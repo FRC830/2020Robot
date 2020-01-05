@@ -6,3 +6,8 @@ Peter would like to look into:
 + command-based c++
 + vision systems
 + led lights
+
+Adithya would like to look into:
++ functionallity
++ making it work
++ winning worlds

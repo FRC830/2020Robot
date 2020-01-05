@@ -58,6 +58,7 @@ model {
                 }
                 exportedHeaders {
                     srcDir 'src/main/include'
+                    srcDir 'src/persistent'
                     if (includeSrcInIncludeRoot) {
                         srcDir 'src/main/cpp'
                     }

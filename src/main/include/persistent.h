@@ -28,18 +28,16 @@ class persistent {
   public:
 
     nt::NetworkTableEntry nt_val;
-    std::string tabName = "persistent";
+    std::string tab_name = "persistent";
     T default_value;
     // map of values
     persistent(std::string name, T value){
       default_value = value;
-      nt_val = frc::Shuffleboard::GetTab(tabName).AddPersistent(name, value).GetEntry();
+      nt_val = frc::Shuffleboard::GetTab(tab_name).AddPersistent(name, value).GetEntry();
     }
     T get() {
         return raw_get<T>(nt_val, default_value);
     }
-
-
 };
 /*
 robotInit() {

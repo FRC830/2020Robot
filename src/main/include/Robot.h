@@ -26,7 +26,8 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
-  rev::CANPIDController CreatePIDController(rev::CANSparkMax motor);
+  double ProcessControllerInput(double);
+  void InitializePIDController(rev::CANPIDController);
   // define pin numbers for motors
 
   //rev::CANSparkMax	(	int 	deviceID,MotorType 	type )	
@@ -39,22 +40,22 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax right_follow_motor{right_follow_id, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax left_lead_motor{left_lead_id, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax left_follow_motor{left_follow_id, rev::CANSparkMax::MotorType::kBrushless};
-  // https://github.com/REVrobotics/SPARK-MAX-Examples/blob/master/C%2B%2B/Smart%20Motion%20Example/src/main/cpp/Robot.cpp
-  //create drivetrain
-  //frc::SpeedControllerGroup right{front_right_motor,back_right_motor};
-  //frc::SpeedControllerGroup left{front_left_motor,back_left_motor};
 
- // frc::DifferentialDrive drivetrain{left, right};
- 
-  // frc::DifferentialDrive drivetrain{left_lead_motor,right_lead_motor};
+  rev::CANPIDController left_lead_controller{left_lead_motor};
+  rev::CANPIDController right_lead_controller{right_lead_motor};
+  rev::CANEncoder left_lead_encoder{left_lead_motor};
+  rev::CANEncoder right_lead_encoder{right_lead_motor};
+  // https://github.com/REVrobotics/SPARK-MAX-Examples/blob/master/C%2B%2B/Smart%20Motion%20Example/src/main/cpp/Robot.cpp
 
   //create controls
   frc::XboxController pilot{0};
   static const frc::GenericHID::JoystickHand LEFT = frc::GenericHID::kLeftHand;
   static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand; 
   static constexpr double DEADZONE_THRESHOLD = 0.1;
-
-  persistent<double> P{"p",1};
-  persistent<double> I{"i",0};
-  persistent<double> D{"d",0};
+  persistent<double> Deadzone{"deadzone",0.1};
+  persistent<double> P{"P",1};
+  persistent<double> I{"I",0};
+  persistent<double> D{"D",0};
+  // http://www.revrobotics.com/sparkmax-users-manual/
+  persistent<int> MaxRPM{"maxRPM",2400};
 };

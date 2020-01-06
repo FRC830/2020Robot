@@ -12,10 +12,11 @@
 #include <frc/TimedRobot.h>
 #include <frc/smartdashboard/SendableChooser.h>
 #include <rev/CANSparkMax.h>
-#include <frc/DifferentialDrive.h>
+#include <frc/drive/DifferentialDrive.h>
 #include <frc/GenericHID.h>
 #include <frc/SpeedControllerGroup.h>
-
+#include <frc/XboxController.h>
+#include <persistent.h>
 class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
@@ -25,7 +26,7 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
-  void CreatePIDController();
+  rev::CANPIDController CreatePIDController(rev::CANSparkMax motor);
   // define pin numbers for motors
 
   //rev::CANSparkMax	(	int 	deviceID,MotorType 	type )	

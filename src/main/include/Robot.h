@@ -39,7 +39,7 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax right_follow_motor{right_follow_id, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax left_lead_motor{left_lead_id, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax left_follow_motor{left_follow_id, rev::CANSparkMax::MotorType::kBrushless};
-  
+  // https://github.com/REVrobotics/SPARK-MAX-Examples/blob/master/C%2B%2B/Smart%20Motion%20Example/src/main/cpp/Robot.cpp
   //create drivetrain
   //frc::SpeedControllerGroup right{front_right_motor,back_right_motor};
   //frc::SpeedControllerGroup left{front_left_motor,back_left_motor};
@@ -54,4 +54,7 @@ class Robot : public frc::TimedRobot {
   static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand; 
   static constexpr double DEADZONE_THRESHOLD = 0.1;
 
+  persistent<double> P{"p",1};
+  persistent<double> I{"i",0};
+  persistent<double> D{"d",0};
 };

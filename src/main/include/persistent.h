@@ -11,6 +11,10 @@ double raw_get(nt::NetworkTableEntry nt_val, double default_value) {
   return nt_val.GetDouble(default_value);
 }
 template<>
+int raw_get(nt::NetworkTableEntry nt_val, int default_value) {
+  return nt_val.GetDouble(default_value);
+}
+template<>
 std::string raw_get(nt::NetworkTableEntry nt_val, std::string default_value) {
   return nt_val.GetString(default_value);
 }
@@ -32,7 +36,7 @@ class persistent {
       nt_val = frc::Shuffleboard::GetTab(tabName).AddPersistent(name, value).GetEntry();
     }
     T get() {
-        return raw_get<T>(nt_val);
+        return raw_get<T>(nt_val, default_value);
     }
 
 

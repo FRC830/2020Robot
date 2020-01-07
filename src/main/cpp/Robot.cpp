@@ -11,10 +11,8 @@ void Robot::RobotInit() {
     // basic initialization
     InitializePIDController(LLeadPID);
     InitializePIDController(RLeadPID);
-    LFollow.Follow(LLead);
-    RFollow.Follow(RLead);
-    LLeadEncoder = LLeadMotor.GetEncoder();
-    RLeadEncoder = RLeadMotor.GetEncoder();
+    LFollowMotor.Follow(LLeadMotor);
+    RFollowMotor.Follow(RLeadMotor);
 }
 // return a configured PID Controller
 void Robot::InitializePIDController(rev::CANPIDController pid_controller) {
@@ -27,10 +25,10 @@ void Robot::InitializePIDController(rev::CANPIDController pid_controller) {
   pid_controller.SetSmartMotionAllowedClosedLoopError(kAllErr);
 }
 void Robot::UpdatePIDController(rev::CANPIDController pidController) {
-    if MaxRPM.justUpdated() { pidController.SetSmartMotionMaxVelocity(MaxRPM.get()); }
-    if P.justUpdated() { pidController.SetP(P.get()); }
-    if I.justUpdated() { pidController.SetI(I.get()); }
-    if D.justUpdated() { pidController.SetD(D.get()); }
+    if (MaxRPM.justUpdated()) { pidController.SetSmartMotionMaxVelocity(MaxRPM.get()); }
+    if (P.justUpdated()) { pidController.SetP(P.get()); }
+    if (I.justUpdated()) { pidController.SetI(I.get()); }
+    if (D.justUpdated()) { pidController.SetD(D.get()); }
 }
 double Robot::ProcessControllerInput(double val) {
   return fabs(val) < Deadzone.get() ? 0 : val;
@@ -38,18 +36,18 @@ double Robot::ProcessControllerInput(double val) {
 void Robot::RobotPeriodic() {
   UpdatePIDController(RLeadPID);
   UpdatePIDController(LLeadPID);
-  UpdatePIDController(RFollowPID);
-  UpdatePIDController(LFollowPID);
-  double forward = -ProcessControllerInput(pilot.GetY(LEFT));
+  double speed = -ProcessControllerInput(pilot.GetY(LEFT));
   double turn = ProcessControllerInput(pilot.GetX(LEFT));
-  double targetVelocity = forward * MaxRPM.get();
+  double targetVelocity = speed * MaxRPM.get();
+  frc::SmartDashboard::PutNumber("Speed", speed);
+  frc::SmartDashboard::PutNumber("Turn", turn);
 
-  drivetrain.ArcardeDrive(forward, turn);
+  drivetrain.ArcadeDrive(targetVelocity, turn, true);
 
-  frc::SmartDashboard::PutNumber("Left Encoder Position", LLeadMotor.GetEncoder().GetPosition());
-  frc::SmartDashboard::PutNumber("Left Motor Output", LLeadMotor.GetAppliedOutput());
-  frc::SmartDashboard::PutNumber("Right Encoder Position", RLeadMotor.GetEncoder().GetPosition());
-  frc::SmartDashboard::PutNumber("Right Motor Output", RLeadMotor.GetAppliedOutput());
+  frc::SmartDashboard::PutNumber("Left Lead Encoder Position", LLead.GetEncoder());
+  frc::SmartDashboard::PutNumber("Left Lead Output", LLead.GetApplied());
+  frc::SmartDashboard::PutNumber("Right Lead Encoder Position", RLead.GetEncoder());
+  frc::SmartDashboard::PutNumber("Right Lead Output", RLead.GetApplied());
 }
 
 

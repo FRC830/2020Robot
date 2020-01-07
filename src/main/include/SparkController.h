@@ -3,12 +3,10 @@
 class SparkController: public frc::SpeedController {
     double maxRPM = 0;
     bool encoderEnabled = false;
-    SparkController(rev::CANSparkMax actualMotor, rev::CANPIDController pid) : actualMotor(motor), encoder(motor.GetEncoder()) {
-        encoder = actualMotor.GetEncoder();
-        motor = actualMotor;
+    SparkController(rev::CANSparkMax aMotor, rev::CANPIDController pid) : motor(aMotor), encoder(aMotor.GetEncoder()) {
+
     }
-    void SetMaxRPM(double rpm) { maxRPM = rpm; }
-    double GetMaxRPM() { return maxRPM; }
+    double GetMaxRPM() { return pid.GetSmartMotionMaxVelocity(); }
     void GetEncoder() { return motor.GetEncoder(); }
     void UseEncoder(bool val) { encoderEnabled = val; }
     void Set(double speed) {
@@ -16,7 +14,7 @@ class SparkController: public frc::SpeedController {
             motor.Set(speed);
             return;
         }
-        motor.SetReference(maxRPM * speed, rev::ControlType::kSmartVelocity);
+        motor.SetReference(GetMaxRPM() * speed, rev::ControlType::kSmartVelocity);
     }
     double Get() { return motor.Get(); }
     void SetInverted(bool isInverted) { motor.SetInverted(isInverted); }

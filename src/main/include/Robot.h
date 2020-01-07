@@ -17,6 +17,7 @@
 #include <frc/SpeedControllerGroup.h>
 #include <frc/XboxController.h>
 #include <persistent.h>
+#include <SparkController.h>
 class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
@@ -32,20 +33,22 @@ class Robot : public frc::TimedRobot {
 
   //rev::CANSparkMax	(	int 	deviceID,MotorType 	type )	
   // create motors
-  const int right_lead_id = 1;
-  const int left_lead_id = 2;
-  const int right_follow_id = 3;
-  const int left_follow_id = 4;
-  rev::CANSparkMax right_lead_motor{right_lead_id, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax right_follow_motor{right_follow_id, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax left_lead_motor{left_lead_id, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax left_follow_motor{left_follow_id, rev::CANSparkMax::MotorType::kBrushless};
+  const int RLeadID = 1;
+  const int LLeadID = 2;
+  const int RFollowID = 3;
+  const int LFollowID = 4;
+  rev::CANSparkMax RLead{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax RFollow{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax LLead{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax LFollow{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
 
-  rev::CANPIDController left_lead_controller{left_lead_motor};
-  rev::CANPIDController right_lead_controller{right_lead_motor};
-  rev::CANEncoder left_lead_encoder{left_lead_motor};
-  rev::CANEncoder right_lead_encoder{right_lead_motor};
+  rev::CANPIDController LLeadPID{RLead};
+  rev::CANPIDController RLeadPID{RLead};
+
   // https://github.com/REVrobotics/SPARK-MAX-Examples/blob/master/C%2B%2B/Smart%20Motion%20Example/src/main/cpp/Robot.cpp
+  SparkController RLeadMotor{RLead, RLeadPID};
+  SparkController LLeadMotor{LLead, LLeadPID};
+
 
   //create controls
   frc::XboxController pilot{0};

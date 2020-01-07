@@ -30,20 +30,20 @@ class persistent {
     nt::NetworkTableEntry nt_val;
     std::string tab_name = "persistent";
     T default_value;
+    T last_value;
     // map of values
     persistent(std::string name, T value){
       default_value = value;
+      last_value = value;
       nt_val = frc::Shuffleboard::GetTab(tab_name).AddPersistent(name, value).GetEntry();
     }
     T get() {
         return raw_get<T>(nt_val, default_value);
     }
+    bool justUpdated() {
+        T new_value = raw_get<T>(nt_val, default_value);
+        bool is_updated = (new_value != last_value);
+        last_value = new_value;
+        return is_updated;
+    }
 };
-/*
-robotInit() {
-  persistentValue1 = persistent("hi", 5)
-}
-robotPeriodic() {
-  val = persistentValue1.get()
-}
-*/

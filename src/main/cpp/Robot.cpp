@@ -17,8 +17,9 @@ void Robot::RobotInit() {
 // return a configured PID Controller
 void Robot::InitializePIDController(rev::CANPIDController pid_controller) {
     
-    // default smart motion coefficients
+  // default smart motion coefficients
   double kMinVel = 0, kMaxAcc = 1500, kAllErr = 0;
+
   pid_controller.SetOutputRange(-1, 1);
   pid_controller.SetSmartMotionMinOutputVelocity(kMinVel);
   pid_controller.SetSmartMotionMaxAccel(kMaxAcc);

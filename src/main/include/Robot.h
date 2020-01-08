@@ -41,11 +41,11 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax RFollowMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax LLeadMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANPIDController LLeadPID{RLead};
-  rev::CANPIDController RLeadPID{RLead};
+  rev::CANPIDController LLeadPID{LLeadMotor};
+  rev::CANPIDController RLeadPID{RLeadMotor};
 
-  SparkController RLead{RLead, RLeadPID};
-  SparkController LLead{LLead, LLeadPID};
+  SparkController RLead{RLeadMotor, RLeadPID};
+  SparkController LLead{LLeadMotor, LLeadPID};
   frc::DifferentialDrive drivetrain{LLead, RLead};
 
   //create controls

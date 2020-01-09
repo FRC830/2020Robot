@@ -45,10 +45,11 @@ void Robot::RobotPeriodic() {
 
   drivetrain.ArcadeDrive(targetVelocity, turn, true);
 
-  frc::SmartDashboard::PutNumber("Left Lead Encoder Position", LLead.GetEncoder());
-  frc::SmartDashboard::PutNumber("Left Lead Output", LLead.GetApplied());
-  frc::SmartDashboard::PutNumber("Right Lead Encoder Position", RLead.GetEncoder());
-  frc::SmartDashboard::PutNumber("Right Lead Output", RLead.GetApplied());
+  // don't read, just display
+  llepPersistent.set(LLead.GetEncoder());
+  rlepPersistent.set(RLead.GetEncoder());
+  lloPersistent.set(LLead.GetApplied());
+  rloPersistent.set(LLead.GetApplied());
 }
 
 

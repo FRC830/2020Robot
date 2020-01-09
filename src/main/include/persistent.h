@@ -24,7 +24,6 @@ bool raw_get(nt::NetworkTableEntry nt_val, bool default_value) {
 }
 template<typename T>
 void raw_set(nt::NetworkTableEntry nt_val, T value) {}
-template<>
 void raw_set(nt::NetworkTableEntry nt_val, double value) {
   nt_val.SetDouble(value);
 }
@@ -37,6 +36,7 @@ void raw_set(nt::NetworkTableEntry nt_val, std::string value) {
 void raw_set(nt::NetworkTableEntry nt_val, bool value) {
   nt_val.SetBoolean(value);
 }
+
 template <typename T>
 class persistent {
   public:
@@ -56,7 +56,11 @@ class persistent {
       last_value = value;
       nt_val = frc::Shuffleboard::GetTab(tab_name).AddPersistent(name, value).WithWidget(widget).GetEntry();
     }
-
+    persistent(std::string name, T value, frc::BuiltInWidgets widget, wpi::StringMap< std::shared_ptr< nt::Value >> properties) {
+      default_value = value;
+      last_value = value;
+      nt_val = frc::Shuffleboard::GetTab(tab_name).AddPersistent(name, value).WithWidget(widget).WithProperties(properties).GetEntry();
+    }
     T get() {
         return raw_get<T>(nt_val, default_value);
     }

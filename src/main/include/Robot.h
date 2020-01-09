@@ -58,4 +58,9 @@ class Robot : public frc::TimedRobot {
   persistent<double> I{"I",0};
   persistent<double> D{"D",0};
   persistent<int> MaxRPM{"maxRPM", 2400}; // http://www.revrobotics.com/sparkmax-users-manual/
+
+  persistent<double> llepPersistent{"Left Lead Encoder Position",0}; 
+  persistent<double> lloPersistent{"Left Lead Output",0}; 
+  persistent<double> rloPersistent{"Right Lead Output",0}; 
+  persistent<double> rlepPersistent{"Right Lead Encoder Position",0}; 
 };

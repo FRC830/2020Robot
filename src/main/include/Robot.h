@@ -1,10 +1,3 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
-
 #pragma once
 
 #include <string>
@@ -18,6 +11,8 @@
 #include <frc/XboxController.h>
 #include <persistent.h>
 #include <SparkController.h>
+#include <frc/Preferences.h>
+
 class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
@@ -29,7 +24,6 @@ class Robot : public frc::TimedRobot {
   void TestPeriodic() override;
   double ProcessControllerInput(double);
   void InitializePIDController(rev::CANPIDController);
-  void UpdatePIDController(rev::CANPIDController);
   // define pin numbers for motors
   const int RLeadID = 1;
   const int LLeadID = 2;
@@ -52,15 +46,8 @@ class Robot : public frc::TimedRobot {
   frc::XboxController pilot{0};
   frc::XboxController copilot{1};
   static const frc::GenericHID::JoystickHand LEFT = frc::GenericHID::kLeftHand;
-  static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand; 
-  persistent<double> Deadzone{"deadzone",0.1};
-  persistent<double> P{"P",1};
-  persistent<double> I{"I",0};
-  persistent<double> D{"D",0};
-  persistent<int> MaxRPM{"maxRPM", 2400}; // http://www.revrobotics.com/sparkmax-users-manual/
+  static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand;
+  frc::Preferences& prefs = *frc::Preferences::GetInstance();
+// http://www.revrobotics.com/sparkmax-users-manual/
 
-  persistent<double> llepPersistent{"Left Lead Encoder Position",0}; 
-  persistent<double> lloPersistent{"Left Lead Output",0}; 
-  persistent<double> rloPersistent{"Right Lead Output",0}; 
-  persistent<double> rlepPersistent{"Right Lead Encoder Position",0}; 
 };

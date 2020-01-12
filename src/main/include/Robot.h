@@ -9,17 +9,22 @@
 #include <frc/GenericHID.h>
 #include <frc/SpeedControllerGroup.h>
 #include <frc/XboxController.h>
-#include <persistent.h>
 #include <SparkController.h>
 #include <frc/Preferences.h>
 #include <rev/ColorSensorV3.h>
 #include <rev/ColorMatch.h>
 #include <frc/util/Color.h>
-
 #include "ctre/Phoenix.h"
+#include <frc/shuffleboard/Shuffleboard.h>
+#include <frc/AddressableLED.h>
+
+
 
 class Robot : public frc::TimedRobot {
  public:
+  void rainbow();
+  void red();
+
   void RobotInit() override;
   void RobotPeriodic() override;
   void AutonomousInit() override;
@@ -60,6 +65,12 @@ class Robot : public frc::TimedRobot {
 
   //initializes prefreences widget
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
+
+  static constexpr int kLength = 40;
+  frc::AddressableLED led{9};
+  //Affected leds
+  std::array<frc::AddressableLED::LEDData,kLength> a_leds;
+            
 // http://www.revrobotics.com/sparkmax-users-manual/
 
   //colors
@@ -75,3 +86,4 @@ class Robot : public frc::TimedRobot {
   frc::Color aimBlue = {0.157, 0.43, 0.412}; 
 
 };
+      

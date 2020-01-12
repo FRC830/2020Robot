@@ -7,7 +7,7 @@ using namespace frc;
 void Robot::rainbow(){
     // For every pixel
 
-    std::cout << "rainbow" << std::endl;
+    frc::SmartDashboard::PutString("MODE", "Rainbow")
     static int firstPixelHue = 0;
     auto pixelHue = (firstPixelHue + (0 * 180 / kLength)) % 180;
     for (int i = 0; i < kLength; i++) {
@@ -20,12 +20,13 @@ void Robot::rainbow(){
     // Increase by to make the rainbow "move"
     firstPixelHue += 3;
     // Check bounds
-    firstPixelHue %= 180;   
+    firstPixelHue %= 180;
     led.SetData(a_leds);
 }
 
 void Robot::red(){
-  std::cout << "red" << std::endl;
+  frc::SmartDashboard::PutString("MODE","RED")
+  frc::SmartDashboard::PutNumber("LED COUNT", kLength)
   for (int i = 0; i < kLength; i++){
 
     a_leds[i].SetHSV(0,100,100);
@@ -38,11 +39,7 @@ void Robot::RobotInit() {
     //LED Stuff
     led.SetLength(kLength);    
     led.SetData(a_leds);
-
-
-
-
-
+    led.Start();
     // clear the motor config
     LLeadMotor.RestoreFactoryDefaults();
     LFollowMotor.RestoreFactoryDefaults();

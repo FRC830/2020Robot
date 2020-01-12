@@ -1,7 +1,46 @@
 #include "Robot.h"
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
+
+void Robot::rainbow(){
+    // For every pixel
+
+    std::cout << "rainbow" << std::endl;
+    static int firstPixelHue = 0;
+    auto pixelHue = (firstPixelHue + (0 * 180 / kLength)) % 180;
+    for (int i = 0; i < kLength; i++) {
+      // Calculate the hue - hue is easier for rainbows because the color
+      // shape is a circle so only one value needs to process
+      pixelHue = (firstPixelHue + (i * 180 / kLength)) % 180;
+      // Set the value
+      a_leds[i].SetHSV(pixelHue, 255, 128);
+    }
+    // Increase by to make the rainbow "move"
+    firstPixelHue += 3;
+    // Check bounds
+    firstPixelHue %= 180;   
+    led.SetData(a_leds);
+}
+
+void Robot::red(){
+  std::cout << "red" << std::endl;
+  for (int i = 0; i < kLength; i++){
+
+    a_leds[i].SetHSV(0,100,100);
+    
+  }
+  led.SetData(a_leds);
+}
+
 void Robot::RobotInit() {
+    //LED Stuff
+    led.SetLength(kLength);    
+    led.SetData(a_leds);
+
+
+
+
+
     // clear the motor config
     LLeadMotor.RestoreFactoryDefaults();
     LFollowMotor.RestoreFactoryDefaults();
@@ -44,6 +83,9 @@ void Robot::RobotPeriodic() {
   double targetVelocity = speed * prefs.GetInt("maxrpm");
   frc::SmartDashboard::PutNumber("Speed", speed);
   frc::SmartDashboard::PutNumber("Turn", turn);
+
+
+  red();
 
   drivetrain.ArcadeDrive(targetVelocity, turn, true);
 

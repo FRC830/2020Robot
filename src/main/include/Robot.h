@@ -12,9 +12,15 @@
 #include <persistent.h>
 #include <SparkController.h>
 #include <frc/Preferences.h>
+#include <frc/AddressableLED.h>
+
+
 
 class Robot : public frc::TimedRobot {
  public:
+  void rainbow();
+  void red();
+
   void RobotInit() override;
   void RobotPeriodic() override;
   void AutonomousInit() override;
@@ -48,6 +54,21 @@ class Robot : public frc::TimedRobot {
   static const frc::GenericHID::JoystickHand LEFT = frc::GenericHID::kLeftHand;
   static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand;
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
+
+  static constexpr int kLength = 40;
+  frc::AddressableLED led{9};
+  //Affected leds
+  std::array<frc::AddressableLED::LEDData,kLength> a_leds;
+            
 // http://www.revrobotics.com/sparkmax-users-manual/
 
+
+
+
+
+
+
+
+
 };
+      

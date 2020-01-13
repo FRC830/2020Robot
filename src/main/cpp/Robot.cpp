@@ -4,45 +4,7 @@
 
 using namespace frc;
 
-void Robot::rainbow(){
-    // For every pixel
-
-    frc::SmartDashboard::PutString("MODE", "Rainbow");
-    static int firstPixelHue = 0;
-    auto pixelHue = (firstPixelHue + (0 * 180 / kLength)) % 180;
-    for (int i = 0; i < kLength; i++) {
-      // Calculate the hue - hue is easier for rainbows because the color
-      // shape is a circle so only one value needs to process
-      pixelHue = (firstPixelHue + (i * 180 / kLength)) % 180;
-      // Set the value
-      a_leds[i].SetHSV(pixelHue, 255, 128);
-    }
-    // Increase by to make the rainbow "move"
-    firstPixelHue += 3;
-    // Check bounds
-    firstPixelHue %= 180;
-    led.SetData(a_leds);
-}
-
-void Robot::red(){
-  frc::SmartDashboard::PutString("MODE","RED");
-  frc::SmartDashboard::PutNumber("LED COUNT", kLength);
-  for (int i = 0; i < kLength; i++){
-    frc::SmartDashboard::PutNumber("Iteration", i);
-    a_leds[i].SetRGB(255,100,100);
-    
-  }
-  frc::SmartDashboard::PutNumber("first red", a_leds[0].r);
-  frc::SmartDashboard::PutNumber("first green", a_leds[0].g);
-  frc::SmartDashboard::PutNumber("first blue", a_leds[0].b);
-}
-
 void Robot::RobotInit() {
-    //LED Stuff
-    led.SetLength(kLength);    
-    red();
-    // led.SetData(a_leds);
-    led.Start();
     // clear the motor config
     LLeadMotor.RestoreFactoryDefaults();
     LFollowMotor.RestoreFactoryDefaults();
@@ -58,6 +20,7 @@ void Robot::RobotInit() {
     prefs.PutDouble("p",1.0);
     prefs.PutDouble("i",0.0);
     prefs.PutDouble("d",0.0);
+    prefs.PutDouble("color spinner motor speed",0.5);
     // output vision testing values
     MakeSlider("lowerH", 15, 179);
     MakeSlider("lowerS", 100);
@@ -67,7 +30,7 @@ void Robot::RobotInit() {
     MakeSlider("upperV", 255);
     frc::SmartDashboard::PutNumber("Original", 1.0);
     // initialize color motor
-    srxMotor.SetNeutralMode(NeutralMode::Brake);
+    colorWheelMotor.SetNeutralMode(NeutralMode::Brake);
     colorMatcher.AddColorMatch(aimRed);
     colorMatcher.AddColorMatch(aimYellow);
     colorMatcher.AddColorMatch(aimBlue);
@@ -106,14 +69,11 @@ double Robot::ProcessControllerInput(double val) {
 }
 
 // Return the closest detected color
-std::string Robot::ClosestColor() {
-
-  
+std::tuple<std::string, double> Robot::ClosestColor() {
   frc::Color detectedColor = colorSensor.GetColor();
   std::string colorString;
   double confidence;
   frc::Color matchedColor = colorMatcher.MatchClosestColor(detectedColor, confidence);
-
   if (matchedColor == aimBlue) {
     colorString = "blue";
   } else if (matchedColor == aimRed) {
@@ -123,32 +83,36 @@ std::string Robot::ClosestColor() {
   } else if (matchedColor == aimYellow) {
     colorString = "yellow";
   } else {
-    colorString = "Unknown";
+    colorString = "unknown";
   }
-  return colorString;
+  return std::make_tuple(colorString, confidence);
 }
-void Robot::RobotPeriodic() {
-  // Drivetrain
+// Handle teleop drivetrain code
+void Robot::HandleDrivetrain() {
   double speed = -ProcessControllerInput(pilot.GetY(LEFT));
   double turn = ProcessControllerInput(pilot.GetX(LEFT));
   double targetVelocity = speed * prefs.GetInt("maxrpm");
   frc::SmartDashboard::PutNumber("Speed", speed);
   frc::SmartDashboard::PutNumber("Turn", turn);
-
-
-  red();
-  led.SetData(a_leds);
-
   drivetrain.ArcadeDrive(targetVelocity, turn, true);
   frc::SmartDashboard::PutNumber("left lead encoder", LLead.GetEncoder());
   frc::SmartDashboard::PutNumber("right lead encoder", RLead.GetEncoder());
   frc::SmartDashboard::PutNumber("left motor applied", LLead.GetApplied());
   frc::SmartDashboard::PutNumber("right lead applied", RLead.GetApplied());
+}
+// Handle LED Strip code
+void Robot::HandleLEDStrip() {
+  double angle = pilot.GetPOV();
+  if (angle >= 45 && angle <= 135) {
+    ledMode++;
+    ledStrip.Set(ledMode);
+  } else if (angle >= 225 && angle <= 315 ) {
+    ledMode--;
+    ledStrip.Set(ledMode);
+  }
+}
+void Robot::RobotPeriodic() {
 
-  // Color Wheel
-  int proximity = (int) colorSensor.GetProximity();
-  SmartDashboard::PutNumber("Proximity", proximity);
-  SmartDashboard::PutString("Closest Color", ClosestColor());
 }
 
 
@@ -170,22 +134,30 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic() {
   // color
-  double rt = pilot.GetTriggerAxis(::GenericHID::kRightHand);
-  SmartDashboard::PutNumber("RT", rt);
-  
+  HandleLEDStrip();
+  HandleDrivetrain();
+  HandleColorWheel();
+
+}
+void Robot::HandleColorWheel() {
+  int proximity = (int) colorSensor.GetProximity();
+  SmartDashboard::PutNumber("Proximity", proximity);
   bool red = pilot.GetBButton();
   bool blue = pilot.GetXButton();
   bool green = pilot.GetAButton();
   bool yellow = pilot.GetYButton();
-  
-  std::string color = ClosestColor();
-
-  if ((red && color != "red") || (yellow && color != "yellow") || (blue && color != "blue") || (green && color != "green"))
-    srxMotor.Set(ControlMode::PercentOutput, -0.5);
-  else  
-    srxMotor.Set(ControlMode::PercentOutput, 0);
+  std::string color;
+  double confidence;
+  // https://www.techiedelight.com/return-multiple-values-functions-cpp/
+  std::tie(color, confidence) = ClosestColor();
+  SmartDashboard::PutNumber("Confidence", confidence);
+  SmartDashboard::PutString("Closest Color", color);
+  if ((red && color != "red") || (yellow && color != "yellow") || (blue && color != "blue") || (green && color != "green")) {
+    colorWheelMotor.Set(ControlMode::PercentOutput, -prefs.GetDouble("color spinner motor speed"));
+  } else {
+    colorWheelMotor.Set(ControlMode::PercentOutput, 0);
+  }  
 }
-
 
 void Robot::TestPeriodic() {}
 

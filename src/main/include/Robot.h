@@ -16,15 +16,11 @@
 #include <frc/util/Color.h>
 #include "ctre/Phoenix.h"
 #include <frc/shuffleboard/Shuffleboard.h>
-#include <frc/AddressableLED.h>
-
+#include "LEDController.h"
 
 
 class Robot : public frc::TimedRobot {
  public:
-  void rainbow();
-  void red();
-
   void RobotInit() override;
   void RobotPeriodic() override;
   void AutonomousInit() override;
@@ -33,7 +29,10 @@ class Robot : public frc::TimedRobot {
   void TeleopPeriodic() override;
   void TestPeriodic() override;
   double ProcessControllerInput(double);
-  std::string ClosestColor();
+  void HandleColorWheel();
+  void HandleDrivetrain();
+  void HandleLEDStrip();
+  std::tuple<std::string, double> ClosestColor();
   void MakeSlider(std::string, double, double=255);
   void InitializePIDController(rev::CANPIDController);
   // define pin numbers for motors
@@ -41,7 +40,7 @@ class Robot : public frc::TimedRobot {
   const int LLeadID = 2;
   const int RFollowID = 3;
   const int LFollowID = 4;
-
+  const int ColorWheelID = 16;
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax RFollowMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
@@ -66,24 +65,20 @@ class Robot : public frc::TimedRobot {
   //initializes prefreences widget
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
 
-  static constexpr int kLength = 120;
-  frc::AddressableLED led{9};
-  //Affected leds
-  std::array<frc::AddressableLED::LEDData,kLength> a_leds;
-            
+
+  LEDController ledStrip{40, 9};
 // http://www.revrobotics.com/sparkmax-users-manual/
 
   //colors
   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
   rev::ColorSensorV3 colorSensor{i2cPort};
   rev::ColorMatch colorMatcher;
-  
+  int ledMode = 0;
 
-  TalonSRX srxMotor{16};
+  TalonSRX colorWheelMotor{ColorWheelID};
   frc::Color aimRed = {0.465, 0.376, 0.158}; 
   frc::Color aimYellow = {0.324, 0.535, 0.14}; 
   frc::Color aimGreen = {0.197, 0.545, 0.256}; 
   frc::Color aimBlue = {0.157, 0.43, 0.412}; 
 
 };
-      

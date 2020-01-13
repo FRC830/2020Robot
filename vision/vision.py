@@ -194,6 +194,7 @@ if __name__ == "__main__":
 
 		M = cv2.moments(max_contour)
 		center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+		dashboard.putNumber("centerX", center[0])
 
 		cv2.circle(img, (int(x), int(y)), int(radius), (0, 255, 255), 2)
 		cv2.circle(img, center, 5, (0, 0, 255), -1)

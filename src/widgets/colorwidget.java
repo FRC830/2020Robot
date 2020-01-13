@@ -1,35 +1,75 @@
-package org.ligerbots.MapPlugin;
+package edu.wpi.first.shuffleboard.plugin.base.widget;
 
-import javax.swing.ImageIcon;
-
+import edu.wpi.first.shuffleboard.api.prefs.Group;
+import edu.wpi.first.shuffleboard.api.prefs.Setting;
 import edu.wpi.first.shuffleboard.api.widget.Description;
+import edu.wpi.first.shuffleboard.api.widget.ParametrizedController;
 import edu.wpi.first.shuffleboard.api.widget.SimpleAnnotatedWidget;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
-import javafx.scene.text.Text;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.fxml.FXML;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 /**
  * Widget
  */
-@Description(dataTypes = { Boolean.class }, name = "MapWidget")
-@ParametrizedController("colorwidget.fxml")
+@Description(
+    name = "Color Picker",
+    dataTypes = Color.class)
+@ParametrizedController("BooleanBoxWidget.fxml")
+// https://docs.oracle.com/javafx/2/ui_controls/color-picker.htm
+// https://github.com/wpilibsuite/shuffleboard/blob/6dabb35bb443e043a40b78782e17519ad80ac033/plugins/base/src/main/resources/edu/wpi/first/shuffleboard/plugin/base/widget/BooleanBoxWidget.fxml
+// https://github.com/wpilibsuite/shuffleboard/blob/6dabb35bb443e043a40b78782e17519ad80ac033/plugins/base/src/main/resources/edu/wpi/first/shuffleboard/plugin/base/widget/Command.fxml
 
 public class colorwidget extends SimpleAnnotatedWidget {
-    public void UpdatePosition() {
-
+    @FXML
+    private Pane root;
+  
+    private final Property<Color> color = new SimpleObjectProperty<>(this, "color", Color.LAWNGREEN);
+    @FXML
+    private ColorPicker colorPicker;
+    @FXML
+    private void initialize() {
+        fillBackground(color);
+        colorPicker.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                fillBackground(colorPicker.getValue());               
+            }
+        });
     }
-
+  
+    @Override
+    public List<Group> getSettings() {
+      return ImmutableList.of();
+    }
+  
     @Override
     public Pane getView() {
-        Image map = new Image("file:///C:/map.png", 500, 250, true, true);
-        ImageView image_frame = new ImageView(map);
-
-        Text t = new Text(50, 50, System.getProperty("user.dir"));
-
-        Pane root = new Pane();
-        root.getChildren().addAll(t, image_frame);
-        root.setPrefSize(map.getWidth(), map.getHeight());
-        return root;
+      return root;
+    }
+  
+    private Color getColor() {
+      final Boolean data = getData();
+      if (data == null) {
+        return Color.BLACK;
+      }
+  
+        return color.getValue();
+    }
+  
+    private Background fillBackground(Color color) {
+      return new Background(new BackgroundFill(color, null, null));
+    }
+  
+    public void updateColor(Color newColor) {
+      fillBackground(newColor);
     }
 }

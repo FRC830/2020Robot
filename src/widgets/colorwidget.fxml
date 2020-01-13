@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="edu.wpi.first.shuffleboard.plugin.base.widget.BooleanBoxWidget"
+           fx:id="root"
+           minWidth="32" minHeight="32"
+           prefHeight="128" prefWidth="128">
+    <TextField fx:id="firstName"/>
+    <ToggleButton fx:id="button"/>
+</StackPane>

@@ -1,5 +1,5 @@
 #include <frc/AddressableLED.h>
-enum LEDModes{Red = 0, Rainbow = 1};
+enum LEDModes{Red, Rainbow, COUNT};
 class LEDController {
     public:
         int length;

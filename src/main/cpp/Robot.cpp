@@ -104,12 +104,14 @@ void Robot::HandleDrivetrain() {
 void Robot::HandleLEDStrip() {
   double angle = pilot.GetPOV();
   if (angle >= 45 && angle <= 135) {
-    ledMode++;
-    ledStrip.Set(ledMode);
-  } else if (angle >= 225 && angle <= 315 ) {
     ledMode--;
-    ledStrip.Set(ledMode);
+  } else if (angle >= 225 && angle <= 315 ) {
+    ledMode++;
+  } else {
+    return;
   }
+
+  ledStrip.Set(ledMode % (int) LEDModes::COUNT);
 }
 void Robot::RobotPeriodic() {
 

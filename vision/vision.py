@@ -117,8 +117,8 @@ if __name__ == "__main__":
 
 	# start NetworkTables
 	ntinst = NetworkTablesInstance.getDefault()
-	table = ntinst.getTable("Shuffleboard")
-	dashboard = table.getSubTable("vision")
+	dashboard = ntinst.getTable("SmartDashboard")
+	# dashboard = table.getSubTable("vision")
 	if server:
 		print("Setting up NetworkTables server")
 		ntinst.startServer()
@@ -181,14 +181,14 @@ if __name__ == "__main__":
 		
 		max_contour = max(contours, key=cv2.contourArea)
 		((x, y), radius) = cv2.minEnclosingCircle(max_contour) # returns point, radius
-		originalRadius = dashboard.getNumber("Original Radius", 7)
+		originalRadius = dashboard.getNumber("Original", 7)
 		# original radius * distance away / width as described in link #3
-		focalLength = (originalRadius * 24) / 3.5
-		actualSize = (3.5 * focalLength) / radius
+		focalLength = (originalRadius * 24.0) / 3.5
+		distanceAway = (3.5 * focalLength) / radius
 
 		dashboard.putNumber("Radius", radius)
 		dashboard.putNumber("Focal Length", focalLength)
-		dashboard.putNumber("Actual Size", actualSize)
+		dashboard.putNumber("Distance Away", distanceAway)
 		if radius < dashboard.getNumber("Min Radius", 1):
 			continue
 

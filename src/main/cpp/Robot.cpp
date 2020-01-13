@@ -7,7 +7,7 @@ using namespace frc;
 void Robot::rainbow(){
     // For every pixel
 
-    frc::SmartDashboard::PutString("MODE", "Rainbow")
+    frc::SmartDashboard::PutString("MODE", "Rainbow");
     static int firstPixelHue = 0;
     auto pixelHue = (firstPixelHue + (0 * 180 / kLength)) % 180;
     for (int i = 0; i < kLength; i++) {
@@ -25,20 +25,23 @@ void Robot::rainbow(){
 }
 
 void Robot::red(){
-  frc::SmartDashboard::PutString("MODE","RED")
-  frc::SmartDashboard::PutNumber("LED COUNT", kLength)
+  frc::SmartDashboard::PutString("MODE","RED");
+  frc::SmartDashboard::PutNumber("LED COUNT", kLength);
   for (int i = 0; i < kLength; i++){
-
-    a_leds[i].SetHSV(0,100,100);
+    frc::SmartDashboard::PutNumber("Iteration", i);
+    a_leds[i].SetRGB(255,100,100);
     
   }
-  led.SetData(a_leds);
+  frc::SmartDashboard::PutNumber("first red", a_leds[0].r);
+  frc::SmartDashboard::PutNumber("first green", a_leds[0].g);
+  frc::SmartDashboard::PutNumber("first blue", a_leds[0].b);
 }
 
 void Robot::RobotInit() {
     //LED Stuff
     led.SetLength(kLength);    
-    led.SetData(a_leds);
+    red();
+    // led.SetData(a_leds);
     led.Start();
     // clear the motor config
     LLeadMotor.RestoreFactoryDefaults();
@@ -62,12 +65,14 @@ void Robot::RobotInit() {
     MakeSlider("upperH", 60, 179);
     MakeSlider("upperS", 255);
     MakeSlider("upperV", 255);
+    frc::SmartDashboard::PutNumber("Original", 1.0);
     // initialize color motor
     srxMotor.SetNeutralMode(NeutralMode::Brake);
     colorMatcher.AddColorMatch(aimRed);
     colorMatcher.AddColorMatch(aimYellow);
     colorMatcher.AddColorMatch(aimBlue);
     colorMatcher.AddColorMatch(aimGreen);
+    
 }
 // adds a configured slider to vision tab
 void Robot::MakeSlider(std::string name, double defaultV, double max) {
@@ -132,15 +137,13 @@ void Robot::RobotPeriodic() {
 
 
   red();
+  led.SetData(a_leds);
 
   drivetrain.ArcadeDrive(targetVelocity, turn, true);
   frc::SmartDashboard::PutNumber("left lead encoder", LLead.GetEncoder());
   frc::SmartDashboard::PutNumber("right lead encoder", RLead.GetEncoder());
   frc::SmartDashboard::PutNumber("left motor applied", LLead.GetApplied());
   frc::SmartDashboard::PutNumber("right lead applied", RLead.GetApplied());
-  //min radius for vision
-  frc::SmartDashboard::PutNumber("Min Radius", 1);
-  frc::SmartDashboard::PutNumber("Original Radius", 7);
 
   // Color Wheel
   int proximity = (int) colorSensor.GetProximity();

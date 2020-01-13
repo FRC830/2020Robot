@@ -66,7 +66,7 @@ class Robot : public frc::TimedRobot {
   //initializes prefreences widget
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
 
-  static constexpr int kLength = 40;
+  static constexpr int kLength = 120;
   frc::AddressableLED led{9};
   //Affected leds
   std::array<frc::AddressableLED::LEDData,kLength> a_leds;

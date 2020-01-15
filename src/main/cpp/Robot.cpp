@@ -115,6 +115,8 @@ void Robot::HandleLEDStrip() {
 }
 void Robot::RobotPeriodic() {
 
+
+
 }
 
 
@@ -139,7 +141,15 @@ void Robot::TeleopPeriodic() {
   HandleLEDStrip();
   HandleDrivetrain();
   HandleColorWheel();
-
+  // use this
+  double rpm = 0;
+  if (pilot.GetAButton()) {
+    rpm = ProcessControllerInput(pilot.GetY(RIGHT)) * 500.0;
+  } else {
+    rpm = SmartDashboard::GetNumber("Velocity in RPM", 0);
+  } // can alan check the led thing
+  // double speed = ProcessControllerInput(pilot.GetY(RIGHT));
+  falcon.Set(ctre::phoenix::motorcontrol::TalonFXControlMode::Velocity, rpm);
 }
 void Robot::HandleColorWheel() {
   int proximity = (int) colorSensor.GetProximity();

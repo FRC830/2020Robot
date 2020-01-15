@@ -1,4 +1,4 @@
-#pragma once
+  #pragma once
 
 #include <string>
 
@@ -15,6 +15,7 @@
 #include <rev/ColorMatch.h>
 #include <frc/util/Color.h>
 #include "ctre/Phoenix.h"
+// #include <ctre/TalonFX.h>
 #include <frc/shuffleboard/Shuffleboard.h>
 #include "LEDController.h"
 
@@ -81,4 +82,24 @@ class Robot : public frc::TimedRobot {
   frc::Color aimGreen = {0.197, 0.545, 0.256}; 
   frc::Color aimBlue = {0.157, 0.43, 0.412}; 
 
+
+  //TalonFX Code
+
+  const int TalonDeviceID = 17;
+
+  TalonFX falcon{TalonDeviceID};
+
+
+
+  
+  /*
+  in robotPeriodic
+  
+  max velocity = preferences.GetNumber("maxV")
+  falcon.Set(controller input * Max velocity, ctre::longnamespacething::velocity mode)
+  http://www.ctr-electronics.com/downloads/api/cpp/html/classctre_1_1phoenix_1_1motorcontrol_1_1can_1_1_talon_f_x.html#aa3e3514f29187deaa9d843592f42392b
+  */
 };
+
+
+  

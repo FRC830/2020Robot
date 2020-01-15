@@ -1,7 +1,6 @@
 #include "Robot.h"
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
-
 using namespace frc;
 
 void Robot::RobotInit() {
@@ -111,7 +110,8 @@ void Robot::HandleLEDStrip() {
     return;
   }
 
-  ledStrip.Set(ledMode % (int) LEDModes::COUNT);
+  ledStrip.Set(ledMode % ledStrip.NumModes());
+  frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
 void Robot::RobotPeriodic() {
 

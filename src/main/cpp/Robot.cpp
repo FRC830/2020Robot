@@ -1,6 +1,7 @@
 #include "Robot.h"
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
+
 using namespace frc;
 
 void Robot::RobotInit() {
@@ -29,11 +30,16 @@ void Robot::RobotInit() {
     MakeSlider("upperV", 255);
     frc::SmartDashboard::PutNumber("Original", 1.0);
     // initialize color motor
-    colorWheelMotor.SetNeutralMode(NeutralMode::Brake);
+    // colorWheelMotor.SetNeutralMode(NeutralMode::Brake);
     colorMatcher.AddColorMatch(aimRed);
     colorMatcher.AddColorMatch(aimYellow);
     colorMatcher.AddColorMatch(aimBlue);
     colorMatcher.AddColorMatch(aimGreen);
+    Shuffleboard::GetTab("vision")
+    .Add("Front Camera", true)
+    .WithWidget(BuiltInWidgets::kToggleButton);
+
+    SmartDashboard::PutNumber("Velocity in RPM", 0);
     
 }
 // adds a configured slider to vision tab
@@ -68,28 +74,28 @@ double Robot::ProcessControllerInput(double val) {
 }
 
 // Return the closest detected color
-std::tuple<std::string, double> Robot::ClosestColor() {
+std::tuple<char, double> Robot::ClosestColor() {
   frc::Color detectedColor = colorSensor.GetColor();
-  std::string colorString;
+  char color;
   double confidence;
   frc::Color matchedColor = colorMatcher.MatchClosestColor(detectedColor, confidence);
   if (matchedColor == aimBlue) {
-    colorString = "blue";
+    color = 'B';
   } else if (matchedColor == aimRed) {
-    colorString = "red";
+    color = 'R';
   } else if (matchedColor == aimGreen) {
-    colorString = "green";
+    color = 'G';
   } else if (matchedColor == aimYellow) {
-    colorString = "yellow";
+    color = 'Y';
   } else {
-    colorString = "unknown";
+    color = 'N';
   }
-  return std::make_tuple(colorString, confidence);
+  return std::make_tuple(color, confidence);
 }
 // Handle teleop drivetrain code
 void Robot::HandleDrivetrain() {
-  double speed = -ProcessControllerInput(pilot.GetY(LEFT));
-  double turn = ProcessControllerInput(pilot.GetX(LEFT));
+  double speed = 0; //-ProcessControllerInput(pilot.GetY(LEFT));
+  double turn = ProcessControllerInput(pilot.GetX(RIGHT));
   double targetVelocity = speed * prefs.GetInt("maxrpm");
   frc::SmartDashboard::PutNumber("Speed", speed);
   frc::SmartDashboard::PutNumber("Turn", turn);
@@ -134,43 +140,51 @@ void Robot::TeleopInit() {
   InitializePIDController(RLeadPID);
  
 }
-
+void Robot::HandleVision() {
+  // double toggleMode = ProcessControllerInput(pilot.GetTriggerAxis(LEFT));
+  // if (toggleMode > 0) {
+  //   // SmartDashboard::PutNumber("")
+  //   Shuffleboard::GetTab("vision")
+  //   .add("Camera", CameraServer::GetInstance()::GetServer("Front Camera"))
+  // }
+  // if toggleMode 
+}
 
 void Robot::TeleopPeriodic() {
   // color
   HandleLEDStrip();
   HandleDrivetrain();
   HandleColorWheel();
-  // use this
-  double rpm = 0;
-  if (pilot.GetAButton()) {
-    rpm = ProcessControllerInput(pilot.GetY(RIGHT)) * 500.0;
-  } else {
-    rpm = SmartDashboard::GetNumber("Velocity in RPM", 0);
-  } // can alan check the led thing
-  // double speed = ProcessControllerInput(pilot.GetY(RIGHT));
-  falcon.Set(ctre::phoenix::motorcontrol::TalonFXControlMode::Velocity, rpm);
+  // rpm = SmartDashboard::GetNumber("Velocity in RPM", 0);
+  // double speed = ProcessControllerInput(pilot.GetY(LEFT));
+  // testMotor.Set(speed);
+  // // use this
+  // if (pilot.GetAButton()) {
+  //   rpm = ProcessControllerInput(pilot.GetY(RIGHT)) * 500.0;
+  // } else {
+  // } // can alan check the led thing
+  // falcon.Set(ctre::phoenix::motorcontrol::TalonFXControlMode::Velocity, rpm);
 }
 void Robot::HandleColorWheel() {
+  std::string gameData;
+  gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+  char closestColor;
+  double confidence;
+  std::tie(closestColor, confidence) = ClosestColor();
   int proximity = (int) colorSensor.GetProximity();
   SmartDashboard::PutNumber("Proximity", proximity);
-  bool red = pilot.GetBButton();
-  bool blue = pilot.GetXButton();
-  bool green = pilot.GetAButton();
-  bool yellow = pilot.GetYButton();
-  std::string color;
-  double confidence;
-  // https://www.techiedelight.com/return-multiple-values-functions-cpp/
-  std::tie(color, confidence) = ClosestColor();
   SmartDashboard::PutNumber("Confidence", confidence);
-  SmartDashboard::PutString("Closest Color", color);
-  if ((red && color != "red") || (yellow && color != "yellow") || (blue && color != "blue") || (green && color != "green")) {
-    colorWheelMotor.Set(ControlMode::PercentOutput, -prefs.GetDouble("color spinner motor speed"));
-  } else {
+  SmartDashboard::PutString("Closest Color", std::string(1, closestColor));
+  if(gameData.length() > 0) {
+    currentColorTarget = gameData[0];
+  }
+  if ((currentColorTarget == closestColor) || closestColor == 'N' || currentColorTarget == 'N') {
     colorWheelMotor.Set(ControlMode::PercentOutput, 0);
-  }  
-}
+  } else {
+    colorWheelMotor.Set(ControlMode::PercentOutput, -prefs.GetDouble("color spinner motor speed"));
+  }
 
+}
 void Robot::TestPeriodic() {}
 
 #ifndef RUNNING_FRC_TESTS

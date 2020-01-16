@@ -15,9 +15,11 @@
 #include <rev/ColorMatch.h>
 #include <frc/util/Color.h>
 #include "ctre/Phoenix.h"
-// #include <ctre/TalonFX.h>
+// #include <ctre/phoenix/motorcontrol/can/TalonFX.h>
 #include <frc/shuffleboard/Shuffleboard.h>
 #include "LEDController.h"
+#include <frc/DriverStation.h>
+// #include <frc/cs/CameraServer.h>
 
 
 class Robot : public frc::TimedRobot {
@@ -33,7 +35,8 @@ class Robot : public frc::TimedRobot {
   void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
-  std::tuple<std::string, double> ClosestColor();
+  void HandleVision();
+  std::tuple<char, double> ClosestColor();
   void MakeSlider(std::string, double, double=255);
   void InitializePIDController(rev::CANPIDController);
   // define pin numbers for motors
@@ -81,13 +84,13 @@ class Robot : public frc::TimedRobot {
   frc::Color aimYellow = {0.324, 0.535, 0.14}; 
   frc::Color aimGreen = {0.197, 0.545, 0.256}; 
   frc::Color aimBlue = {0.157, 0.43, 0.412}; 
-
-
+  char currentColorTarget = 'N';
+  // frc::DriverStation driverStation = ::GetInstance()
   //TalonFX Code
 
-  const int TalonDeviceID = 17;
+  // const int TalonDeviceID = 17;
 
-  TalonFX falcon{TalonDeviceID};
+  // ctre::phoenix::motorcontrol::can::TalonFX falcon{TalonDeviceID};
 
 
 

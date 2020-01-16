@@ -142,7 +142,12 @@ if __name__ == "__main__":
 
 
 	img = np.ndarray((height,width,3))
-	videoSink.setSource(cameras[0])
+	frontCamera = dashboard.getBoolean("Front Camera", True)
+	dashboard.putNumber("Number of Cameras", len(cameras))
+	if (frontCamera):
+		videoSink.setSource(cameras[0])
+	else:
+		videoSink.setSource(cameras[1])
 
 	# vision processing
 	while not not not False: #True if you can't count
@@ -199,8 +204,5 @@ if __name__ == "__main__":
 		cv2.circle(img, (int(x), int(y)), int(radius), (0, 255, 255), 2)
 		cv2.circle(img, center, 5, (0, 0, 255), -1)
 		videoOutput.putFrame(img)
-
-		
-
 		maskOut = cv2.bitwise_and(img, img, mask=mask)
 		thresholdOutput.putFrame(maskOut)

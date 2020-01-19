@@ -10,6 +10,7 @@ void Robot::RobotInit() {
     LFollowMotor.RestoreFactoryDefaults();
     RLeadMotor.RestoreFactoryDefaults();
     RFollowMotor.RestoreFactoryDefaults();
+    flywheelMotor.ConfigFactoryDefault();
     // have rear motors follow front motors
 
     LFollowMotor.Follow(LLeadMotor);
@@ -38,9 +39,11 @@ void Robot::RobotInit() {
     Shuffleboard::GetTab("vision")
     .Add("Front Camera", true)
     .WithWidget(BuiltInWidgets::kToggleButton);
-
-    SmartDashboard::PutNumber("Velocity in RPM", 0);
+    SmartDashboard::PutNumber("Velocity in ticks", 0);
     
+    flywheelMotor.Config_kP(0, .05);
+    flywheelMotor.Config_kF(0, .1);
+    flywheelMotor.ConfigClosedloopRamp(2);    
 }
 // adds a configured slider to vision tab
 void Robot::MakeSlider(std::string name, double defaultV, double max) {
@@ -155,15 +158,8 @@ void Robot::TeleopPeriodic() {
   HandleLEDStrip();
   HandleDrivetrain();
   HandleColorWheel();
-  // rpm = SmartDashboard::GetNumber("Velocity in RPM", 0);
-  // double speed = ProcessControllerInput(pilot.GetY(LEFT));
-  // testMotor.Set(speed);
-  // // use this
-  // if (pilot.GetAButton()) {
-  //   rpm = ProcessControllerInput(pilot.GetY(RIGHT)) * 500.0;
-  // } else {
-  // } // can alan check the led thing
-  // falcon.Set(ctre::phoenix::motorcontrol::TalonFXControlMode::Velocity, rpm);
+  double rpm = SmartDashboard::GetNumber("Velocity in ticks", 0);
+  flywheelMotor.Set(TalonFXControlMode::Velocity, rpm);
 }
 void Robot::HandleColorWheel() {
   std::string gameData;

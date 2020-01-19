@@ -15,7 +15,7 @@
 #include <rev/ColorMatch.h>
 #include <frc/util/Color.h>
 #include "ctre/Phoenix.h"
-// #include <ctre/phoenix/motorcontrol/can/TalonFX.h>
+#include <ctre/phoenix/motorcontrol/can/TalonFX.h>
 #include <frc/shuffleboard/Shuffleboard.h>
 #include "LEDController.h"
 #include <frc/DriverStation.h>
@@ -45,6 +45,7 @@ class Robot : public frc::TimedRobot {
   const int RFollowID = 3;
   const int LFollowID = 4;
   const int ColorWheelID = 16;
+  const int FlyWheelID = 17;
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax RFollowMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
@@ -85,6 +86,11 @@ class Robot : public frc::TimedRobot {
   frc::Color aimGreen = {0.197, 0.545, 0.256}; 
   frc::Color aimBlue = {0.157, 0.43, 0.412}; 
   char currentColorTarget = 'N';
+
+  TalonFX flywheelMotor{FlyWheelID};
+
+
+
   // frc::DriverStation driverStation = ::GetInstance()
   //TalonFX Code
 
@@ -106,3 +112,63 @@ class Robot : public frc::TimedRobot {
 
 
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

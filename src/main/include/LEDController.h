@@ -1,25 +1,29 @@
 #include <frc/AddressableLED.h>
 #include <frc/Timer.h>
 #include "enums.h"
-BETTER_ENUM(LED_MODE, int, Red, Green, Rainbow, SolidBlue, SolidYellow, Dot, Ratpack, None);
+BETTER_ENUM(LED_MODE, int, Red, Green, Rainbow, SolidBlue, SolidYellow, Dot, Ratpack, None)
 class LEDController {
     public:
-        int length;
-        frc::AddressableLED ledInterface;
-        //Affected leds
-        std::vector<frc::AddressableLED::LEDData> ledStrip;
-        frc::Timer timer;
+        LED_MODE oldMode = LED_MODE::None;
         int firstPixelHue = 0;
         bool modeChange = false;
-        LED_MODE oldMode = LED_MODE::None;
+        frc::Timer timer;
+        frc::AddressableLED ledInterface;
+        std::vector<frc::AddressableLED::LEDData> ledStrip;
+        int length;
         LEDController(int len, int pin) : ledInterface(pin), ledStrip(len), length(len) {
             ledInterface.SetLength(len);
             ledInterface.SetData(ledStrip);
             ledInterface.Start();
             timer.Start();
         }
+        //Affected leds
     void Set(int index) {
         // https://stackoverflow.com/questions/11452920/how-to-cast-int-to-enum-in-c
+        if (index < 0) { 
+            std::cout << "WARNING: Set index < 0; using 0.\n";
+            index = 0;
+        }
         _set(LED_MODE::_from_integral(index));
     }
     int NumModes() {

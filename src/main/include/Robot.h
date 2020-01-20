@@ -38,6 +38,7 @@ class Robot : public frc::TimedRobot {
   void HandleDrivetrain();
   void HandleLEDStrip();
   void HandleVision();
+  void HandleStuff();
   std::tuple<char, double> ClosestColor();
   void MakeSlider(std::string, double, double=255);
   void InitializePIDController(rev::CANPIDController);
@@ -58,11 +59,7 @@ class Robot : public frc::TimedRobot {
   // intake
   //ctre::VictorSPX 
 
-  //solenoid id
-  const int solenoidID = 1;
 
-  frc::Solenoid intakeOpen{solenoidID};
-  Toggle intakeState{true};
 
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
@@ -79,15 +76,15 @@ class Robot : public frc::TimedRobot {
   //initializes prefreences widget
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
 
-
+  // LED
   LEDController ledStrip{40, 9};
+  int ledMode = 0;
 // http://www.revrobotics.com/sparkmax-users-manual/
 
   //colors
   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
   rev::ColorSensorV3 colorSensor{i2cPort};
   rev::ColorMatch colorMatcher;
-  int ledMode = 0;
 
   TalonSRX colorWheelMotor{ColorWheelID};
   frc::Color aimRed = {0.465, 0.376, 0.158}; 
@@ -98,25 +95,17 @@ class Robot : public frc::TimedRobot {
 
   TalonFX flywheelMotor{FlyWheelID};
 
-
-
-  // frc::DriverStation driverStation = ::GetInstance()
-  //TalonFX Code
-
-  // const int TalonDeviceID = 17;
-
-  // ctre::phoenix::motorcontrol::can::TalonFX falcon{TalonDeviceID};
-
-
-
-  
-  /*
-  in robotPeriodic
-  
-  max velocity = preferences.GetNumber("maxV")
-  falcon.Set(controller input * Max velocity, ctre::longnamespacething::velocity mode)
-  http://www.ctr-electronics.com/downloads/api/cpp/html/classctre_1_1phoenix_1_1motorcontrol_1_1can_1_1_talon_f_x.html#aa3e3514f29187deaa9d843592f42392b
-  */
+  //solenoid id
+  const int solenoidID = -1;
+  const int intakeMotorID = -1;
+  const int shooterID = -1;
+  const int intakeBeltID = -1;
+  frc::Solenoid intakePiston{solenoidID};
+  Toggle intakeAvailable{true};
+  Toggle intakeState{true};
+  VictorSPX intakeMotor{intakeMotorID};
+  VictorSPX intakeBelt{intakeBeltID}; // vertical + bottom
+  VictorSPX shooterBelt{shooterID};
 };
 
 

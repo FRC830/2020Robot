@@ -19,6 +19,8 @@
 #include <frc/shuffleboard/Shuffleboard.h>
 #include "LEDController.h"
 #include <frc/DriverStation.h>
+#include <frc/Solenoid.h>
+#include <Toggle.h>
 // #include <frc/cs/CameraServer.h>
 
 
@@ -53,7 +55,14 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANPIDController LLeadPID{LLeadMotor};
   rev::CANPIDController RLeadPID{RLeadMotor};
+  // intake
+  //ctre::VictorSPX 
 
+  //solenoid id
+  const int solenoidID = 1;
+
+  frc::Solenoid intakeOpen{solenoidID};
+  Toggle intakeState{true};
 
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};

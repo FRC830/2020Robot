@@ -43,7 +43,7 @@ void Robot::RobotInit() {
     
     flywheelMotor.Config_kP(0, .05);
     flywheelMotor.Config_kF(0, .1);
-    flywheelMotor.ConfigClosedloopRamp(2);    
+    flywheelMotor.ConfigClosedloopRamp(2);
 }
 // adds a configured slider to vision tab
 void Robot::MakeSlider(std::string name, double defaultV, double max) {
@@ -132,6 +132,7 @@ void Robot::RobotPeriodic() {
 void Robot::AutonomousInit() {
   InitializePIDController(LLeadPID);
   InitializePIDController(RLeadPID);
+
 }
 
 void Robot::AutonomousPeriodic() {
@@ -141,6 +142,9 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {
   InitializePIDController(LLeadPID);
   InitializePIDController(RLeadPID);
+
+  //open intake
+  intakeOpen.Set(true);
  
 }
 void Robot::HandleVision() {
@@ -158,6 +162,10 @@ void Robot::TeleopPeriodic() {
   HandleLEDStrip();
   HandleDrivetrain();
   HandleColorWheel();
+
+  //manage intake state, toggle with a button
+  intakeOpen.Set(intakeState.toggle(pilot.GetAButton()));
+
   double rpm = SmartDashboard::GetNumber("Velocity in ticks", 0);
   flywheelMotor.Set(TalonFXControlMode::Velocity, rpm);
 }

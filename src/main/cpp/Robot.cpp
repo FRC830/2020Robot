@@ -17,7 +17,7 @@ void Robot::RobotInit() {
 		prefs.PutDouble("p",1.0);
 		prefs.PutDouble("i",0.0);
 		prefs.PutDouble("d",0.0);
-
+		prefs.PutInt("flywheel error", 0);
 		// Configure flywheel
 		flywheelMotor.ConfigFactoryDefault();
 		flywheelMotor.Config_kP(0, .05);
@@ -56,10 +56,11 @@ void Robot::RobotInit() {
 
 // Handle teleop drivetrain code
 void Robot::HandleDrivetrain() {
-	double speed = -ProcessControllerInput(pilot.GetY(LEFT));
+	double speed = ProcessControllerInput(pilot.GetY(LEFT));
 	double turn = ProcessControllerInput(pilot.GetX(RIGHT));
-	double targetVelocity = speed * prefs.GetInt("maxrpm");
-	drivetrain.ArcadeDrive(targetVelocity, turn, true);
+	double targetVelocity = speed;
+	drivetrain.ArcadeDrive(targetVelocity, -turn, true);
+
 
 	// Output useful values
 	frc::SmartDashboard::PutNumber("Speed", speed);
@@ -121,25 +122,30 @@ void Robot::TeleopPeriodic() {
 
 }
 void Robot::HandleStuff() {
-	intakeState.toggle(copilot.GetXButton());
-	SmartDashboard::PutBoolean("isIntaking", intakeState);
-	intakeAvailable.toggle(copilot.GetAButton());
-	SmartDashboard::PutBoolean("canIntake", intakeAvailable);
-	intakePiston.Set(intakeAvailable);
-	intakeMotor.Set(ControlMode::PercentOutput, intakeState ? prefs.GetDouble("intake belt speed",0) : 0);
-	shooterBelt.Set(ControlMode::PercentOutput, intakeState ? prefs.GetDouble("shooter belt speed",0) : 0);
-	
-	if (ProcessControllerInput(copilot.GetTriggerAxis(LEFT)) > 0) {
-		double big = flywheelMotor.GetSelectedSensorVelocity(0);
-		double small = (double)prefs.GetInt("shooter output in ticks", 0);
-		if (small > big) { std::swap(small, big); }
-		double error = (big / small) - 1.0;
-		if (prefs.GetBoolean("wait to shoot") && (error >= .2)) {
-			// reverse motors & wait to spin up
-			shooterBelt.Set(ControlMode::PercentOutput, -prefs.GetDouble("shooter belt speed reverse", 0));
-		} else {
-			shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed", 0));
+	bool isIntaking = ProcessControllerInput(copilot.GetTriggerAxis(LEFT)) > 0;
+	bool runShooterBelt = ProcessControllerInput(copilot.GetTriggerAxis(RIGHT)) > 0;
+	int error = std::abs(flywheelMotor.GetClosedLoopError());
+
+	canIntake.toggle(copilot.GetXButton());
+	isShooting.toggle(copilot.GetAButton());
+
+	SmartDashboard::PutBoolean("isIntaking", isIntaking);
+	SmartDashboard::PutBoolean("canIntake", canIntake);
+	SmartDashboard::PutBoolean("wants to shoot", isShooting);
+
+	intakePiston.Set(canIntake);
+	intakeMotor.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("intake belt speed",0) : 0);
+	shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("shooter belt speed",0) : 0);
+	// turn on shooter belt
+	if (runShooterBelt) {
+		shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed", 0));
+	}
+
+	if (isShooting) {
+		if (error > prefs.GetInt("flywheel error", 0)) {
+			shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? -prefs.GetDouble("shooter belt speed reverse",0) : 0);
 		}
+		
 		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("shooter output in ticks", 0));
 	}
 }
@@ -165,12 +171,12 @@ void Robot::HandleColorWheel() {
 }
 
 /*
-	_    _ _______ _____ _      _____ _________     __  ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
- | |  | |__   __|_   _| |    |_   _|__   __\ \   / / |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
- | |  | |  | |    | | | |      | |    | |   \ \_/ /  | |__  | |  | |  \| | |       | |    | || |  | |  \| | (___  
- | |  | |  | |    | | | |      | |    | |    \   /   |  __| | |  | | . ` | |       | |    | || |  | | . ` |\___ \ 
- | |__| |  | |   _| |_| |____ _| |_   | |     | |    | |    | |__| | |\  | |____   | |   _| || |__| | |\  |____) |
-	\____/   |_|  |_____|______|_____|  |_|     |_|    |_|     \____/|_| \_|\_____|  |_|  |_____\____/|_| \_|_____/                                            
+     _    _ _______ _____ _      _____ _________     __  ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
+    | |  | |__   __|_   _| |    |_   _|__   __\ \   / / |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
+   | |  | |  | |    | | | |      | |    | |   \ \_/ /  | |__  | |  | |  \| | |       | |    | || |  | |  \| | (___  
+  |  |  | | | |    | | | |      | |    | |    \  /   |  __|  | |  | | . ` | |       | |    | || |  | | . ` |\___ \ 
+ |  |__| | | |   _| |_| |____ _| |_   | |     | |    | |    | |__| | |\  | |____   | |   _| || |__| | |\  |____) 
+|\____/   |_|  |_____|______|_____|  |_|     |_|    |_|     \____/|_| \_|\_____|  |_|  |_____\____/|_| \_|_____/                                            
 */
 // adds a configured slider to vision tab
 void Robot::MakeSlider(std::string name, double defaultV, double max) {

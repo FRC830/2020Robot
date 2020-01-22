@@ -4,7 +4,7 @@
 class SparkController: public frc::SpeedController {
 public:
     double maxRPM = 0;
-    bool encoderEnabled = true;
+    bool encoderEnabled = false;
     rev::CANSparkMax motor;
     rev::CANEncoder encoder;
     rev::CANPIDController pid;

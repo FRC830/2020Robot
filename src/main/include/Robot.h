@@ -23,7 +23,6 @@
 #include <Toggle.h>
 // #include <frc/cs/CameraServer.h>
 
-
 class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
@@ -43,10 +42,10 @@ class Robot : public frc::TimedRobot {
   void MakeSlider(std::string, double, double=255);
   void InitializePIDController(rev::CANPIDController);
   // define pin numbers for motors
-  const int RLeadID = 1;
-  const int LLeadID = 2;
-  const int RFollowID = 3;
-  const int LFollowID = 4;
+  const int RLeadID = 2;
+  const int LLeadID = 4;
+  const int RFollowID = 1;
+  const int LFollowID = 3;
   const int ColorWheelID = 16;
   const int FlyWheelID = 17;
   //defines motors and PID controllers
@@ -64,6 +63,7 @@ class Robot : public frc::TimedRobot {
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
   SparkController LLead{LLeadMotor, LLeadPID};
+  
   frc::DifferentialDrive drivetrain{LLead, RLead};
 
   //create controls
@@ -101,72 +101,9 @@ class Robot : public frc::TimedRobot {
   const int shooterID = -1;
   const int intakeBeltID = -1;
   frc::Solenoid intakePiston{solenoidID};
-  Toggle intakeAvailable{true};
-  Toggle intakeState{true};
+  Toggle canIntake{false};
+  Toggle isShooting{false};
   VictorSPX intakeMotor{intakeMotorID};
   VictorSPX intakeBelt{intakeBeltID}; // vertical + bottom
   VictorSPX shooterBelt{shooterID};
 };
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

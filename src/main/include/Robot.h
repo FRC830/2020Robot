@@ -96,7 +96,7 @@ class Robot : public frc::TimedRobot {
   TalonFX flywheelMotor{FlyWheelID};
 
   //solenoid id
-  const int solenoidID = -1;
+  const int solenoidID = 0;
   const int intakeMotorID = -1;
   const int shooterID = -1;
   const int intakeBeltID = -1;

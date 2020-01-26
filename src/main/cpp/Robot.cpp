@@ -10,13 +10,14 @@ void Robot::RobotInit() {
 		LFollowMotor.RestoreFactoryDefaults();
 		RLeadMotor.RestoreFactoryDefaults();
 		RFollowMotor.RestoreFactoryDefaults();
-		LFollowMotor.Follow(LLeadMotor);
-		RFollowMotor.Follow(RLeadMotor);
+		LFollowMotor.Follow(LLeadMotor, false);
+		RFollowMotor.Follow(RLeadMotor, true); // differential drive inverts the right motor
 		prefs.PutDouble("deadzone", 0.1);
 		prefs.PutInt("maxrpm", 2400);
 		prefs.PutDouble("p",1.0);
 		prefs.PutDouble("i",0.0);
 		prefs.PutDouble("d",0.0);
+    prefs.PutBoolean("use encoder", false);
 		prefs.PutInt("flywheel error", 0);
 		// Configure flywheel
 		flywheelMotor.ConfigFactoryDefault();
@@ -100,6 +101,8 @@ void Robot::AutonomousPeriodic() {
 }
 	
 void Robot::TeleopInit() {
+  RLead.UseEncoder(prefs.GetBoolean("use encoder"));
+  LLead.UseEncoder(prefs.GetBoolean("use encoder"));
 	InitializePIDController(LLeadPID);
 	InitializePIDController(RLeadPID);
 }

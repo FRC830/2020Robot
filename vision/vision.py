@@ -178,31 +178,29 @@ if __name__ == "__main__":
 		mask = cv2.dilate(mask, None, iterations=2)
 		
 		# Find 'parent' contour(s) with simple chain countour algorithm
-		contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+		contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) #blobs
 		# https://github.com/jrosebr1/imutils/blob/master/imutils/convenience.py#L162
-		contours = contours[1]
-		if len(contours) == 0:
-			continue
-		
+		contours = contours[1] 
 		max_contour = max(contours, key=cv2.contourArea)
-		((x, y), radius) = cv2.minEnclosingCircle(max_contour) # returns point, radius
-		originalRadius = dashboard.getNumber("Original", 7)
-		# original radius * distance away / width as described in link #3
-		focalLength = (originalRadius * 24.0) / 3.5
-		distanceAway = (3.5 * focalLength) / radius
+		if len(contours) > 0:
+			((x, y), radius) = cv2.minEnclosingCircle(max_contour) # returns point, radius
+			originalRadius = dashboard.getNumber("Original", 7)
+			# original radius * distance away / width as described in link #3
+			focalLength = (originalRadius * 24.0) / 3.5
+			distanceAway = (3.5 * focalLength) / radius
 
-		dashboard.putNumber("Radius", radius)
-		dashboard.putNumber("Focal Length", focalLength)
-		dashboard.putNumber("Distance Away", distanceAway)
-		if radius < dashboard.getNumber("Min Radius", 1):
-			continue
+			dashboard.putNumber("Radius", radius)
+			dashboard.putNumber("Focal Length", focalLength)
+			dashboard.putNumber("Distance Away", distanceAway)
+			
+			if radius > dashboard.getNumber("Min Radius", 1):
+				M = cv2.moments(max_contour)
+				center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+				dashboard.putNumber("centerX", center[0])
 
-		M = cv2.moments(max_contour)
-		center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-		dashboard.putNumber("centerX", center[0])
-
-		cv2.circle(img, (int(x), int(y)), int(radius), (0, 255, 255), 2)
-		cv2.circle(img, center, 5, (0, 0, 255), -1)
+				cv2.circle(img, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+				cv2.circle(img, center, 5, (0, 0, 255), -1)
+		
 		videoOutput.putFrame(img)
 		maskOut = cv2.bitwise_and(img, img, mask=mask)
 		thresholdOutput.putFrame(maskOut)

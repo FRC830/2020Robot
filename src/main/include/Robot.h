@@ -56,20 +56,16 @@ class Robot : public frc::TimedRobot {
   rev::CANPIDController LLeadPID{LLeadMotor};
   rev::CANPIDController RLeadPID{RLeadMotor};
   // intake
-  //ctre::VictorSPX 
-
-
 
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
   SparkController LLead{LLeadMotor, LLeadPID};
-  
   frc::DifferentialDrive drivetrain{LLead, RLead};
 
   //create controls
   frc::XboxController pilot{0};
   frc::XboxController copilot{1};
-  //abrieveate frc::GenericHID::kLeftHand to LEFT, etc
+  //frc::GenericHID::kLeftHand to LEFT, etc
   static const frc::GenericHID::JoystickHand LEFT = frc::GenericHID::kLeftHand;
   static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand;
 

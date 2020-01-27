@@ -48,15 +48,14 @@ class Robot : public frc::TimedRobot {
   const int LFollowID = 3;
   const int ColorWheelID = 16;
   const int FlyWheelID = 17;
+
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax RFollowMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax LLeadMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax RFollowMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax LLeadMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANPIDController LLeadPID{LLeadMotor};
   rev::CANPIDController RLeadPID{RLeadMotor};
-  // intake
-
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
   SparkController LLead{LLeadMotor, LLeadPID};

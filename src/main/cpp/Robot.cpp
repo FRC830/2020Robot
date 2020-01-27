@@ -3,56 +3,55 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 
 using namespace frc;
-
 void Robot::RobotInit() {
-		// Configure drivetrain
-		LLeadMotor.RestoreFactoryDefaults();
-		LFollowMotor.RestoreFactoryDefaults();
-		RLeadMotor.RestoreFactoryDefaults();
-		RFollowMotor.RestoreFactoryDefaults();
-		LFollowMotor.Follow(LLeadMotor, false);
-		RFollowMotor.Follow(RLeadMotor, true); // differential drive inverts the right motor
-		prefs.PutDouble("deadzone", 0.1);
-		prefs.PutInt("maxrpm", 2400);
-		prefs.PutDouble("p",1.0);
-		prefs.PutDouble("i",0.0);
-		prefs.PutDouble("d",0.0);
-    prefs.PutBoolean("use encoder", false);
-		prefs.PutInt("flywheel error", 0);
-		// Configure flywheel
-		flywheelMotor.ConfigFactoryDefault();
-		flywheelMotor.Config_kP(0, .05);
-		flywheelMotor.Config_kF(0, .1);
-		flywheelMotor.Config_kI(0, 6E-05);
-		flywheelMotor.ConfigClosedloopRamp(2);
-		flywheelMotor.SetInverted(true);
-		prefs.PutInt("shooter output in ticks", 8000);
-		
-		// configure intake/shooter
-		prefs.PutBoolean("wait to shoot", false);
-		prefs.PutDouble("intake motor speed", 0.2);
-		prefs.PutDouble("intake belt speed", 0.2);
-		prefs.PutDouble("shooter belt speed", 0.2);
-		prefs.PutDouble("shooter belt speed reverse", 0.2);
-		// output vision testing values
-		MakeSlider("lowerH", 15, 179);
-		MakeSlider("lowerS", 100);
-		MakeSlider("lowerV", 130);
-		MakeSlider("upperH", 60, 179);
-		MakeSlider("upperS", 255);
-		MakeSlider("upperV", 255);
-		prefs.PutDouble("color spinner motor speed",0.5);
+	// Configure drivetrain
+	LLeadMotor.RestoreFactoryDefaults();
+	LFollowMotor.RestoreFactoryDefaults();
+	RLeadMotor.RestoreFactoryDefaults();
+	RFollowMotor.RestoreFactoryDefaults();
+	LFollowMotor.Follow(LLeadMotor, false);
+	RFollowMotor.Follow(RLeadMotor, false); // differential drive inverts the right motor
+	prefs.PutDouble("deadzone", 0.1);
+	prefs.PutInt("maxrpm", 2400);
+	prefs.PutDouble("p",1.0);
+	prefs.PutDouble("i",0.0);
+	prefs.PutDouble("d",0.0);
+	prefs.PutBoolean("use encoder", false);
+	prefs.PutInt("flywheel error", 0);
+	// Configure flywheel
+	flywheelMotor.ConfigFactoryDefault();
+	flywheelMotor.Config_kP(0, .05);
+	flywheelMotor.Config_kF(0, .1);
+	flywheelMotor.Config_kI(0, 6E-05);
+	flywheelMotor.ConfigClosedloopRamp(2);
+	flywheelMotor.SetInverted(true);
+	prefs.PutInt("shooter output in ticks", 8000);
+	
+	// configure intake/shooter
+	prefs.PutBoolean("wait to shoot", false);
+	prefs.PutDouble("intake motor speed", 0.2);
+	prefs.PutDouble("intake belt speed", 0.2);
+	prefs.PutDouble("shooter belt speed", 0.2);
+	prefs.PutDouble("shooter belt speed reverse", 0.2);
+	// output vision \ing values
+	MakeSlider("lowerH", 15, 179);
+	MakeSlider("lowerS", 100);
+	MakeSlider("lowerV", 130);
+	MakeSlider("upperH", 60, 179);
+	MakeSlider("upperS", 255);
+	MakeSlider("upperV", 255);
+	prefs.PutDouble("color spinner motor speed",0.5);
 
-		// initialize color motor
-		colorMatcher.AddColorMatch(aimRed);
-		colorMatcher.AddColorMatch(aimYellow);
-		colorMatcher.AddColorMatch(aimBlue);
-		colorMatcher.AddColorMatch(aimGreen);
+	// initialize color motor
+	colorMatcher.AddColorMatch(aimRed);
+	colorMatcher.AddColorMatch(aimYellow);
+	colorMatcher.AddColorMatch(aimBlue);
+	colorMatcher.AddColorMatch(aimGreen);
 
-		// Vision Camera
-		Shuffleboard::GetTab("vision")
-		.Add("Front Camera", true)
-		.WithWidget(BuiltInWidgets::kToggleButton);
+	// Vision Camera
+	Shuffleboard::GetTab("vision")
+	.Add("Front Camera", true)
+	.WithWidget(BuiltInWidgets::kToggleButton);
 		
 }
 
@@ -65,12 +64,12 @@ void Robot::HandleDrivetrain() {
 
 
 	// Output useful values
-	frc::SmartDashboard::PutNumber("Speed", speed);
+	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
+	frc::SmartDashboard::PutNumber("Current R motor velocity", RLead.GetVelocity());
+	frc::SmartDashboard::PutNumber("Desired", speed * 5500);
 	frc::SmartDashboard::PutNumber("Turn", turn);
-	frc::SmartDashboard::PutNumber("left lead encoder", LLead.GetEncoder());
-	frc::SmartDashboard::PutNumber("right lead encoder", RLead.GetEncoder());
-	frc::SmartDashboard::PutNumber("left motor applied", LLead.GetApplied());
-	frc::SmartDashboard::PutNumber("right lead applied", RLead.GetApplied());
+	frc::SmartDashboard::PutNumber("left lead position", LLead.GetPosition());
+	frc::SmartDashboard::PutNumber("right lead position", RLead.GetPosition());
 }
 // Handle LED Strip code
 void Robot::HandleLEDStrip() {
@@ -197,16 +196,11 @@ void Robot::MakeSlider(std::string name, double defaultV, double max) {
 void Robot::InitializePIDController(rev::CANPIDController pid_controller) {
 		
 	// default smart motion coefficients
-	double kMinVel = 0, kMaxAcc = 1500, kAllErr = 0;
-
 	pid_controller.SetOutputRange(-1, 1);
-	pid_controller.SetSmartMotionMinOutputVelocity(kMinVel);
-	pid_controller.SetSmartMotionMaxAccel(kMaxAcc);
-	pid_controller.SetSmartMotionAllowedClosedLoopError(kAllErr);
-	pid_controller.SetSmartMotionMaxVelocity(prefs.GetInt("maxrpm"));
-	pid_controller.SetP(prefs.GetInt("p"));
-	pid_controller.SetI(prefs.GetInt("i"));
-	pid_controller.SetD(prefs.GetInt("d"));
+	pid_controller.SetP(0);
+	pid_controller.SetI(0);
+	pid_controller.SetD(0);
+	pid_controller.SetFF(0.0001755);
 }
 // apply deadzone & possible scaling, etc
 double Robot::ProcessControllerInput(double val) {

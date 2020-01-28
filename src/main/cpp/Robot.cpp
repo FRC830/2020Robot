@@ -129,29 +129,31 @@ void Robot::HandleStuff() {
 	bool runShooterBelt = ProcessControllerInput(copilot.GetTriggerAxis(RIGHT)) > 0;
 	int error = std::abs(flywheelMotor.GetClosedLoopError());
 
-	canIntake.toggle(copilot.GetXButton());
-	isShooting.toggle(copilot.GetAButton());
+	// canIntake.toggle(copilot.GetXButton());
+	// isShooting.toggle(copilot.GetAButton());
 
-	SmartDashboard::PutBoolean("isIntaking", isIntaking);
-	SmartDashboard::PutBoolean("canIntake", canIntake);
-	SmartDashboard::PutBoolean("wants to shoot", isShooting);
+	// SmartDashboard::PutBoolean("isIntaking", isIntaking);
+	// SmartDashboard::PutBoolean("canIntake", canIntake);
+	// SmartDashboard::PutBoolean("wants to shoot", isShooting);
 
-	intakePiston.Set(canIntake);
-	intakeMotor.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("intake belt speed",0) : 0);
-	shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("shooter belt speed",0) : 0);
+	// intakePiston.Set(canIntake);
+	// intakeMotor.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("intake belt speed",0) : 0);
+	// shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("shooter belt speed",0) : 0);
+	intakeMotor.Set(ControlMode::PercentOutput, prefs.GetDouble("intake belt speed",0));
+	intakeMotor.Set(ControlMode::PercentOutput, prefs.GetDouble("intake belt speed",0));
+	shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed",0));
 	// turn on shooter belt
-	if (runShooterBelt) {
-		shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed", 0));
-	}
+	// if (runShooterBelt) {
+	// 	shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed", 0));
+	// }
 
-	if (isShooting) {
-		if (error > prefs.GetInt("flywheel error", 0)) {
-			shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? -prefs.GetDouble("shooter belt speed reverse",0) : 0);
-		}
-		
+	// if (isShooting) {
+	// 	if (error > prefs.GetInt("flywheel error", 0)) {
+	// 		shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? -prefs.GetDouble("shooter belt speed reverse",0) : 0);
+	// 	}
+	if (copilot.GetAButton()) {
 		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("shooter output in ticks", 0));
-	}
-	else {
+	} else {
 		flywheelMotor.Set(TalonFXControlMode::Velocity, 0);
 	}
 }

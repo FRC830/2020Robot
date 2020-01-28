@@ -91,13 +91,13 @@ class Robot : public frc::TimedRobot {
   TalonFX flywheelMotor{FlyWheelID};
 
   //solenoid id
-  const int solenoidID = 0;
+  // const int solenoidID = 0;
   const int intakeMotorID = -1;
   const int shooterID = -1;
   const int intakeBeltID = -1;
-  frc::Solenoid intakePiston{solenoidID};
-  Toggle canIntake{false};
-  Toggle isShooting{false};
+  // frc::Solenoid intakePiston{solenoidID};
+  // Toggle canIntake{false};
+  // Toggle isShooting{false};
   VictorSPX intakeMotor{intakeMotorID};
   VictorSPX intakeBelt{intakeBeltID}; // vertical + bottom
   VictorSPX shooterBelt{shooterID};

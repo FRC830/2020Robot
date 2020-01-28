@@ -1,4 +1,4 @@
-  #pragma once
+#pragma once
 
 #include <string>
 
@@ -21,6 +21,8 @@
 #include <frc/DriverStation.h>
 #include <frc/Solenoid.h>
 #include <Toggle.h>
+
+
 // #include <frc/cs/CameraServer.h>
 
 class Robot : public frc::TimedRobot {
@@ -38,6 +40,12 @@ class Robot : public frc::TimedRobot {
   void HandleLEDStrip();
   void HandleVision();
   void HandleStuff();
+
+  int runsAfterPlayback = 0;
+
+  void print(std::vector<double> input);
+  void printSD(std::vector<double> input, std::string name);
+  
   std::tuple<char, double> ClosestColor();
   void MakeSlider(std::string, double, double=255);
   void InitializePIDController(rev::CANPIDController);
@@ -48,6 +56,8 @@ class Robot : public frc::TimedRobot {
   const int LFollowID = 3;
   const int ColorWheelID = 16;
   const int FlyWheelID = 17;
+  bool isRecording = false;
+  bool Adown = false;
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax RFollowMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
@@ -55,11 +65,17 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANPIDController LLeadPID{LLeadMotor};
   rev::CANPIDController RLeadPID{RLeadMotor};
+  rev::CANPIDController LFollowPID{LFollowMotor};
+  rev::CANPIDController RFollowPID{RFollowMotor};
   // intake
 
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
   SparkController LLead{LLeadMotor, LLeadPID};
+
+  SparkController RFollow{RFollowMotor, RFollowPID};
+  SparkController LFollow{LFollowMotor, LFollowPID};
+
   frc::DifferentialDrive drivetrain{LLead, RLead};
 
   //create controls
@@ -88,6 +104,7 @@ class Robot : public frc::TimedRobot {
   frc::Color aimGreen = {0.197, 0.545, 0.256}; 
   frc::Color aimBlue = {0.157, 0.43, 0.412}; 
   char currentColorTarget = 'N';
+  
 
   TalonFX flywheelMotor{FlyWheelID};
 
@@ -102,4 +119,9 @@ class Robot : public frc::TimedRobot {
   VictorSPX intakeMotor{intakeMotorID};
   VictorSPX intakeBelt{intakeBeltID}; // vertical + bottom
   VictorSPX shooterBelt{shooterID};
+
+  std::vector<double> leftLeadMotorValues;
+  std::vector<double> rightLeadMotorValues;
+  std::vector<double> leftFollowMotorValues;
+  std::vector<double> rightFollowMotorValues;
 };

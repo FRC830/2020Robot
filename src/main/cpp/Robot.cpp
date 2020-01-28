@@ -2,6 +2,7 @@
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
 
+
 using namespace frc;
 
 void Robot::RobotInit() {
@@ -17,7 +18,7 @@ void Robot::RobotInit() {
 		prefs.PutDouble("p",1.0);
 		prefs.PutDouble("i",0.0);
 		prefs.PutDouble("d",0.0);
-    prefs.PutBoolean("use encoder", false);
+    	prefs.PutBoolean("use encoder", false);
 		prefs.PutInt("flywheel error", 0);
 		// Configure flywheel
 		flywheelMotor.ConfigFactoryDefault();
@@ -55,15 +56,37 @@ void Robot::RobotInit() {
 		.WithWidget(BuiltInWidgets::kToggleButton);
 		
 }
-
+void Robot::print(std::vector<double> input)
+{
+	int size = input.size();
+	for (int i = 0; i < size; i++) {
+		std::cout << input.at(i) << ',';
+	}
+}
+void Robot::printSD(std::vector<double> input, std::string name)
+{
+	int size = input.size();
+	for (int i = 0; i < size; i++) {
+		SmartDashboard::PutNumber(std::to_string(i) + name, input.at(i));
+	}
+}
 // Handle teleop drivetrain code
 void Robot::HandleDrivetrain() {
-	double speed = ProcessControllerInput(pilot.GetY(LEFT));
-	double turn = ProcessControllerInput(pilot.GetX(RIGHT));
-	double targetVelocity = speed;
-	drivetrain.ArcadeDrive(targetVelocity, -turn, true);
-
-
+	double speed;
+	double turn;
+	double targetVelocity;
+	if(!PlayingBack)
+	{
+		speed = ProcessControllerInput(pilot.GetY(LEFT));
+		turn = ProcessControllerInput(pilot.GetX(RIGHT));
+		targetVelocity = speed;
+		drivetrain.ArcadeDrive(targetVelocity, -turn, true);
+	}
+	else if (PlayingBack)
+	{
+		runsAfterPlayback++;
+	}
+	
 	// Output useful values
 	frc::SmartDashboard::PutNumber("Speed", speed);
 	frc::SmartDashboard::PutNumber("Turn", turn);
@@ -152,7 +175,44 @@ void Robot::HandleStuff() {
 		
 		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("shooter output in ticks", 0));
 	}
+	
+	//recording/.playback options
+	//recording
+	if(pilot.GetAButtonPressed())
+	{
+		isRecording = !isRecording;
+		LLeadMotor.RestoreFactoryDefaults();
+		LFollowMotor.RestoreFactoryDefaults();
+		RLeadMotor.RestoreFactoryDefaults();
+		RFollowMotor.RestoreFactoryDefaults();
+		if(!isRecording){
+			print(leftLeadMotorValues);
+			print(leftFollowMotorValues);
+			print(rightLeadMotorValues);
+			print(rightFollowMotorValues);
+			printSD(leftLeadMotorValues, "LL");
+			printSD(leftFollowMotorValues, "LF");
+			printSD(rightLeadMotorValues, "RL");
+			printSD(rightFollowMotorValues, "RF");
+		}else{
+			leftLeadMotorValues.clear();
+			leftFollowMotorValues.clear();
+			rightLeadMotorValues.clear();
+			rightFollowMotorValues.clear();
+		}
+	}
+	
+	
+	if(isRecording){
+		leftLeadMotorValues.push_back(LLead.GetEncoder());
+		leftFollowMotorValues.push_back(LFollow.GetEncoder());
+		rightLeadMotorValues.push_back(RLead.GetEncoder());
+		rightFollowMotorValues.push_back(RFollow.GetEncoder());
+	}
+	//playback
+
 }
+
 void Robot::HandleColorWheel() {
 	std::string gameData;
 	gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
@@ -232,6 +292,10 @@ std::tuple<char, double> Robot::ClosestColor() {
 	}
 	return std::make_tuple(color, confidence);
 }
+std::vector<double> leftLeadMotorValues;
+std::vector<double> rightLeadMotorValues;
+std::vector<double> leftFollowMotorValues;
+std::vector<double> rightFollowMotorValues;
 void Robot::TestPeriodic() {}
 
 #ifndef RUNNING_FRC_TESTS

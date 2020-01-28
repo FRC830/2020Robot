@@ -151,6 +151,9 @@ void Robot::HandleStuff() {
 		
 		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("shooter output in ticks", 0));
 	}
+	else {
+		flywheelMotor.Set(TalonFXControlMode::Velocity, 0);
+	}
 }
 void Robot::HandleColorWheel() {
 	std::string gameData;

@@ -57,6 +57,7 @@ class Robot : public frc::TimedRobot {
   const int ColorWheelID = 16;
   const int FlyWheelID = 17;
   bool isRecording = false;
+  bool PlayingBack = false;
   bool Adown = false;
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
@@ -124,4 +125,7 @@ class Robot : public frc::TimedRobot {
   std::vector<double> rightLeadMotorValues;
   std::vector<double> leftFollowMotorValues;
   std::vector<double> rightFollowMotorValues;
+
+  //we need to add velocity PID as well
+  double kPposi = 0.1, kIposi = 1e-4, kDposi = 1;
 };

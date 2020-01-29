@@ -75,6 +75,7 @@ void Robot::HandleDrivetrain() {
 	double speed;
 	double turn;
 	double targetVelocity;
+	
 	if(!PlayingBack)
 	{
 		speed = ProcessControllerInput(pilot.GetY(LEFT));
@@ -85,6 +86,10 @@ void Robot::HandleDrivetrain() {
 	else if (PlayingBack)
 	{
 		runsAfterPlayback++;
+		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
 	}
 	
 	// Output useful values
@@ -181,10 +186,10 @@ void Robot::HandleStuff() {
 	if(pilot.GetAButtonPressed())
 	{
 		isRecording = !isRecording;
-		LLeadMotor.RestoreFactoryDefaults();
-		LFollowMotor.RestoreFactoryDefaults();
-		RLeadMotor.RestoreFactoryDefaults();
-		RFollowMotor.RestoreFactoryDefaults();
+		LLeadMotor.GetEncoder().SetPosition(0.0);
+		LFollowMotor.GetEncoder().SetPosition(0.0);
+		RLeadMotor.GetEncoder().SetPosition(0.0);
+		RFollowMotor.GetEncoder().SetPosition(0.0);
 		if(!isRecording){
 			print(leftLeadMotorValues);
 			print(leftFollowMotorValues);
@@ -209,7 +214,42 @@ void Robot::HandleStuff() {
 		rightLeadMotorValues.push_back(RLead.GetEncoder());
 		rightFollowMotorValues.push_back(RFollow.GetEncoder());
 	}
+
 	//playback
+	if(pilot.GetBButtonPressed())
+	{
+		LLeadMotor.GetEncoder().SetPosition(0.0);
+		LFollowMotor.GetEncoder().SetPosition(0.0);
+		RLeadMotor.GetEncoder().SetPosition(0.0);
+		RFollowMotor.GetEncoder().SetPosition(0.0);
+		
+		PlayingBack = !PlayingBack;
+
+		if (PlayingBack)
+		{
+			LLeadMotor.GetPIDController().SetP(kPposi);
+			LLeadMotor.GetPIDController().SetI(kIposi);
+			LLeadMotor.GetPIDController().SetD(kDposi);
+
+			LFollowMotor.GetPIDController().SetP(kPposi);
+			LFollowMotor.GetPIDController().SetI(kIposi);
+			LFollowMotor.GetPIDController().SetD(kDposi);
+
+			RLeadMotor.GetPIDController().SetP(kPposi);
+			RLeadMotor.GetPIDController().SetI(kIposi);
+			RLeadMotor.GetPIDController().SetD(kDposi);
+
+			RFollowMotor.GetPIDController().SetP(kPposi);
+			RFollowMotor.GetPIDController().SetI(kIposi);
+			RFollowMotor.GetPIDController().SetD(kDposi);
+		}
+	}
+
+	if (PlayingBack)
+	{
+			
+	}
+
 
 }
 

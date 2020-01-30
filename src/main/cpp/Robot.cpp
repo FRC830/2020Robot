@@ -156,7 +156,7 @@ void Robot::HandleStuff() {
 	// 	if (error > prefs.GetInt("flywheel error", 0)) {
 	// 		shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? -prefs.GetDouble("shooter belt speed reverse",0) : 0);
 	// 	}
-	if (copilot.GetAButton()) {
+	if (pilot.GetAButton()) {
 		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("shooter output in ticks", 0));
 	} else {
 		flywheelMotor.Set(TalonFXControlMode::Velocity, 0);

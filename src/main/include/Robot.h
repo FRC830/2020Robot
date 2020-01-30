@@ -21,6 +21,8 @@
 #include <frc/DriverStation.h>
 #include <frc/Solenoid.h>
 #include <Toggle.h>
+#include <frc/DigitalInput.h>
+#include <frc/AnalogInput.h>
 // #include <frc/cs/CameraServer.h>
 
 class Robot : public frc::TimedRobot {
@@ -92,13 +94,14 @@ class Robot : public frc::TimedRobot {
 
   //solenoid id
   // const int solenoidID = 0;
-  const int intakeMotorID = -1;
-  const int shooterID = -1;
-  const int intakeBeltID = -1;
+  const int intakeMotorID = 5;
+  const int shooterID = 6;
+  const int intakeBeltID = 7;
   // frc::Solenoid intakePiston{solenoidID};
   // Toggle canIntake{false};
   // Toggle isShooting{false};
   VictorSPX intakeMotor{intakeMotorID};
-  VictorSPX intakeBelt{intakeBeltID}; // vertical + bottom
+  TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
   VictorSPX shooterBelt{shooterID};
+  frc::AnalogInput lineBreak{0};
 };

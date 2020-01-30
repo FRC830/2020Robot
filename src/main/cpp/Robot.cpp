@@ -25,14 +25,18 @@ void Robot::RobotInit() {
 	flywheelMotor.Config_kI(0, 6E-05);
 	flywheelMotor.ConfigClosedloopRamp(2);
 	flywheelMotor.SetInverted(true);
+	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
 	prefs.PutInt("shooter output in ticks", 8000);
 	
 	// configure intake/shooter
 	prefs.PutBoolean("wait to shoot", false);
-	prefs.PutDouble("intake motor speed", 0.2);
-	prefs.PutDouble("intake belt speed", 0.2);
-	prefs.PutDouble("shooter belt speed", 0.2);
-	prefs.PutDouble("shooter belt speed reverse", 0.2);
+	SmartDashboard::PutNumber("intake motor", 0);
+	SmartDashboard::PutNumber("intake belt", 0);
+	SmartDashboard::PutNumber("shooter belt", 0);
+	// prefs.PutDouble("intake motor speed", 0.2);
+	// prefs.PutDouble("intake belt speed", 0.2);
+	// prefs.PutDouble("shooter belt speed", 0.2);
+	// prefs.PutDouble("shooter belt speed reverse", 0.2);
 	// output vision \ing values
 	MakeSlider("lowerH", 15, 179);
 	MakeSlider("lowerS", 100);
@@ -96,7 +100,7 @@ void Robot::AutonomousInit() {
 }
 
 void Robot::AutonomousPeriodic() {
- 
+	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
 }
 	
 void Robot::TeleopInit() {
@@ -121,6 +125,7 @@ void Robot::TeleopPeriodic() {
 	HandleDrivetrain();
 	HandleColorWheel();
 	HandleStuff();
+
 	//manage intake state, toggle with a button
 
 }
@@ -139,9 +144,9 @@ void Robot::HandleStuff() {
 	// intakePiston.Set(canIntake);
 	// intakeMotor.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("intake belt speed",0) : 0);
 	// shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("shooter belt speed",0) : 0);
-	intakeMotor.Set(ControlMode::PercentOutput, prefs.GetDouble("intake belt speed",0));
-	intakeMotor.Set(ControlMode::PercentOutput, prefs.GetDouble("intake belt speed",0));
-	shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed",0));
+	intakeMotor.Set(ControlMode::PercentOutput, SmartDashboard::GetNumber("intake motor", 0));
+	intakeBelt.Set(ControlMode::PercentOutput, SmartDashboard::GetNumber("intake belt", 0));
+	shooterBelt.Set(ControlMode::PercentOutput, SmartDashboard::GetNumber("shooter belt", 0));
 	// turn on shooter belt
 	// if (runShooterBelt) {
 	// 	shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed", 0));

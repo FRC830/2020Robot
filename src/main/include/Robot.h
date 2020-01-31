@@ -103,5 +103,6 @@ class Robot : public frc::TimedRobot {
   VictorSPX intakeMotor{intakeMotorID};
   TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
   VictorSPX shooterBelt{shooterID};
-  frc::AnalogInput lineBreak{0};
+  frc::DigitalInput lineBreak{0};
+  frc::DigitalInput lineBreak2{1};
 };

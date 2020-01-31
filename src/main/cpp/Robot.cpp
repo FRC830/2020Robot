@@ -25,7 +25,8 @@ void Robot::RobotInit() {
 	flywheelMotor.Config_kI(0, 6E-05);
 	flywheelMotor.ConfigClosedloopRamp(2);
 	flywheelMotor.SetInverted(true);
-	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
+	frc::SmartDashboard::PutNumber("Line Break Sensor", lineBreak.Get());
+	frc::SmartDashboard::PutNumber("Line Break Sensor 2", lineBreak2.Get());
 	prefs.PutInt("shooter output in ticks", 8000);
 	
 	// configure intake/shooter
@@ -90,7 +91,8 @@ void Robot::HandleLEDStrip() {
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
 void Robot::RobotPeriodic() {
-
+	frc::SmartDashboard::PutNumber("Line Break Sensor", lineBreak.Get());
+	frc::SmartDashboard::PutNumber("Line Break Sensor 2", lineBreak2.Get());
 }
 
 void Robot::AutonomousInit() {
@@ -100,7 +102,7 @@ void Robot::AutonomousInit() {
 }
 
 void Robot::AutonomousPeriodic() {
-	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
+
 }
 	
 void Robot::TeleopInit() {

@@ -58,10 +58,20 @@ void Robot::RobotInit() {
 }
 void Robot::print(std::vector<double> input)
 {
-	int size = input.size();
+	/*int size = input.size();
 	for (int i = 0; i < size; i++) {
 		std::cout << input.at(i) << ',';
+	}*/
+
+	std::ofstream values;
+
+	values.open ("vectors.txt");
+	int size = input.size() - 1;
+	for (int i = 0; i < size; i++) {
+		values << input.at(i) << ',';
 	}
+	values << "\n";
+	values.close();
 }
 void Robot::printSD(std::vector<double> input, std::string name)
 {
@@ -82,16 +92,26 @@ void Robot::HandleDrivetrain() {
 		turn = ProcessControllerInput(pilot.GetX(RIGHT));
 		targetVelocity = speed;
 		drivetrain.ArcadeDrive(targetVelocity, -turn, true);
+		
 	}
 	else if (PlayingBack)
 	{
-		runsAfterPlayback++;
 		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
 		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
 		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
 		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+
+		pilot.SetRumble(GenericHID::kLeftRumble, 1);
+		pilot.SetRumble(GenericHID::kRightRumble, 1);
+
+		runsAfterPlayback++;
+		if (leftLeadMotorValues.size() <= runsAfterPlayback)
+		{
+			PlayingBack = false;
+			pilot.SetRumble(GenericHID::kLeftRumble, 0);
+			pilot.SetRumble(GenericHID::kRightRumble, 0);
+		}
 	}
-	
 	// Output useful values
 	frc::SmartDashboard::PutNumber("Speed", speed);
 	frc::SmartDashboard::PutNumber("Turn", turn);
@@ -115,7 +135,7 @@ void Robot::HandleLEDStrip() {
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
 void Robot::RobotPeriodic() {
-
+	
 }
 
 void Robot::AutonomousInit() {
@@ -165,7 +185,7 @@ void Robot::HandleStuff() {
 	SmartDashboard::PutBoolean("canIntake", canIntake);
 	SmartDashboard::PutBoolean("wants to shoot", isShooting);
 
-	intakePiston.Set(canIntake);
+	//intakePiston.Set(canIntake);
 	intakeMotor.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("intake belt speed",0) : 0);
 	shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("shooter belt speed",0) : 0);
 	// turn on shooter belt
@@ -195,10 +215,6 @@ void Robot::HandleStuff() {
 			print(leftFollowMotorValues);
 			print(rightLeadMotorValues);
 			print(rightFollowMotorValues);
-			printSD(leftLeadMotorValues, "LL");
-			printSD(leftFollowMotorValues, "LF");
-			printSD(rightLeadMotorValues, "RL");
-			printSD(rightFollowMotorValues, "RF");
 		}else{
 			leftLeadMotorValues.clear();
 			leftFollowMotorValues.clear();
@@ -224,6 +240,9 @@ void Robot::HandleStuff() {
 		RFollowMotor.GetEncoder().SetPosition(0.0);
 		
 		PlayingBack = !PlayingBack;
+		runsAfterPlayback = 0;
+		pilot.SetRumble(GenericHID::kLeftRumble, 0);
+		pilot.SetRumble(GenericHID::kRightRumble, 0);
 
 		if (PlayingBack)
 		{
@@ -244,12 +263,6 @@ void Robot::HandleStuff() {
 			RFollowMotor.GetPIDController().SetD(kDposi);
 		}
 	}
-
-	if (PlayingBack)
-	{
-			
-	}
-
 
 }
 

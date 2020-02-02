@@ -22,6 +22,8 @@
 #include <frc/Solenoid.h>
 #include <Toggle.h>
 
+#include <fstream>
+
 
 // #include <frc/cs/CameraServer.h>
 
@@ -114,7 +116,7 @@ class Robot : public frc::TimedRobot {
   const int intakeMotorID = -1;
   const int shooterID = -1;
   const int intakeBeltID = -1;
-  frc::Solenoid intakePiston{solenoidID};
+//  frc::Solenoid intakePiston{solenoidID};
   Toggle canIntake{false};
   Toggle isShooting{false};
   VictorSPX intakeMotor{intakeMotorID};

@@ -40,6 +40,7 @@ class Robot : public frc::TimedRobot {
   void HandleLEDStrip();
   void HandleVision();
   void HandleStuff();
+  void HandleIndex();
   std::tuple<char, double> ClosestColor();
   void MakeSlider(std::string, double, double=255);
   void InitializePIDController(rev::CANPIDController);
@@ -102,7 +103,10 @@ class Robot : public frc::TimedRobot {
   // Toggle isShooting{false};
   VictorSPX intakeMotor{intakeMotorID};
   TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
-  VictorSPX shooterBelt{shooterID};
+  VictorSPX shooterBelt{shooterID};// top belt
   frc::DigitalInput lineBreak{0};
   frc::DigitalInput lineBreak2{1};
+  double intakeBeltSpeed = 0.2;
+  double shooterBeltSpeed = 0.2;
+
 };

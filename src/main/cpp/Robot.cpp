@@ -13,24 +13,24 @@ void Robot::RobotInit() {
 	RFollowMotor.Follow(RLeadMotor, false); // differential drive inverts the right motor
 	prefs.PutDouble("deadzone", 0.1);
 	prefs.PutBoolean("use encoder", false);
-	prefs.PutInt("flywheel error", 0);
 	// Configure flywheel
 	flywheelMotor.ConfigFactoryDefault();
 	flywheelMotor.Config_kP(0, .05);
 	flywheelMotor.Config_kF(0, .1);
 	flywheelMotor.Config_kI(0, 6E-05);
 	flywheelMotor.ConfigClosedloopRamp(2);
-	flywheelMotor.SetInverted(true);
+	flywheelMotor.SetInverted(false);
+	prefs.PutInt("flywheel speed", 8000);
+
+	// Configure Line break sensors & belts
+	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
+	frc::SmartDashboard::PutNumber("Line Break Sensor 2", 2);
+	frc::SmartDashboard::PutNumber("intake belt",0);
+	frc::SmartDashboard::PutNumber("shooter belt",0);
+	shooterBelt.SetInverted(true);
+	intakeBelt.SetInverted(true);
 	
-	prefs.PutInt("shooter output in ticks", 8000);
-	
-	// configure intake/shooter
-	prefs.PutBoolean("wait to shoot", false);
-	prefs.PutDouble("intake motor speed", Robot::intakeMotorSpeed);
-	prefs.PutDouble("intake belt speed", Robot::intakeBeltSpeed;
-	prefs.PutDouble("shooter belt speed", Robot::shooterBeltSpeed);
-	prefs.PutDouble("shooter belt speed reverse", Robot::shooterBeltSpeed);
-	// output vision \ing values
+	// Configure Vision
 	MakeSlider("ballLowerH", 15, 179);
 	MakeSlider("ballLowerS", 100);
 	MakeSlider("ballLowerV", 130);
@@ -44,33 +44,29 @@ void Robot::RobotInit() {
 	MakeSlider("tapeUpperH", 60, 179);
 	MakeSlider("tapeUpperS", 255);
 	MakeSlider("tapeUpperV", 255);
-	prefs.PutDouble("color spinner motor speed",0.5);
 
-	// initialize color motor
-	colorMatcher.AddColorMatch(aimRed);
-	colorMatcher.AddColorMatch(aimYellow);
-	colorMatcher.AddColorMatch(aimBlue);
-	colorMatcher.AddColorMatch(aimGreen);
-
-	// Vision Camera
 	Shuffleboard::GetTab("vision")
 	.Add("Front Camera", true)
 	.WithWidget(BuiltInWidgets::kToggleButton);
-		
+	// Configure Color Sensor
+	prefs.PutDouble("color spinner motor speed",0.5);
+	colorMatcher.AddColorMatch(aimRed);
+	colorMatcher.AddColorMatch(aimYellow);
+	colorMatcher.AddColorMatch(aimBlue);
+	colorMatcher.AddColorMatch(aimGreen);		
 }
 
 // Handle teleop drivetrain code
 void Robot::HandleDrivetrain() {
+
 	double speed = ProcessControllerInput(pilot.GetY(LEFT));
 	double turn = ProcessControllerInput(pilot.GetX(RIGHT));
-	double targetVelocity = speed;
-	drivetrain.ArcadeDrive(targetVelocity, -turn, true);
-
+	drivetrain.ArcadeDrive(speed, -turn, true);
 
 	// Output useful values
 	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
 	frc::SmartDashboard::PutNumber("Current R motor velocity", RLead.GetVelocity());
-	frc::SmartDashboard::PutNumber("Desired", speed * 5500);
+	frc::SmartDashboard::PutNumber("Desired Speed (Velocity)", speed * 5500);
 	frc::SmartDashboard::PutNumber("Turn", turn);
 	frc::SmartDashboard::PutNumber("left lead position", LLead.GetPosition());
 	frc::SmartDashboard::PutNumber("right lead position", RLead.GetPosition());
@@ -123,43 +119,12 @@ void Robot::TeleopPeriodic() {
 	// color
 	HandleLEDStrip();
 	HandleDrivetrain();
-	HandleColorWheel();
-	HandleStuff();
+	// HandleColorWheel(); // Currently breaks robot code w/o sensor
+	HandleShooter();
 	//manage intake state, toggle with a button
 
 }
-void Robot::HandleStuff() {
-	bool isIntaking = ProcessControllerInput(copilot.GetTriggerAxis(LEFT)) > 0;
-	bool runShooterBelt = ProcessControllerInput(copilot.GetTriggerAxis(RIGHT)) > 0;
-	int error = std::abs(flywheelMotor.GetClosedLoopError());
 
-	canIntake.toggle(copilot.GetXButton());
-	isShooting.toggle(copilot.GetAButton());
-
-	SmartDashboard::PutBoolean("isIntaking", isIntaking);
-	SmartDashboard::PutBoolean("canIntake", canIntake);
-	SmartDashboard::PutBoolean("wants to shoot", isShooting);
-
-	intakePiston.Set(canIntake);
-	intakeBelt.Set(ControlMode::PercentOutput, intakeBeltSpeed);
-	shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
-	
-	// turn on shooter belt
-	if (runShooterBelt) {
-		shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed", 0));
-	}
-
-	if (isShooting) {
-		if (error > prefs.GetInt("flywheel error", 0)) {
-			shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? -prefs.GetDouble("shooter belt speed reverse",0) : 0);
-		}
-		
-		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("shooter output in ticks", 0));
-	}
-	else {
-		flywheelMotor.Set(TalonFXControlMode::Velocity, 0);
-	}
-}
 void Robot::HandleColorWheel() {
 	std::string gameData;
 	gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
@@ -180,9 +145,28 @@ void Robot::HandleColorWheel() {
 	}
 
 }
-
-//Boi im really bouta get yo pickle chin ah boi stanky ah boi afro head ah boi lip gloss chin ah boi 
-
+// Handle Line Sensor Indexing
+void Robot::HandleShooter() {
+	bool runFlywheel = ProcessControllerInput(pilot.GetTriggerAxis(RIGHT)) > 0;
+	if (runFlywheel) {
+		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("flywheel speed", 0));
+	} else {
+		flywheelMotor.Set(TalonFXControlMode::PercentOutput, 0);
+	}
+	// Returns 1 if NOT blocked, so runs when neither are blocked
+	frc::SmartDashboard::PutNumber("Line Break Sensor", lineBreak.Get());
+	frc::SmartDashboard::PutNumber("Line Break Sensor 2", lineBreak2.Get());
+	if (lineBreak.Get() && lineBreak2.Get()) {
+		intakeBeltSpeed = 0.0;
+		shooterBeltSpeed = 0.0;
+	}
+	else {
+		intakeBeltSpeed = SmartDashboard::GetNumber("intake belt", 0);
+		shooterBeltSpeed = SmartDashboard::GetNumber("shooter belt", 0);
+	}
+	intakeBelt.Set(ControlMode::PercentOutput, intakeBeltSpeed);
+	shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
+}
 /*
  _    _ _______ _____ _      _____ _________     __  ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
 | |  | |__   __|_   _| |    |_   _|__   __\ \   / / |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
@@ -201,16 +185,6 @@ void Robot::MakeSlider(std::string name, double defaultV, double max) {
 		.Add(name, defaultV)
 		.WithWidget(BuiltInWidgets::kNumberSlider)
 		.WithProperties(properties);
-}
-void Robot::HandleIndex() {
-	if (lineBreak == 1 && lineBreak2 == 1){
-		intakeBeltSpeed = 0.0;
-		shooterBeltSpeed = 0.0;
-	}
-	else {
-		intakeBeltSpeed = 0.2;
-		shooterBeltSpeed = 0.2;
-	}
 }
 // configures a PID controller
 void Robot::InitializePIDController(rev::CANPIDController pid_controller) {

@@ -39,8 +39,7 @@ class Robot : public frc::TimedRobot {
   void HandleDrivetrain();
   void HandleLEDStrip();
   void HandleVision();
-  void HandleStuff();
-  void HandleIndex();
+  void HandleShooter();
   std::tuple<char, double> ClosestColor();
   void MakeSlider(std::string, double, double=255);
   void InitializePIDController(rev::CANPIDController);
@@ -94,7 +93,7 @@ class Robot : public frc::TimedRobot {
   TalonFX flywheelMotor{FlyWheelID};
 
   //solenoid id
-  // const int solenoidID = 0;
+  const int solenoidID = 0;
   const int intakeMotorID = 5;
   const int shooterID = 6;
   const int intakeBeltID = 7;

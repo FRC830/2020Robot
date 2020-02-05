@@ -54,6 +54,10 @@ void Robot::RobotInit() {
 		Shuffleboard::GetTab("vision")
 		.Add("Front Camera", true)
 		.WithWidget(BuiltInWidgets::kToggleButton);
+
+		kPposi = SmartDashboard::GetNumber("kp", kPposi);
+  		kIposi = SmartDashboard::GetNumber("ki", kIposi);
+  		kDposi = SmartDashboard::GetNumber("kd", kDposi);
 		
 }
 void Robot::print(std::vector<double> input)
@@ -135,7 +139,7 @@ void Robot::HandleLEDStrip() {
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
 void Robot::RobotPeriodic() {
-	
+
 }
 
 void Robot::AutonomousInit() {
@@ -151,8 +155,12 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {
   RLead.UseEncoder(prefs.GetBoolean("use encoder"));
   LLead.UseEncoder(prefs.GetBoolean("use encoder"));
-	InitializePIDController(LLeadPID);
-	InitializePIDController(RLeadPID);
+  InitializePIDController(LLeadPID);
+  InitializePIDController(RLeadPID);
+
+  kPposi = SmartDashboard::PutNumber("kp", kPposi);
+  kIposi = SmartDashboard::PutNumber("ki", kIposi);
+  kDposi = SmartDashboard::PutNumber("kd", kDposi);
 }
 void Robot::HandleVision() {
 	// double toggleMode = ProcessControllerInput(pilot.GetTriggerAxis(LEFT));
@@ -171,6 +179,10 @@ void Robot::TeleopPeriodic() {
 	HandleColorWheel();
 	HandleStuff();
 	//manage intake state, toggle with a button
+
+	kPposi = SmartDashboard::GetNumber("kp", kPposi);
+  	kIposi = SmartDashboard::GetNumber("ki", kIposi);
+    kDposi = SmartDashboard::GetNumber("kd", kDposi);
 
 }
 void Robot::HandleStuff() {
@@ -203,9 +215,9 @@ void Robot::HandleStuff() {
 	
 	//recording/.playback options
 	//recording
-	if(pilot.GetAButtonPressed())
-	{
+	if(pilot.GetAButtonPressed()) {
 		isRecording = !isRecording;
+		SmartDashboard::PutBoolean("is recording", isRecording);
 		LLeadMotor.GetEncoder().SetPosition(0.0);
 		LFollowMotor.GetEncoder().SetPosition(0.0);
 		RLeadMotor.GetEncoder().SetPosition(0.0);
@@ -223,8 +235,14 @@ void Robot::HandleStuff() {
 		}
 	}
 	
-	
-	if(isRecording){
+	/*bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
+							RLeadMotor.GetEncoder().GetPosition() == 0.0 &&
+							LFollowMotor.GetEncoder().GetPosition() == 0.0 &&
+							RFollowMotor.GetEncoder().GetPosition() == 0.0
+						);*/
+	//allEd
+	SmartDashboard::PutBoolean("all encoders are zero", allEncodersZero);
+	if(isRecording && true/*allEncodersZero*/){
 		leftLeadMotorValues.push_back(LLead.GetEncoder());
 		leftFollowMotorValues.push_back(LFollow.GetEncoder());
 		rightLeadMotorValues.push_back(RLead.GetEncoder());
@@ -237,9 +255,10 @@ void Robot::HandleStuff() {
 		LLeadMotor.GetEncoder().SetPosition(0.0);
 		LFollowMotor.GetEncoder().SetPosition(0.0);
 		RLeadMotor.GetEncoder().SetPosition(0.0);
-		RFollowMotor.GetEncoder().SetPosition(0.0);
+		RFollowMotor.GetEncoder().SetPosition(0.0); // returns in 1ms, motor doesnt actually set till 50ms
 		
 		PlayingBack = !PlayingBack;
+		SmartDashboard::PutBoolean("is playing back", PlayingBack);
 		runsAfterPlayback = 0;
 		pilot.SetRumble(GenericHID::kLeftRumble, 0);
 		pilot.SetRumble(GenericHID::kRightRumble, 0);

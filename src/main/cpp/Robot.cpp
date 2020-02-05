@@ -104,6 +104,8 @@ void Robot::TeleopInit() {
   LLead.UseEncoder(prefs.GetBoolean("use encoder"));
 	InitializePIDController(LLeadPID);
 	InitializePIDController(RLeadPID);
+        frc::SmartDashboard::PutNumber("Intake Belt Min Velocity", 500);
+        frc::SmartDashboard::PutNumber("Intake Belt Max Velocity", 1000);
 }
 void Robot::HandleVision() {
 	// double toggleMode = ProcessControllerInput(pilot.GetTriggerAxis(LEFT));
@@ -159,10 +161,18 @@ void Robot::HandleShooter() {
 	if (lineBreak.Get() && lineBreak2.Get()) {
 		intakeBeltSpeed = 0.0;
 		shooterBeltSpeed = 0.0;
-	}
-	else {
+	} else {
 		intakeBeltSpeed = SmartDashboard::GetNumber("intake belt", 0);
 		shooterBeltSpeed = SmartDashboard::GetNumber("shooter belt", 0);
+	}
+	double currentVelocity = intakeBelt.GetSelectedSensorVelocity(0);
+	double maxVelocity = SmartDashboard::GetNumber("Intake Belt Min Velocity",0);
+	double minVelocity = SmartDashboard::GetNumber("Intake Belt Max Velocity",99999); // impossibly high
+
+	if (currentVelocity < minVelocity) {
+		intakeBeltSpeed++;
+	} else if (currentVelocity > maxVelocity) {
+		intakeBeltSpeed--;
 	}
 	intakeBelt.Set(ControlMode::PercentOutput, intakeBeltSpeed);
 	shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);

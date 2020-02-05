@@ -104,8 +104,8 @@ void Robot::TeleopInit() {
   LLead.UseEncoder(prefs.GetBoolean("use encoder"));
 	InitializePIDController(LLeadPID);
 	InitializePIDController(RLeadPID);
-        frc::SmartDashboard::PutNumber("Intake Belt Min Velocity", 500);
-        frc::SmartDashboard::PutNumber("Intake Belt Max Velocity", 1000);
+        frc::SmartDashboard::PutNumber("Intake Belt Min Velocity", 100);
+        frc::SmartDashboard::PutNumber("Intake Belt Max Velocity", 999999);
 }
 void Robot::HandleVision() {
 	// double toggleMode = ProcessControllerInput(pilot.GetTriggerAxis(LEFT));
@@ -158,22 +158,23 @@ void Robot::HandleShooter() {
 	// Returns 1 if NOT blocked, so runs when neither are blocked
 	frc::SmartDashboard::PutNumber("Line Break Sensor", lineBreak.Get());
 	frc::SmartDashboard::PutNumber("Line Break Sensor 2", lineBreak2.Get());
+	intakeBeltSpeed = SmartDashboard::GetNumber("intake belt", 0);
+	shooterBeltSpeed = SmartDashboard::GetNumber("shooter belt", 0);
+	double maxVelocity = SmartDashboard::GetNumber("Intake Belt Min Velocity",100);
+	double minVelocity = SmartDashboard::GetNumber("Intake Belt Max Velocity",99999); // impossibly high
 	if (lineBreak.Get() && lineBreak2.Get()) {
 		intakeBeltSpeed = 0.0;
 		shooterBeltSpeed = 0.0;
 	} else {
-		intakeBeltSpeed = SmartDashboard::GetNumber("intake belt", 0);
-		shooterBeltSpeed = SmartDashboard::GetNumber("shooter belt", 0);
+		double currentVelocity = intakeBelt.GetSelectedSensorVelocity(0);
+		SmartDashboard::PutNumber("current velocity",currentVelocity);
+		if (currentVelocity < minVelocity) {
+			intakeBeltSpeed+=.1;
+		} else if (currentVelocity > maxVelocity) {
+			intakeBeltSpeed-=.1;
+		}
 	}
-	double currentVelocity = intakeBelt.GetSelectedSensorVelocity(0);
-	double maxVelocity = SmartDashboard::GetNumber("Intake Belt Min Velocity",0);
-	double minVelocity = SmartDashboard::GetNumber("Intake Belt Max Velocity",99999); // impossibly high
 
-	if (currentVelocity < minVelocity) {
-		intakeBeltSpeed++;
-	} else if (currentVelocity > maxVelocity) {
-		intakeBeltSpeed--;
-	}
 	intakeBelt.Set(ControlMode::PercentOutput, intakeBeltSpeed);
 	shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
 }

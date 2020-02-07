@@ -21,14 +21,19 @@ void Robot::RobotInit() {
 	flywheelMotor.ConfigClosedloopRamp(2);
 	flywheelMotor.SetInverted(false);
 	prefs.PutInt("flywheel speed", 8000);
+	// configure intake
+	intakeBelt.ConfigFactoryDefault();
+	intakeBelt.Config_kP(0, .03);
+	// intakeBelt.Config_kF(0, .1);
+	intakeBelt.Config_kI(0, 6E-05);
+	intakeBelt.SetInverted(true);
+	frc::SmartDashboard::PutNumber("intake belt", 0);
 
 	// Configure Line break sensors & belts
 	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
 	frc::SmartDashboard::PutNumber("Line Break Sensor 2", 2);
-	frc::SmartDashboard::PutNumber("intake belt",0);
 	frc::SmartDashboard::PutNumber("shooter belt",0);
 	shooterBelt.SetInverted(true);
-	intakeBelt.SetInverted(true);
 	
 	// Configure Vision
 	MakeSlider("ballLowerH", 15, 179);
@@ -100,12 +105,8 @@ void Robot::AutonomousPeriodic() {
 }
 	
 void Robot::TeleopInit() {
-  RLead.UseEncoder(prefs.GetBoolean("use encoder"));
-  LLead.UseEncoder(prefs.GetBoolean("use encoder"));
-	InitializePIDController(LLeadPID);
-	InitializePIDController(RLeadPID);
-        frc::SmartDashboard::PutNumber("Intake Belt Min Velocity", 100);
-        frc::SmartDashboard::PutNumber("Intake Belt Max Velocity", 999999);
+	RLead.UseEncoder(prefs.GetBoolean("use encoder"));
+	LLead.UseEncoder(prefs.GetBoolean("use encoder"));
 }
 void Robot::HandleVision() {
 	// double toggleMode = ProcessControllerInput(pilot.GetTriggerAxis(LEFT));
@@ -127,56 +128,96 @@ void Robot::TeleopPeriodic() {
 
 }
 
-void Robot::HandleColorWheel() {
-	std::string gameData;
-	gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
-	char closestColor;
-	double confidence;
-	std::tie(closestColor, confidence) = ClosestColor();
-	int proximity = (int) colorSensor.GetProximity();
-	SmartDashboard::PutNumber("Proximity", proximity);
-	SmartDashboard::PutNumber("Confidence", confidence);
-	SmartDashboard::PutString("Closest Color", std::string(1, closestColor));
-	if(gameData.length() > 0) {
-		currentColorTarget = gameData[0];
-	}
-	if ((currentColorTarget == closestColor) || closestColor == 'N' || currentColorTarget == 'N') {
-		colorWheelMotor.Set(ControlMode::PercentOutput, 0);
-	} else {
-		colorWheelMotor.Set(ControlMode::PercentOutput, -prefs.GetDouble("color spinner motor speed"));
-	}
+// void Robot::HandleColorWheel() {
+// 	std::string gameData;
+// 	gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+// 	char closestColor;
+// 	double confidence;
+// 	std::tie(closestColor, confidence) = ClosestColor();
+// 	int proximity = (int) colorSensor.GetProximity();
+// 	SmartDashboard::PutNumber("Proximity", proximity);
+// 	SmartDashboard::PutNumber("Confidence", confidence);
+// 	SmartDashboard::PutString("Closest Color", std::string(1, closestColor));
+// 	if(gameData.length() > 0) {
+// 		currentColorTarget = gameData[0];
+// 	}
+// 	if ((currentColorTarget == closestColor) || closestColor == 'N' || currentColorTarget == 'N') {
+// 		colorWheelMotor.Set(ControlMode::PercentOutput, 0);
+// 	} else {
+// 		colorWheelMotor.Set(ControlMode::PercentOutput, -prefs.GetDouble("color spinner motor speed"));
+// 	}
 
-}
+// }
 // Handle Line Sensor Indexing
 void Robot::HandleShooter() {
+	/*
+	begin spinning flywheel, false
+	threshold, true
+	true until release flywheel button
+	*/
+	// The 'run in reverse because something bad happened'
+	if (pilot.GetStartButton()) {
+		shooterBelt.Set(ControlMode::PercentOutput, -.5);
+		intakeBelt.Set(ControlMode::PercentOutput, -.5);
+		return; // do not run any other shooter code
+	}
+
+	// The 'spin flywheel' functionality
+	double max = flywheelMotor.GetSelectedSensorVelocity(0);
+	double min = prefs.GetInt("flywheel speed");
+	if (min > max) {
+		std::swap(min, max);
+	}
+	double error = (max/min) - 1;
+	if (max == 0 || min == 0) {
+		error = 1.0;
+	}
+	bool meetsThreshold = (error <= .1);
 	bool runFlywheel = ProcessControllerInput(pilot.GetTriggerAxis(RIGHT)) > 0;
 	if (runFlywheel) {
 		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("flywheel speed", 0));
+		if (meetsThreshold) {
+			isUpToSpeed = true;
+		}
 	} else {
+		if (!meetsThreshold) {
+			isUpToSpeed = false;
+		}
 		flywheelMotor.Set(TalonFXControlMode::PercentOutput, 0);
 	}
-	// Returns 1 if NOT blocked, so runs when neither are blocked
+	// Logging time!!!
 	frc::SmartDashboard::PutNumber("Line Break Sensor", lineBreak.Get());
 	frc::SmartDashboard::PutNumber("Line Break Sensor 2", lineBreak2.Get());
+	double currentVelocity = intakeBelt.GetSelectedSensorVelocity(0);
+	SmartDashboard::PutNumber("current velocity",currentVelocity);
+	double currentPosition = intakeBelt.GetSelectedSensorPosition(0);
+	SmartDashboard::PutNumber("current position",currentPosition);
+
+	// The 'shoot' functionality
 	intakeBeltSpeed = SmartDashboard::GetNumber("intake belt", 0);
 	shooterBeltSpeed = SmartDashboard::GetNumber("shooter belt", 0);
-	double maxVelocity = SmartDashboard::GetNumber("Intake Belt Min Velocity",100);
-	double minVelocity = SmartDashboard::GetNumber("Intake Belt Max Velocity",99999); // impossibly high
-	if (lineBreak.Get() && lineBreak2.Get()) {
-		intakeBeltSpeed = 0.0;
-		shooterBeltSpeed = 0.0;
-	} else {
-		double currentVelocity = intakeBelt.GetSelectedSensorVelocity(0);
-		SmartDashboard::PutNumber("current velocity",currentVelocity);
-		if (currentVelocity < minVelocity) {
-			intakeBeltSpeed+=.1;
-		} else if (currentVelocity > maxVelocity) {
-			intakeBeltSpeed-=.1;
+	SmartDashboard::PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
+	if (pilot.GetAButton()) {
+		if (meetsThreshold) {
+			isUpToSpeed = true;
 		}
+		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("flywheel speed", 0));
+		if (isUpToSpeed) {
+			shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
+			intakeBelt.Set(ControlMode::Velocity, intakeBeltSpeed);
+		}
+		return; // do not run intake code
 	}
-
-	intakeBelt.Set(ControlMode::PercentOutput, intakeBeltSpeed);
-	shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
+	frc::SmartDashboard::PutBoolean("meets threshold", meetsThreshold);
+	frc::SmartDashboard::PutBoolean("is up to speed", isUpToSpeed);
+	// The 'intake' functionality
+	if (lineBreak.Get() && lineBreak2.Get()) {
+		intakeBelt.Set(ControlMode::PercentOutput, 0);
+		shooterBelt.Set(ControlMode::PercentOutput, 0);
+	} else {
+		intakeBelt.Set(ControlMode::Velocity, intakeBeltSpeed);
+		shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
+	}
 }
 /*
  _    _ _______ _____ _      _____ _________     __  ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
@@ -213,24 +254,24 @@ double Robot::ProcessControllerInput(double val) {
 }
 
 // Return the closest detected color
-std::tuple<char, double> Robot::ClosestColor() {
-	frc::Color detectedColor = colorSensor.GetColor();
-	char color;
-	double confidence;
-	frc::Color matchedColor = colorMatcher.MatchClosestColor(detectedColor, confidence);
-	if (matchedColor == aimBlue) {
-		color = 'B';
-	} else if (matchedColor == aimRed) {
-		color = 'R';
-	} else if (matchedColor == aimGreen) {
-		color = 'G';
-	} else if (matchedColor == aimYellow) {
-		color = 'Y';
-	} else {
-		color = 'N';
-	}
-	return std::make_tuple(color, confidence);
-}
+// std::tuple<char, double> Robot::ClosestColor() {
+// 	frc::Color detectedColor = colorSensor.GetColor();
+// 	char color;
+// 	double confidence;
+// 	frc::Color matchedColor = colorMatcher.MatchClosestColor(detectedColor, confidence);
+// 	if (matchedColor == aimBlue) {
+// 		color = 'B';
+// 	} else if (matchedColor == aimRed) {
+// 		color = 'R';
+// 	} else if (matchedColor == aimGreen) {
+// 		color = 'G';
+// 	} else if (matchedColor == aimYellow) {
+// 		color = 'Y';
+// 	} else {
+// 		color = 'N';
+// 	}
+// 	return std::make_tuple(color, confidence);
+// }
 void Robot::TestPeriodic() {}
 
 #ifndef RUNNING_FRC_TESTS

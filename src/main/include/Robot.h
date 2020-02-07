@@ -35,7 +35,7 @@ class Robot : public frc::TimedRobot {
   void TeleopPeriodic() override;
   void TestPeriodic() override;
   double ProcessControllerInput(double);
-  void HandleColorWheel();
+  // void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
   void HandleVision();
@@ -80,7 +80,7 @@ class Robot : public frc::TimedRobot {
 
   //colors
   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
-  rev::ColorSensorV3 colorSensor{i2cPort};
+  // rev::ColorSensorV3 colorSensor{i2cPort};
   rev::ColorMatch colorMatcher;
 
   TalonSRX colorWheelMotor{ColorWheelID};
@@ -105,7 +105,8 @@ class Robot : public frc::TimedRobot {
   VictorSPX shooterBelt{shooterID};// top belt
   frc::DigitalInput lineBreak{0};
   frc::DigitalInput lineBreak2{1};
-  double intakeBeltSpeed = 0.2;
+  double intakeBeltSpeed = 0;
   double shooterBeltSpeed = 0.2;
+	bool isUpToSpeed = false;
 
 };

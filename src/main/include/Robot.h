@@ -3,7 +3,6 @@
 #include <string>
 
 #include <frc/TimedRobot.h>
-#include <frc/smartdashboard/SendableChooser.h>
 #include <rev/CANSparkMax.h>
 #include <frc/drive/DifferentialDrive.h>
 #include <frc/GenericHID.h>
@@ -13,16 +12,20 @@
 #include <frc/Preferences.h>
 #include <rev/ColorSensorV3.h>
 #include <rev/ColorMatch.h>
-#include <frc/util/Color.h>
+
 #include "ctre/Phoenix.h"
 #include <ctre/phoenix/motorcontrol/can/TalonFX.h>
 #include <frc/shuffleboard/Shuffleboard.h>
+#include <frc/shuffleboard/ShuffleboardTab.h>
 #include "LEDController.h"
 #include <frc/DriverStation.h>
 #include <frc/Solenoid.h>
 #include <Toggle.h>
 #include <frc/DigitalInput.h>
 #include <frc/AnalogInput.h>
+
+
+
 // #include <frc/cs/CameraServer.h>
 
 class Robot : public frc::TimedRobot {
@@ -34,15 +37,12 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
-  double ProcessControllerInput(double);
-  // void HandleColorWheel();
+  // double ProcessControllerInput(double);
+  void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
   void HandleVision();
   void HandleShooter();
-  std::tuple<char, double> ClosestColor();
-  void MakeSlider(std::string, double, double=255);
-  void InitializePIDController(rev::CANPIDController);
   // define pin numbers for motors
   const int RLeadID = 2;
   const int LLeadID = 4;
@@ -80,14 +80,10 @@ class Robot : public frc::TimedRobot {
 
   //colors
   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
-  // rev::ColorSensorV3 colorSensor{i2cPort};
-  rev::ColorMatch colorMatcher;
+  rev::ColorSensorV3 colorSensor{i2cPort};
 
   TalonSRX colorWheelMotor{ColorWheelID};
-  frc::Color aimRed = {0.465, 0.376, 0.158}; 
-  frc::Color aimYellow = {0.324, 0.535, 0.14}; 
-  frc::Color aimGreen = {0.197, 0.545, 0.256}; 
-  frc::Color aimBlue = {0.157, 0.43, 0.412}; 
+
   char currentColorTarget = 'N';
 
   TalonFX flywheelMotor{FlyWheelID};

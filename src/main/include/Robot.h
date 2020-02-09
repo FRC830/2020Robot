@@ -43,6 +43,8 @@ class Robot : public frc::TimedRobot {
   void HandleVision();
   void HandleStuff();
 
+
+  //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
   int runsAfterPlayback = 0;
 
   void print(std::vector<double> input);
@@ -129,5 +131,5 @@ class Robot : public frc::TimedRobot {
   std::vector<double> rightFollowMotorValues;
 
   //we need to add velocity PID as well
-  double kPposi = 0.1, kIposi = 1e-4, kDposi = 1;
+  double kPposi = 0.3, kIposi = 1e-3, kDposi = 0;
 };

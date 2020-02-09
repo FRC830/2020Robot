@@ -66,6 +66,16 @@
     "streambuf": "cpp",
     "thread": "cpp",
     "cinttypes": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "bitset": "cpp",
+    "complex": "cpp",
+    "numeric": "cpp",
+    "random": "cpp",
+    "hash_map": "cpp",
+    "hash_set": "cpp",
+    "list": "cpp",
+    "unordered_set": "cpp",
+    "future": "cpp",
+    "iomanip": "cpp"
   }
 }

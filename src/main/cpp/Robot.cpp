@@ -60,16 +60,19 @@ void Robot::RobotInit() {
   		kDposi = SmartDashboard::GetNumber("kd", kDposi);
 		
 }
-void Robot::print(std::vector<double> input)
+void Robot::print(std::vector<std::vector<double>> input)
 {
 	std::ofstream values;
 
-	values.open ("vectors.txt");
-	int size = input.size() - 1;
-	for (int i = 0; i < size; i++) {
-		values << input.at(i) << ',';
+	values.open ("/home/lvuser/vectors.txt");
+	
+	for (int j = 0; j < input.size(); j++)
+	{
+		for (int i = 0; i < input.at(j)size(); i++) {
+			values << input.at(j).at(i) << ',';
+		}
+		values << "\n";
 	}
-	values << "\n";
 	values.close();
 }
 void Robot::printSD(std::vector<double> input, std::string name)
@@ -219,10 +222,7 @@ void Robot::HandleStuff() {
 		RLeadMotor.GetEncoder().SetPosition(0.0);
 		RFollowMotor.GetEncoder().SetPosition(0.0);
 		if(!isRecording){
-			print(leftLeadMotorValues);
-			print(leftFollowMotorValues);
-			print(rightLeadMotorValues);
-			print(rightFollowMotorValues);
+			print({leftLeadMotorValues, leftFollowMotorValues, leftFollowMotorValues, rightFollowMotorValues});
 		}else{
 			leftLeadMotorValues.clear();
 			leftFollowMotorValues.clear();
@@ -231,14 +231,19 @@ void Robot::HandleStuff() {
 		}
 	}
 	
-	/*bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
+	bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
 							RLeadMotor.GetEncoder().GetPosition() == 0.0 &&
 							LFollowMotor.GetEncoder().GetPosition() == 0.0 &&
 							RFollowMotor.GetEncoder().GetPosition() == 0.0
-						);*/
+						);
 	//allEd
 	SmartDashboard::PutBoolean("all encoders are zero", allEncodersZero);
-	if(isRecording && true/*allEncodersZero*/){
+
+	if (allEncodersZero)
+	{
+		recordGo = true;
+	}
+	if(isRecording && recordGo){
 		leftLeadMotorValues.push_back(LLead.GetEncoder());
 		leftFollowMotorValues.push_back(LFollow.GetEncoder());
 		rightLeadMotorValues.push_back(RLead.GetEncoder());
@@ -369,3 +374,4 @@ void Robot::TestPeriodic() {}
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
+

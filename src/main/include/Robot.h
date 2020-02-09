@@ -47,7 +47,7 @@ class Robot : public frc::TimedRobot {
   //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
   int runsAfterPlayback = 0;
 
-  void print(std::vector<double> input);
+  void print(std::vector<std::vector<double>> input);
   void printSD(std::vector<double> input, std::string name);
   
   std::tuple<char, double> ClosestColor();
@@ -63,6 +63,7 @@ class Robot : public frc::TimedRobot {
   bool isRecording = false;
   bool PlayingBack = false;
   bool Adown = false;
+  bool recordGo = false;
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax RFollowMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
@@ -131,5 +132,5 @@ class Robot : public frc::TimedRobot {
   std::vector<double> rightFollowMotorValues;
 
   //we need to add velocity PID as well
-  double kPposi = 0.3, kIposi = 1e-3, kDposi = 0;
+  double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
 };

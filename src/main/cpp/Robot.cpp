@@ -58,11 +58,6 @@ void Robot::RobotInit() {
 }
 void Robot::print(std::vector<double> input)
 {
-	/*int size = input.size();
-	for (int i = 0; i < size; i++) {
-		std::cout << input.at(i) << ',';
-	}*/
-
 	std::ofstream values;
 
 	values.open ("vectors.txt");
@@ -96,10 +91,11 @@ void Robot::HandleDrivetrain() {
 	}
 	else if (PlayingBack)
 	{
-		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		const int MOD = runsAfterPlayback - (runsAfterPlayback % 2); 
+		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(MOD), rev::ControlType::kPosition);
+		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(MOD), rev::ControlType::kPosition);
+		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(MOD), rev::ControlType::kPosition);
+		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(MOD), rev::ControlType::kPosition);
 
 		pilot.SetRumble(GenericHID::kLeftRumble, 1);
 		pilot.SetRumble(GenericHID::kRightRumble, 1);

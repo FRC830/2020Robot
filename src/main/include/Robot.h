@@ -43,6 +43,7 @@ class Robot : public frc::TimedRobot {
   void HandleLEDStrip();
   void HandleVision();
   void HandleShooter();
+  void HandleIntake();
   // define pin numbers for motors
   const int RLeadID = 2;
   const int LLeadID = 4;
@@ -93,16 +94,29 @@ class Robot : public frc::TimedRobot {
   const int intakeMotorID = 5;
   const int shooterID = 6;
   const int intakeBeltID = 7;
-  // frc::Solenoid intakePiston{solenoidID};
+  frc::Solenoid intakePiston{solenoidID};
   // Toggle canIntake{false};
   // Toggle isShooting{false};
   VictorSPX intakeMotor{intakeMotorID};
   TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
   VictorSPX shooterBelt{shooterID};// top belt
-  frc::DigitalInput lineBreak{0};
+  frc::DigitalInput lineBreak1{0};
   frc::DigitalInput lineBreak2{1};
   double intakeBeltSpeed = 0;
   double shooterBeltSpeed = 0.2;
 	bool isUpToSpeed = false;
+
+  //Reversing and Counting the balls
+  //Linebreak Sensor 3 has a value of 1 when both sensors are not facing eachother
+  //Linebreak Sensor 3 has a value of 0 when both sensors are facing eachother
+  //Linebreak sensors can be displaced by about 9.5 inches from each other and about up to 1 cm of vertical displacement
+  frc::DigitalInput lineBreak3{2};
+  int ballsStored = 0;
+  int ballsShot = 0;
+
+  bool lineBreak1WasBroken = false;
+  bool lineBreak2WasBroken = false;
+  bool lineBreak3WasBroken = false;
+
 
 };

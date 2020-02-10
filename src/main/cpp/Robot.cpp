@@ -24,6 +24,7 @@ void Robot::RobotInit() {
 	ConfigurePIDF(intakeBelt, .03, 6E-05, 0, 0);
 	intakeBelt.SetInverted(true);
 	prefs.PutInt("intake belt", 0);
+	prefs.PutDouble("intake roller speed",0.5);
 
 	// Configure Line break sensors & belts
 	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
@@ -117,6 +118,7 @@ void Robot::TeleopPeriodic() {
 	// HandleColorWheel(); // Currently breaks robot code w/o sensor
 	HandleShooter();
 	//manage intake state, toggle with a button
+	HandleIntake();
 
 }
 
@@ -139,15 +141,37 @@ void Robot::HandleColorWheel() {
 	}
 
 }
+
+
+
+
 // Handle Line Sensor Indexing
 void Robot::HandleShooter() {
+	double reverseSpeed = prefs.GetDouble("reverse belt speed",0);
+	bool lineBreak1Broken = !lineBreak1.Get();
+	bool lineBreak2Broken = !lineBreak2.Get();
+
+	bool lineBreak3Broken = lineBreak3.Get();
+
 
 	// The 'run in reverse because something bad happened'
 	if (pilot.GetStartButton()) {
-		double reverseSpeed = prefs.GetDouble("reverse belt speed",0);
 		shooterBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
 		intakeBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
 		return; // do not run any other shooter code
+	}
+	// The 'run in reverse to move ball back to the front'
+	if (pilot.GetBackButton()){
+		if (!lineBreak2Broken){
+			shooterBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
+			intakeBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
+		} else {
+			shooterBelt.Set(ControlMode::PercentOutput, 0);
+			intakeBelt.Set(ControlMode::PercentOutput, 0);
+		}
+		// already handled sensor here, prevent it from being handled later
+		lineBreak2WasBroken = lineBreak2Broken;
+		return;
 	}
 
 	// read values
@@ -173,10 +197,13 @@ void Robot::HandleShooter() {
 	}
 	
 	// Logging time!!!
-	SmartDashboard::PutNumber("Line Break Sensor", lineBreak.Get());
+	SmartDashboard::PutNumber("Line Break Sensor 1", lineBreak1.Get());
 	SmartDashboard::PutNumber("Line Break Sensor 2", lineBreak2.Get());
+	SmartDashboard::PutNumber("Line Break Sensor 3", lineBreak3.Get());
 	SmartDashboard::PutNumber("current intake velocity", intakeBelt.GetSelectedSensorVelocity(0));
 	SmartDashboard::PutNumber("current flywheel velocity", flywheelMotor.GetSelectedSensorVelocity(0));
+	SmartDashboard::PutNumber("Balls Stored", ballsStored);
+	SmartDashboard::PutNumber("Balls Shot", ballsShot);
 
 	// The 'shoot' functionality
 	SmartDashboard::PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
@@ -193,7 +220,9 @@ void Robot::HandleShooter() {
 	}
 
 	// The 'intake' functionality
-	if (lineBreak.Get() && lineBreak2.Get()) {
+	// If the line break sensor detects the retroreflective tape, It will have a value of 1.0000
+	// If the line break sensor detects something infront of the retroreflective tape, it will have a value of 0.0000
+	if (!lineBreak1Broken && !lineBreak2Broken) {
 		intakeBelt.Set(ControlMode::PercentOutput, 0);
 		shooterBelt.Set(ControlMode::PercentOutput, 0);
 	} else {
@@ -203,6 +232,44 @@ void Robot::HandleShooter() {
 
 	frc::SmartDashboard::PutBoolean("meets threshold", meetsThreshold);
 	frc::SmartDashboard::PutBoolean("is up to speed", isUpToSpeed);
+
+
+	//Deals with ball count
+	//Pseudocode: ✔️Increase ball count when line break sensor 2 is broken.
+	//			  ✔️Decrease ball count when line break sensor 3 is broken.
+	//			  When there is space between the back ball and the second line break sensor, run belts backwards until it intercepts it
+	//			  *This will increase the ball count by 1, in which case we decrease the ball count by one to correct it
+	//		   	  *Run the belts forward to then move the ball out of the second line break sensor
+
+
+	if (lineBreak2Broken && !lineBreak2WasBroken){
+
+		ballsStored += 1;
+
+	}
+	if (lineBreak3Broken && !lineBreak3WasBroken){
+
+		ballsStored -= 1;
+		ballsShot += 1;
+
+	}
+
+	lineBreak1WasBroken = lineBreak1Broken;
+	lineBreak2WasBroken = lineBreak2Broken;
+	lineBreak3WasBroken = lineBreak3Broken;
+
+}
+
+void Robot::HandleIntake(){
+	//Change to copilot later
+	bool isIntaking = ApplyDeadzone(pilot.GetTriggerAxis(LEFT), 0.2) > 0;
+	intakePiston.Set(isIntaking);
+	double intakeRollerSpeed = prefs.GetDouble("intake roller speed", 0.5);
+	if (isIntaking){
+		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
+	} else {
+		intakeMotor.Set(ControlMode::PercentOutput, 0);
+	}
 }
 
 void Robot::TestPeriodic() {}

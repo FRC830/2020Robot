@@ -45,7 +45,7 @@ class Robot : public frc::TimedRobot {
 
 
   //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
-  int runsAfterPlayback = 0;
+  int runsAfterPlayback = 5;
 
   void print(std::vector<std::vector<double>> input);
   void printSD(std::vector<double> input, std::string name);

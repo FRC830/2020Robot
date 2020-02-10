@@ -68,10 +68,10 @@ void Robot::print(std::vector<std::vector<double>> input)
 	
 	for (int j = 0; j < input.size(); j++)
 	{
-		for (int i = 0; i < input.at(j)size(); i++) {
+		for (int i = 0; i < input.at(j).size(); i++) {
 			values << input.at(j).at(i) << ',';
 		}
-		values << "\n";
+		values << "\n\n";
 	}
 	values.close();
 }
@@ -122,6 +122,10 @@ void Robot::HandleDrivetrain() {
 	frc::SmartDashboard::PutNumber("right lead encoder", RLead.GetEncoder());
 	frc::SmartDashboard::PutNumber("left motor applied", LLead.GetApplied());
 	frc::SmartDashboard::PutNumber("right lead applied", RLead.GetApplied());
+	frc::SmartDashboard::PutNumber("left follow encoder", LFollow.GetEncoder());
+	frc::SmartDashboard::PutNumber("right follow encoder", RFollow.GetEncoder());
+	frc::SmartDashboard::PutNumber("left follow applied", LFollow.GetApplied());
+	frc::SmartDashboard::PutNumber("right follow applied", RFollow.GetApplied());
 }
 // Handle LED Strip code
 void Robot::HandleLEDStrip() {
@@ -222,7 +226,7 @@ void Robot::HandleStuff() {
 		RLeadMotor.GetEncoder().SetPosition(0.0);
 		RFollowMotor.GetEncoder().SetPosition(0.0);
 		if(!isRecording){
-			print({leftLeadMotorValues, leftFollowMotorValues, leftFollowMotorValues, rightFollowMotorValues});
+			print({leftLeadMotorValues, leftFollowMotorValues, rightFollowMotorValues, rightLeadMotorValues});
 		}else{
 			leftLeadMotorValues.clear();
 			leftFollowMotorValues.clear();

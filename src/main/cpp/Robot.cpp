@@ -219,6 +219,7 @@ void Robot::HandleStuff() {
 	//recording/.playback options
 	//recording
 	if(pilot.GetAButtonPressed()) {
+		recordGo = false;
 		isRecording = !isRecording;
 		SmartDashboard::PutBoolean("is recording", isRecording);
 		LLeadMotor.GetEncoder().SetPosition(0.0);
@@ -233,6 +234,7 @@ void Robot::HandleStuff() {
 			rightLeadMotorValues.clear();
 			rightFollowMotorValues.clear();
 		}
+
 	}
 	
 	bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
@@ -378,4 +380,3 @@ void Robot::TestPeriodic() {}
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
-

@@ -177,7 +177,7 @@ void Robot::HandleShooter() {
 	// read values
 	double flywheelSpeedVelocity = prefs.GetInt("flywheel speed", 0);
 	double shooterSpeedPercent = prefs.GetDouble("shooter speed", 0);
-	double intakeSpeedVelocity = prefs.GetInt("intake speed", 0);
+	double intakeSpeedVelocity = prefs.GetInt("intake belt", 0);
 
 	// The 'spin flywheel' functionality
 	double error = ErrorBetween(flywheelMotor.GetSelectedSensorVelocity(0), flywheelSpeedVelocity);

@@ -23,7 +23,7 @@ void Robot::RobotInit() {
 	// configure intake
 	ConfigurePIDF(intakeBelt, .03, 6E-05, 0, 0);
 	intakeBelt.SetInverted(true);
-	prefs.PutInt("intake belt", 0);
+	prefs.PutInt("intake belt", 8000);
 	prefs.PutDouble("intake roller speed",0.5);
 
 	// Configure Line break sensors & belts
@@ -148,16 +148,18 @@ void Robot::HandleColorWheel() {
 // Handle Line Sensor Indexing
 void Robot::HandleShooter() {
 	double reverseSpeed = prefs.GetDouble("reverse belt speed",0);
+	double intakeRollerSpeed = prefs.GetDouble("intake roller speed", 0.5);
 	bool lineBreak1Broken = !lineBreak1.Get();
 	bool lineBreak2Broken = !lineBreak2.Get();
-
 	bool lineBreak3Broken = lineBreak3.Get();
+	
 
 
 	// The 'run in reverse because something bad happened'
 	if (pilot.GetStartButton()) {
 		shooterBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
 		intakeBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
+		intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
 		return; // do not run any other shooter code
 	}
 	// The 'run in reverse to move ball back to the front'
@@ -165,6 +167,8 @@ void Robot::HandleShooter() {
 		if (!lineBreak2Broken){
 			shooterBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
 			intakeBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
+			intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
+
 		} else {
 			shooterBelt.Set(ControlMode::PercentOutput, 0);
 			intakeBelt.Set(ControlMode::PercentOutput, 0);
@@ -197,9 +201,9 @@ void Robot::HandleShooter() {
 	}
 	
 	// Logging time!!!
-	SmartDashboard::PutNumber("Line Break Sensor 1", lineBreak1.Get());
-	SmartDashboard::PutNumber("Line Break Sensor 2", lineBreak2.Get());
-	SmartDashboard::PutNumber("Line Break Sensor 3", lineBreak3.Get());
+	SmartDashboard::PutBoolean("Line Break Sensor 1", lineBreak1Broken);
+	SmartDashboard::PutBoolean("Line Break Sensor 2", lineBreak2Broken);
+	SmartDashboard::PutBoolean("Line Break Sensor 3", lineBreak3Broken);
 	SmartDashboard::PutNumber("current intake velocity", intakeBelt.GetSelectedSensorVelocity(0));
 	SmartDashboard::PutNumber("current flywheel velocity", flywheelMotor.GetSelectedSensorVelocity(0));
 	SmartDashboard::PutNumber("Balls Stored", ballsStored);

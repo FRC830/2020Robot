@@ -59,13 +59,43 @@ void Robot::RobotInit() {
 	colorMatcher.AddColorMatch(aimBlue);
 	colorMatcher.AddColorMatch(aimGreen);		
 }
+void Robot::print(std::vector<std::vector<double>> input)
+{
+	std::ofstream values;
 
+	values.open ("/home/lvuser/vectors.txt");
+	
+	for (int j = 0; j < input.size(); j++)
+	{
+		for (int i = 0; i < input.at(j).size(); i++) {
+			values << input.at(j).at(i) << ',';
+		}
+		values << "\n\n";
+	}
+	values.close();
+}
+void Robot::printSD(std::vector<double> input, std::string name)
+{
+	int size = input.size();
+	for (int i = 0; i < size; i++) {
+		SmartDashboard::PutNumber(std::to_string(i) + name, input.at(i));
+	}
+}
 // Handle teleop drivetrain code
 void Robot::HandleDrivetrain() {
 
 	double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 	drivetrain.ArcadeDrive(speed, -turn, true);
+
+	if(!PlayingBack)
+	{
+		speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+		turn = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+		targetVelocity = speed;
+		drivetrain.ArcadeDrive(targetVelocity, -turn, true);
+		
+	}
 
 	// Output useful values
 	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
@@ -110,11 +140,109 @@ void Robot::HandleVision() {
 	// }
 	// if toggleMode 
 }
+void Robot::HandleRecordPlayback() {
+	if(pilot.GetAButtonPressed()) {
+		recordGo = false;
+		isRecording = !isRecording;
+		SmartDashboard::PutBoolean("is recording", isRecording);
+		LLeadMotor.GetEncoder().SetPosition(0.0);
+		LFollowMotor.GetEncoder().SetPosition(0.0);
+		RLeadMotor.GetEncoder().SetPosition(0.0);
+		RFollowMotor.GetEncoder().SetPosition(0.0);
+		if(!isRecording){
+			print({leftLeadMotorValues, leftFollowMotorValues, rightFollowMotorValues, rightLeadMotorValues});
+		}else{
+			leftLeadMotorValues.clear();
+			leftFollowMotorValues.clear();
+			rightLeadMotorValues.clear();
+			rightFollowMotorValues.clear();
+		}
+
+	}
+	
+	bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
+							RLeadMotor.GetEncoder().GetPosition() == 0.0 &&
+							LFollowMotor.GetEncoder().GetPosition() == 0.0 &&
+							RFollowMotor.GetEncoder().GetPosition() == 0.0
+						);
+	//allEd
+	SmartDashboard::PutBoolean("all encoders are zero", allEncodersZero);
+
+	if (allEncodersZero)
+	{
+		recordGo = true;
+	}
+	if(isRecording && recordGo){
+		leftLeadMotorValues.push_back(LLead.GetPosition());
+		leftFollowMotorValues.push_back(LFollow.GetPosition());
+		rightLeadMotorValues.push_back(RLead.GetPosition());
+		rightFollowMotorValues.push_back(RFollow.GetPosition());
+	}
+
+	//playback
+	if(pilot.GetBButtonPressed())
+	{
+		LLeadMotor.GetEncoder().SetPosition(0.0);
+		LFollowMotor.GetEncoder().SetPosition(0.0);
+		RLeadMotor.GetEncoder().SetPosition(0.0);
+		RFollowMotor.GetEncoder().SetPosition(0.0); // returns in 1ms, motor doesnt actually set till 50ms
+		
+		PlayingBack = !PlayingBack;
+		SmartDashboard::PutBoolean("is playing back", PlayingBack);
+		runsAfterPlayback = 0;
+		pilot.SetRumble(GenericHID::kLeftRumble, 0);
+		pilot.SetRumble(GenericHID::kRightRumble, 0);
+
+		if (PlayingBack)
+		{
+			LLeadMotor.GetPIDController().SetP(kPposi);
+			LLeadMotor.GetPIDController().SetI(kIposi);
+			LLeadMotor.GetPIDController().SetD(kDposi);
+
+			LFollowMotor.GetPIDController().SetP(kPposi);
+			LFollowMotor.GetPIDController().SetI(kIposi);
+			LFollowMotor.GetPIDController().SetD(kDposi);
+
+			RLeadMotor.GetPIDController().SetP(kPposi);
+			RLeadMotor.GetPIDController().SetI(kIposi);
+			RLeadMotor.GetPIDController().SetD(kDposi);
+
+			RFollowMotor.GetPIDController().SetP(kPposi);
+			RFollowMotor.GetPIDController().SetI(kIposi);
+			RFollowMotor.GetPIDController().SetD(kDposi);
+		}
+	}
+	//playback
+	if (PlayingBack)
+	{
+		const int MOD = runsAfterPlayback - (runsAfterPlayback % 2); 
+		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(MOD), rev::ControlType::kPosition);
+		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(MOD), rev::ControlType::kPosition);
+		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(MOD), rev::ControlType::kPosition);
+		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(MOD), rev::ControlType::kPosition);
+
+		pilot.SetRumble(GenericHID::kLeftRumble, 1);
+		pilot.SetRumble(GenericHID::kRightRumble, 1);
+
+		double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+		double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
+		drivetrain.ArcadeDrive(speed, -turn, true);
+
+		runsAfterPlayback++;
+		if (leftLeadMotorValues.size() <= runsAfterPlayback)
+		{
+			PlayingBack = false;
+			pilot.SetRumble(GenericHID::kLeftRumble, 0);
+			pilot.SetRumble(GenericHID::kRightRumble, 0);
+		}
+	}
+}
 
 void Robot::TeleopPeriodic() {
 	// color
 	HandleLEDStrip();
 	HandleDrivetrain();
+	HandleRecordPlayback();
 	// HandleColorWheel(); // Currently breaks robot code w/o sensor
 	HandleShooter();
 	//manage intake state, toggle with a button

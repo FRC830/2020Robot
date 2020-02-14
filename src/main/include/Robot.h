@@ -24,6 +24,8 @@
 #include <frc/DigitalInput.h>
 #include <frc/AnalogInput.h>
 
+#include <fstream>
+
 
 
 // #include <frc/cs/CameraServer.h>
@@ -59,9 +61,13 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANPIDController LLeadPID{LLeadMotor};
   rev::CANPIDController RLeadPID{RLeadMotor};
+  rev::CANPIDController LLeadPID{LLeadMotor};
+  rev::CANPIDController RLeadPID{RLeadMotor};
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
   SparkController LLead{LLeadMotor, LLeadPID};
+  SparkController RFollow{RFollowMotor, RFollowPID};
+  SparkController LFollow{LFollowMotor, LFollowPID};
   frc::DifferentialDrive drivetrain{LLead, RLead};
 
   //create controls
@@ -118,5 +124,27 @@ class Robot : public frc::TimedRobot {
   bool lineBreak2WasBroken = false;
   bool lineBreak3WasBroken = false;
 
+  //playback and record
+  void HandleRecordPlayback();
 
+  //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
+  int runsAfterPlayback = 5;
+
+  void print(std::vector<std::vector<double>> input);
+  void printSD(std::vector<double> input, std::string name);
+  bool isRecording = false;
+  bool PlayingBack = false;
+  bool Adown = false;
+  bool recordGo = false;
+
+  double targetVelocity;
+
+  
+  std::vector<double> leftLeadMotorValues;
+std::vector<double> rightLeadMotorValues;
+std::vector<double> leftFollowMotorValues;
+std::vector<double> rightFollowMotorValues;
+
+double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
+  ////
 };

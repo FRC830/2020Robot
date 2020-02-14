@@ -14,6 +14,8 @@ void Robot::RobotInit() {
 	prefs.PutDouble("deadzone", 0.1);
 	prefs.PutBoolean("use encoder", false);
 
+	
+
 	// Configure flywheel
 	ConfigurePIDF(flywheelMotor, .05, 6E-05, 0, .1);
 	flywheelMotor.ConfigClosedloopRamp(2);

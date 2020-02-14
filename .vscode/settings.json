@@ -76,6 +76,7 @@
     "list": "cpp",
     "unordered_set": "cpp",
     "future": "cpp",
-    "iomanip": "cpp"
+    "iomanip": "cpp",
+    "xstring": "cpp"
   }
 }

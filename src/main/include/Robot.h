@@ -3,7 +3,6 @@
 #include <string>
 
 #include <frc/TimedRobot.h>
-#include <frc/smartdashboard/SendableChooser.h>
 #include <rev/CANSparkMax.h>
 #include <frc/drive/DifferentialDrive.h>
 #include <frc/GenericHID.h>
@@ -13,16 +12,19 @@
 #include <frc/Preferences.h>
 #include <rev/ColorSensorV3.h>
 #include <rev/ColorMatch.h>
-#include <frc/util/Color.h>
+
 #include "ctre/Phoenix.h"
 #include <ctre/phoenix/motorcontrol/can/TalonFX.h>
 #include <frc/shuffleboard/Shuffleboard.h>
+#include <frc/shuffleboard/ShuffleboardTab.h>
 #include "LEDController.h"
 #include <frc/DriverStation.h>
 #include <frc/Solenoid.h>
 #include <Toggle.h>
-
 #include <fstream>
+#include <frc/DigitalInput.h>
+#include <frc/AnalogInput.h>
+
 
 
 // #include <frc/cs/CameraServer.h>
@@ -36,12 +38,14 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
-  double ProcessControllerInput(double);
+  // double ProcessControllerInput(double);
   void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
   void HandleVision();
   void HandleStuff();
+  void HandleRecordPlayback();
+
 
 
   //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
@@ -53,6 +57,8 @@ class Robot : public frc::TimedRobot {
   std::tuple<char, double> ClosestColor();
   void MakeSlider(std::string, double, double=255);
   void InitializePIDController(rev::CANPIDController);
+  void HandleShooter();
+  void HandleIntake();
   // define pin numbers for motors
   const int RLeadID = 2;
   const int LLeadID = 4;
@@ -64,17 +70,17 @@ class Robot : public frc::TimedRobot {
   bool PlayingBack = false;
   bool Adown = false;
   bool recordGo = false;
+
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax RFollowMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax LLeadMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax RFollowMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax LLeadMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANPIDController LLeadPID{LLeadMotor};
   rev::CANPIDController RLeadPID{RLeadMotor};
-  rev::CANPIDController LFollowPID{LFollowMotor};
-  rev::CANPIDController RFollowPID{RFollowMotor};
-  // intake
-
+  rev::CANPIDController LFollowPID{LLeadMotor};
+  rev::CANPIDController RFollowPID{RLeadMotor};
+  //defines drivestrain and motor controllers
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
   SparkController LLead{LLeadMotor, LLeadPID};
@@ -102,13 +108,9 @@ class Robot : public frc::TimedRobot {
   //colors
   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
   rev::ColorSensorV3 colorSensor{i2cPort};
-  rev::ColorMatch colorMatcher;
 
   TalonSRX colorWheelMotor{ColorWheelID};
-  frc::Color aimRed = {0.465, 0.376, 0.158}; 
-  frc::Color aimYellow = {0.324, 0.535, 0.14}; 
-  frc::Color aimGreen = {0.197, 0.545, 0.256}; 
-  frc::Color aimBlue = {0.157, 0.43, 0.412}; 
+
   char currentColorTarget = 'N';
   
 
@@ -116,21 +118,39 @@ class Robot : public frc::TimedRobot {
 
   //solenoid id
   const int solenoidID = 0;
-  const int intakeMotorID = -1;
-  const int shooterID = -1;
-  const int intakeBeltID = -1;
-//  frc::Solenoid intakePiston{solenoidID};
-  Toggle canIntake{false};
-  Toggle isShooting{false};
+  const int intakeMotorID = 5;
+  const int shooterID = 6;
+  const int intakeBeltID = 7;
+  frc::Solenoid intakePiston{solenoidID};
+  // Toggle canIntake{false};
+  // Toggle isShooting{false};
   VictorSPX intakeMotor{intakeMotorID};
-  VictorSPX intakeBelt{intakeBeltID}; // vertical + bottom
-  VictorSPX shooterBelt{shooterID};
+  TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
+  VictorSPX shooterBelt{shooterID};// top belt
+  frc::DigitalInput lineBreak1{0};
+  frc::DigitalInput lineBreak2{1};
+  double intakeBeltSpeed = 0;
+  double shooterBeltSpeed = 0.2;
+	bool isUpToSpeed = false;
+
+  //Reversing and Counting the balls
+  //Linebreak Sensor 3 has a value of 1 when both sensors are not facing eachother
+  //Linebreak Sensor 3 has a value of 0 when both sensors are facing eachother
+  //Linebreak sensors can be displaced by about 9.5 inches from each other and about up to 1 cm of vertical displacement
+  frc::DigitalInput lineBreak3{2};
+  int ballsStored = 0;
+  int ballsShot = 0;
+
+  bool lineBreak1WasBroken = false;
+  bool lineBreak2WasBroken = false;
+  bool lineBreak3WasBroken = false;
+
+  //int runsAfterPlayback = 5;
+
+  double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
 
   std::vector<double> leftLeadMotorValues;
-  std::vector<double> rightLeadMotorValues;
-  std::vector<double> leftFollowMotorValues;
-  std::vector<double> rightFollowMotorValues;
-
-  //we need to add velocity PID as well
-  double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
+std::vector<double> rightLeadMotorValues;
+std::vector<double> leftFollowMotorValues;
+std::vector<double> rightFollowMotorValues;
 };

@@ -1,64 +1,82 @@
 #include "Robot.h"
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
-
+#include "utility.h"
 
 using namespace frc;
-
 void Robot::RobotInit() {
-		// Configure drivetrain
-		LLeadMotor.RestoreFactoryDefaults();
-		LFollowMotor.RestoreFactoryDefaults();
-		RLeadMotor.RestoreFactoryDefaults();
-		RFollowMotor.RestoreFactoryDefaults();
-		LFollowMotor.Follow(LLeadMotor, false);
-		RFollowMotor.Follow(RLeadMotor, true); // differential drive inverts the right motor
-		prefs.PutDouble("deadzone", 0.1);
-		prefs.PutInt("maxrpm", 2400);
-		prefs.PutDouble("p",1.0);
-		prefs.PutDouble("i",0.0);
-		prefs.PutDouble("d",0.0);
-    	prefs.PutBoolean("use encoder", false);
-		prefs.PutInt("flywheel error", 0);
-		// Configure flywheel
-		flywheelMotor.ConfigFactoryDefault();
-		flywheelMotor.Config_kP(0, .05);
-		flywheelMotor.Config_kF(0, .1);
-		flywheelMotor.Config_kI(0, 6E-05);
-		flywheelMotor.ConfigClosedloopRamp(2);
-		flywheelMotor.SetInverted(true);
-		prefs.PutInt("shooter output in ticks", 8000);
+	LFollowMotor.Follow(LLeadMotor, false);
+	RFollowMotor.Follow(RLeadMotor, true); // differential drive inverts the right motor
+	prefs.PutDouble("deadzone", 0.1);
+	prefs.PutInt("maxrpm", 2400);
+	prefs.PutDouble("p",1.0);
+	prefs.PutDouble("i",0.0);
+	prefs.PutDouble("d",0.0);
+	prefs.PutBoolean("use encoder", false);
+	prefs.PutInt("flywheel error", 0);
+	// Configure flywheel
+	flywheelMotor.ConfigFactoryDefault();
+	flywheelMotor.Config_kP(0, .05);
+	flywheelMotor.Config_kF(0, .1);
+	flywheelMotor.Config_kI(0, 6E-05);
+	flywheelMotor.ConfigClosedloopRamp(2);
+	flywheelMotor.SetInverted(true);
+	prefs.PutInt("shooter output in ticks", 8000);
+
+	// initialize color motor
+	colorMatcher.AddColorMatch(aimRed);
+	colorMatcher.AddColorMatch(aimYellow);
+	colorMatcher.AddColorMatch(aimBlue);
+	colorMatcher.AddColorMatch(aimGreen);
+
+	// Vision Camera
+	Shuffleboard::GetTab("vision")
+	.Add("Front Camera", true)
+	.WithWidget(BuiltInWidgets::kToggleButton);
+
+	kPposi = SmartDashboard::GetNumber("kp", kPposi);
+	kIposi = SmartDashboard::GetNumber("ki", kIposi);
+	kDposi = SmartDashboard::GetNumber("kd", kDposi);
 		
-		// configure intake/shooter
-		prefs.PutBoolean("wait to shoot", false);
-		prefs.PutDouble("intake motor speed", 0.2);
-		prefs.PutDouble("intake belt speed", 0.2);
-		prefs.PutDouble("shooter belt speed", 0.2);
-		prefs.PutDouble("shooter belt speed reverse", 0.2);
-		// output vision testing values
-		MakeSlider("lowerH", 15, 179);
-		MakeSlider("lowerS", 100);
-		MakeSlider("lowerV", 130);
-		MakeSlider("upperH", 60, 179);
-		MakeSlider("upperS", 255);
-		MakeSlider("upperV", 255);
-		prefs.PutDouble("color spinner motor speed",0.5);
+	// Configure drivetrain
+	LLeadMotor.RestoreFactoryDefaults();
+	LFollowMotor.RestoreFactoryDefaults();
+	RLeadMotor.RestoreFactoryDefaults();
+	RFollowMotor.RestoreFactoryDefaults();
+	LFollowMotor.Follow(LLeadMotor, false);
+	RFollowMotor.Follow(RLeadMotor, false); // differential drive inverts the right motor
+	prefs.PutDouble("deadzone", 0.1);
+	prefs.PutBoolean("use encoder", false);
 
-		// initialize color motor
-		colorMatcher.AddColorMatch(aimRed);
-		colorMatcher.AddColorMatch(aimYellow);
-		colorMatcher.AddColorMatch(aimBlue);
-		colorMatcher.AddColorMatch(aimGreen);
+	// Configure flywheel
+	ConfigurePIDF(flywheelMotor, .05, 6E-05, 0, .1);
+	flywheelMotor.ConfigClosedloopRamp(2);
+	flywheelMotor.SetInverted(false);
+	prefs.PutInt("flywheel speed", 8000);
 
-		// Vision Camera
-		Shuffleboard::GetTab("vision")
-		.Add("Front Camera", true)
-		.WithWidget(BuiltInWidgets::kToggleButton);
+	// configure intake
+	ConfigurePIDF(intakeBelt, .03, 6E-05, 0, 0);
+	intakeBelt.SetInverted(true);
+	prefs.PutInt("intake belt", 8000);
+	prefs.PutDouble("intake roller speed",0.5);
 
-		kPposi = SmartDashboard::GetNumber("kp", kPposi);
-  		kIposi = SmartDashboard::GetNumber("ki", kIposi);
-  		kDposi = SmartDashboard::GetNumber("kd", kDposi);
-		
+	// Configure Line break sensors & belts
+	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
+	frc::SmartDashboard::PutNumber("Line Break Sensor 2", 2);
+	prefs.PutDouble("shooter speed",0.0);
+	prefs.PutDouble("reverse belt speed",0.0);
+	shooterBelt.SetInverted(true);
+
+	Shuffleboard::GetTab("vision")
+	.Add("Front Camera", true)
+	.WithWidget(BuiltInWidgets::kToggleButton);
+
+	// Configure Color Sensor
+	prefs.PutDouble("color spinner motor speed",0.5);
+	colorMatcher.AddColorMatch(aimRed);
+	colorMatcher.AddColorMatch(aimYellow);
+	colorMatcher.AddColorMatch(aimBlue);
+	colorMatcher.AddColorMatch(aimGreen);		
 }
 void Robot::print(std::vector<std::vector<double>> input)
 {
@@ -90,42 +108,18 @@ void Robot::HandleDrivetrain() {
 	
 	if(!PlayingBack)
 	{
-		speed = ProcessControllerInput(pilot.GetY(LEFT));
-		turn = ProcessControllerInput(pilot.GetX(RIGHT));
+		speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+		turn = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
 		targetVelocity = speed;
 		drivetrain.ArcadeDrive(targetVelocity, -turn, true);
 		
 	}
-	else if (PlayingBack)
-	{
-		const int MOD = runsAfterPlayback - (runsAfterPlayback % 2); 
-		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(MOD), rev::ControlType::kPosition);
-		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(MOD), rev::ControlType::kPosition);
-		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(MOD), rev::ControlType::kPosition);
-		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(MOD), rev::ControlType::kPosition);
-
-		pilot.SetRumble(GenericHID::kLeftRumble, 1);
-		pilot.SetRumble(GenericHID::kRightRumble, 1);
-
-		runsAfterPlayback++;
-		if (leftLeadMotorValues.size() <= runsAfterPlayback)
-		{
-			PlayingBack = false;
-			pilot.SetRumble(GenericHID::kLeftRumble, 0);
-			pilot.SetRumble(GenericHID::kRightRumble, 0);
-		}
-	}
+	
 	// Output useful values
-	frc::SmartDashboard::PutNumber("Speed", speed);
+	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
+	frc::SmartDashboard::PutNumber("Current R motor velocity", RLead.GetVelocity());
+	frc::SmartDashboard::PutNumber("Desired Speed (Velocity)", speed * 5500);
 	frc::SmartDashboard::PutNumber("Turn", turn);
-	frc::SmartDashboard::PutNumber("left lead encoder", LLead.GetEncoder());
-	frc::SmartDashboard::PutNumber("right lead encoder", RLead.GetEncoder());
-	frc::SmartDashboard::PutNumber("left motor applied", LLead.GetApplied());
-	frc::SmartDashboard::PutNumber("right lead applied", RLead.GetApplied());
-	frc::SmartDashboard::PutNumber("left follow encoder", LFollow.GetEncoder());
-	frc::SmartDashboard::PutNumber("right follow encoder", RFollow.GetEncoder());
-	frc::SmartDashboard::PutNumber("left follow applied", LFollow.GetApplied());
-	frc::SmartDashboard::PutNumber("right follow applied", RFollow.GetApplied());
 }
 // Handle LED Strip code
 void Robot::HandleLEDStrip() {
@@ -141,13 +135,11 @@ void Robot::HandleLEDStrip() {
 	ledStrip.Set(ledMode % ledStrip.NumModes());
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
-void Robot::RobotPeriodic() {
-
-}
+void Robot::RobotPeriodic() {}
 
 void Robot::AutonomousInit() {
-	InitializePIDController(LLeadPID);
-	InitializePIDController(RLeadPID);
+	ConfigurePIDF(LLeadPID, 0,0,0,0.0001755);
+	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
 
 }
 
@@ -165,6 +157,22 @@ void Robot::TeleopInit() {
   kIposi = SmartDashboard::PutNumber("ki", kIposi);
   kDposi = SmartDashboard::PutNumber("kd", kDposi);
 }
+
+void Robot::InitializePIDController(rev::CANPIDController pid_controller) {
+		
+	// default smart motion coefficients
+	double kMinVel = 0, kMaxAcc = 1500, kAllErr = 0;
+
+	pid_controller.SetOutputRange(-1, 1);
+	pid_controller.SetSmartMotionMinOutputVelocity(kMinVel);
+	pid_controller.SetSmartMotionMaxAccel(kMaxAcc);
+	pid_controller.SetSmartMotionAllowedClosedLoopError(kAllErr);
+	pid_controller.SetSmartMotionMaxVelocity(prefs.GetInt("maxrpm"));
+	pid_controller.SetP(prefs.GetInt("p"));
+	pid_controller.SetI(prefs.GetInt("i"));
+	pid_controller.SetD(prefs.GetInt("d"));
+}
+
 void Robot::HandleVision() {
 	// double toggleMode = ProcessControllerInput(pilot.GetTriggerAxis(LEFT));
 	// if (toggleMode > 0) {
@@ -174,50 +182,7 @@ void Robot::HandleVision() {
 	// }
 	// if toggleMode 
 }
-
-void Robot::TeleopPeriodic() {
-	// color
-	HandleLEDStrip();
-	HandleDrivetrain();
-	HandleColorWheel();
-	HandleStuff();
-	//manage intake state, toggle with a button
-
-	kPposi = SmartDashboard::GetNumber("kp", kPposi);
-  	kIposi = SmartDashboard::GetNumber("ki", kIposi);
-    kDposi = SmartDashboard::GetNumber("kd", kDposi);
-
-}
-void Robot::HandleStuff() {
-	bool isIntaking = ProcessControllerInput(copilot.GetTriggerAxis(LEFT)) > 0;
-	bool runShooterBelt = ProcessControllerInput(copilot.GetTriggerAxis(RIGHT)) > 0;
-	int error = std::abs(flywheelMotor.GetClosedLoopError());
-
-	canIntake.toggle(copilot.GetXButton());
-	isShooting.toggle(copilot.GetAButton());
-
-	SmartDashboard::PutBoolean("isIntaking", isIntaking);
-	SmartDashboard::PutBoolean("canIntake", canIntake);
-	SmartDashboard::PutBoolean("wants to shoot", isShooting);
-
-	//intakePiston.Set(canIntake);
-	intakeMotor.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("intake belt speed",0) : 0);
-	shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? prefs.GetDouble("shooter belt speed",0) : 0);
-	// turn on shooter belt
-	if (runShooterBelt) {
-		shooterBelt.Set(ControlMode::PercentOutput, prefs.GetDouble("shooter belt speed", 0));
-	}
-
-	if (isShooting) {
-		if (error > prefs.GetInt("flywheel error", 0)) {
-			shooterBelt.Set(ControlMode::PercentOutput, isIntaking ? -prefs.GetDouble("shooter belt speed reverse",0) : 0);
-		}
-		
-		flywheelMotor.Set(TalonFXControlMode::Velocity, prefs.GetInt("shooter output in ticks", 0));
-	}
-	
-	//recording/.playback options
-	//recording
+void Robot::HandleRecordPlayback() {
 	if(pilot.GetAButtonPressed()) {
 		recordGo = false;
 		isRecording = !isRecording;
@@ -250,10 +215,10 @@ void Robot::HandleStuff() {
 		recordGo = true;
 	}
 	if(isRecording && recordGo){
-		leftLeadMotorValues.push_back(LLead.GetEncoder());
-		leftFollowMotorValues.push_back(LFollow.GetEncoder());
-		rightLeadMotorValues.push_back(RLead.GetEncoder());
-		rightFollowMotorValues.push_back(RFollow.GetEncoder());
+		leftLeadMotorValues.push_back(LLead.GetPosition());
+		leftFollowMotorValues.push_back(LFollow.GetPosition());
+		rightLeadMotorValues.push_back(RLead.GetPosition());
+		rightFollowMotorValues.push_back(RFollow.GetPosition());
 	}
 
 	//playback
@@ -289,15 +254,53 @@ void Robot::HandleStuff() {
 			RFollowMotor.GetPIDController().SetD(kDposi);
 		}
 	}
+	//playback
+	if (PlayingBack)
+	{
+		const int MOD = runsAfterPlayback - (runsAfterPlayback % 2); 
+		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(MOD), rev::ControlType::kPosition);
+		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(MOD), rev::ControlType::kPosition);
+		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(MOD), rev::ControlType::kPosition);
+		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(MOD), rev::ControlType::kPosition);
+
+		pilot.SetRumble(GenericHID::kLeftRumble, 1);
+		pilot.SetRumble(GenericHID::kRightRumble, 1);
+
+		double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+		double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
+		drivetrain.ArcadeDrive(speed, -turn, true);
+
+		runsAfterPlayback++;
+		if (leftLeadMotorValues.size() <= runsAfterPlayback)
+		{
+			PlayingBack = false;
+			pilot.SetRumble(GenericHID::kLeftRumble, 0);
+			pilot.SetRumble(GenericHID::kRightRumble, 0);
+		}
+	}
+}
+void Robot::TeleopPeriodic() {
+	// color
+	HandleLEDStrip();
+	HandleDrivetrain();
+	// HandleColorWheel(); // Currently breaks robot code w/o sensor
+	HandleShooter();
+	//manage intake state, toggle with a button
+	HandleIntake();
+	HandleRecordPlayback();
+
+	kPposi = SmartDashboard::GetNumber("kp", kPposi);
+  	kIposi = SmartDashboard::GetNumber("ki", kIposi);
+    kDposi = SmartDashboard::GetNumber("kd", kDposi);
 
 }
 
+
 void Robot::HandleColorWheel() {
-	std::string gameData;
-	gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+	std::string gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
 	char closestColor;
 	double confidence;
-	std::tie(closestColor, confidence) = ClosestColor();
+	//std::tie(closestColor, confidence) = ClosestColor(colorSensor);
 	int proximity = (int) colorSensor.GetProximity();
 	SmartDashboard::PutNumber("Proximity", proximity);
 	SmartDashboard::PutNumber("Confidence", confidence);
@@ -313,69 +316,75 @@ void Robot::HandleColorWheel() {
 
 }
 
-/*
- _    _ _______ _____ _      _____ _________     __  ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
-| |  | |__   __|_   _| |    |_   _|__   __\ \   / / |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
-| |  | |  | |    | | | |      | |    | |   \ \_/ /  | |__  | |  | |  \| | |       | |    | || |  | |  \| | (___  
-| |  | |  | |    | | | |      | |    | |    \  /    |  __| | |  | | . ` | |       | |    | || |  | | . ` |\___ \ 
-| |__| |  | |   _| |_| |____ _| |_   | |     | |    | |    | |__| | |\  | |____   | |   _| || |__| | |\  |____) 
-|\____/   |_|  |_____|______|_____|  |_|     |_|    |_|     \____/|_| \_|\_____|  |_|  |_____\____/|_| \_|_____/                                            
-*/
-// adds a configured slider to vision tab
-void Robot::MakeSlider(std::string name, double defaultV, double max) {
-		wpi::StringMap<std::shared_ptr<nt::Value>> properties {
-				std::make_pair("min", nt::Value::MakeDouble(0)),
-				std::make_pair("max", nt::Value::MakeDouble(max))
-		};
-		Shuffleboard::GetTab("vision")
-		.Add(name, defaultV)
-		.WithWidget(BuiltInWidgets::kNumberSlider)
-		.WithProperties(properties);
-}
-// configures a PID controller
-void Robot::InitializePIDController(rev::CANPIDController pid_controller) {
-		
-	// default smart motion coefficients
-	double kMinVel = 0, kMaxAcc = 1500, kAllErr = 0;
 
-	pid_controller.SetOutputRange(-1, 1);
-	pid_controller.SetSmartMotionMinOutputVelocity(kMinVel);
-	pid_controller.SetSmartMotionMaxAccel(kMaxAcc);
-	pid_controller.SetSmartMotionAllowedClosedLoopError(kAllErr);
-	pid_controller.SetSmartMotionMaxVelocity(prefs.GetInt("maxrpm"));
-	pid_controller.SetP(prefs.GetInt("p"));
-	pid_controller.SetI(prefs.GetInt("i"));
-	pid_controller.SetD(prefs.GetInt("d"));
-}
-// apply deadzone & possible scaling, etc
-double Robot::ProcessControllerInput(double val) {
-	return fabs(val) < prefs.GetDouble("deadzone") ? 0 : val;
-}
 
-// Return the closest detected color
-std::tuple<char, double> Robot::ClosestColor() {
-	frc::Color detectedColor = colorSensor.GetColor();
-	char color;
-	double confidence;
-	frc::Color matchedColor = colorMatcher.MatchClosestColor(detectedColor, confidence);
-	if (matchedColor == aimBlue) {
-		color = 'B';
-	} else if (matchedColor == aimRed) {
-		color = 'R';
-	} else if (matchedColor == aimGreen) {
-		color = 'G';
-	} else if (matchedColor == aimYellow) {
-		color = 'Y';
-	} else {
-		color = 'N';
+
+// Handle Line Sensor Indexing
+void Robot::HandleShooter() {
+	double reverseSpeed = prefs.GetDouble("reverse belt speed",0);
+	double intakeRollerSpeed = prefs.GetDouble("intake roller speed", 0.5);
+	bool lineBreak1Broken = !lineBreak1.Get();
+	bool lineBreak2Broken = !lineBreak2.Get();
+	bool lineBreak3Broken = lineBreak3.Get();
+	
+
+
+	// The 'run in reverse because something bad happened'
+	if (pilot.GetStartButton()) {
+		shooterBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
+		intakeBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
+		intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
+		return; // do not run any other shooter code
 	}
-	return std::make_tuple(color, confidence);
+	// The 'run in reverse to move ball back to the front'
+	if (pilot.GetBackButton()){
+		if (!lineBreak2Broken){
+			shooterBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
+			intakeBelt.Set(ControlMode::PercentOutput, -reverseSpeed);
+			intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
+
+		} else {
+			shooterBelt.Set(ControlMode::PercentOutput, 0);
+			intakeBelt.Set(ControlMode::PercentOutput, 0);
+		}
+		// already handled sensor here, prevent it from being handled later
+		lineBreak2WasBroken = lineBreak2Broken;
+		return;
+	}
+
+	// read values
+	double flywheelSpeedVelocity = prefs.GetInt("flywheel speed", 0);
+	double shooterSpeedPercent = prefs.GetDouble("shooter speed", 0);
+	double intakeSpeedVelocity = prefs.GetInt("intake belt", 0);
+	
+	bool runFlywheel = ApplyDeadzone(pilot.GetTriggerAxis(RIGHT), prefs.GetDouble("deadzone")) > 0;
+
+	// The 'intake' functionality
+	// If the line break sensor detects the retroreflective tape, It will have a value of 1.0000
+	// If the line break sensor detects something infront of the retroreflective tape, it will have a value of 0.0000
+	if (!lineBreak1Broken && !lineBreak2Broken) {
+		intakeBelt.Set(ControlMode::PercentOutput, 0);
+		shooterBelt.Set(ControlMode::PercentOutput, 0);
+	} else {
+		intakeBelt.Set(ControlMode::Velocity, intakeSpeedVelocity);
+		shooterBelt.Set(ControlMode::PercentOutput, shooterSpeedPercent);
+	}
+
 }
-std::vector<double> leftLeadMotorValues;
-std::vector<double> rightLeadMotorValues;
-std::vector<double> leftFollowMotorValues;
-std::vector<double> rightFollowMotorValues;
-void Robot::TestPeriodic() {}
+
+void Robot::HandleIntake(){
+	//Change to copilot later
+	bool isIntaking = ApplyDeadzone(pilot.GetTriggerAxis(LEFT), 0.2) > 0;
+	intakePiston.Set(isIntaking);
+	double intakeRollerSpeed = prefs.GetDouble("intake roller speed", 0.5);
+	if (isIntaking){
+		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
+	} else {
+		intakeMotor.Set(ControlMode::PercentOutput, 0);
+	}
+}
+
+void Robot::TestPeriodic() {};
 
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }

@@ -10,7 +10,6 @@ public:
     rev::CANPIDController pid;
     SparkController(rev::CANSparkMax &motor, rev::CANPIDController &pid) 
     : motor(motor), encoder(motor.GetEncoder()), pid(pid) {
-
     }
     double GetVelocity() { return encoder.GetVelocity(); }
     double GetPosition()  { return encoder.GetPosition(); }

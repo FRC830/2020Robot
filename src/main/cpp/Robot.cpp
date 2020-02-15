@@ -14,8 +14,6 @@ void Robot::RobotInit() {
 	prefs.PutDouble("deadzone", 0.1);
 	prefs.PutBoolean("use encoder", false);
 
-	
-
 	// Configure flywheel
 	ConfigurePIDF(flywheelMotor, .05, 6E-05, 0, .1);
 	flywheelMotor.ConfigClosedloopRamp(2);
@@ -91,7 +89,12 @@ void Robot::HandleLEDStrip() {
 	ledStrip.Set(ledMode % ledStrip.NumModes());
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
-void Robot::RobotPeriodic() {}
+void Robot::RobotPeriodic() {
+	double currentGyroAngle = std::fmod(gyro.GetAngle(), 360);
+	odometry.Update(units::degree_t(currentGyroAngle),
+                    units::meter_t(LLead.GetVelocity()),
+                    units::meter_t(RLead.GetVelocity()));
+}
 
 void Robot::AutonomousInit() {
 	ConfigurePIDF(LLeadPID, 0,0,0,0.0001755);

@@ -200,12 +200,16 @@ if __name__ == "__main__":
 
 	videoOutput = inst.putVideo("Camera Output", width, height)
 	visionOutput = inst.putVideo("Vision Processed", width, height)
-	videoSink = CvSink("Rasp PI Sink")
+	videoSink = CvSink("Rasp PI Sink") 
 
 
 	img = np.ndarray((height,width,3))
 	frontCamera = dashboard.getBoolean("Front Camera", True)
+	lastfrontCamera = True
 	dashboard.putNumber("Number of Cameras", len(cameras))
+	dashboard.putBoolean("Last Front Camera", True)
+	
+
 	if (frontCamera):
 		videoSink.setSource(cameras[0])
 	else:
@@ -213,10 +217,18 @@ if __name__ == "__main__":
 
 	# vision processing
 	while True:
+
+		if(frontCamera != lastfrontCamera):
+			frontCamera = lastfrontCamera
+			if(frontCamera):
+				videoSink.setSource(cameras[0])
+			else:
+				videoSink.setSource(cameras[1])
+
+
 		timestamp, img = videoSink.grabFrame(img) # this outputs a CvImage
 		if not timestamp: # could not grab frame
 			continue
-		
 		if (frontCamera):
 			processed = handleBallVision(img)
 			visionOutput.putFrame(processed)

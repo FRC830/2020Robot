@@ -34,6 +34,7 @@ class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
   void RobotPeriodic() override;
+  void DisabledInit() override;
   void AutonomousInit() override;
   void AutonomousPeriodic() override;
   void TeleopInit() override;
@@ -84,14 +85,6 @@ class Robot : public frc::TimedRobot {
   LEDController ledStrip{40, 9};
   int ledMode = 0;
 // http://www.revrobotics.com/sparkmax-users-manual/
-
-  //colors
-  static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
-  rev::ColorSensorV3 colorSensor{i2cPort};
-
-  TalonSRX colorWheelMotor{ColorWheelID};
-
-  char currentColorTarget = 'N';
 
   TalonFX flywheelMotor{FlyWheelID};
 

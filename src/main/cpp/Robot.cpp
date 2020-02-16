@@ -52,19 +52,15 @@ void Robot::RobotInit() {
 	.Add("Front Camera", true)
 	.WithWidget(BuiltInWidgets::kToggleButton);
 
-	// Configure Color Sensor
-	prefs.PutDouble("color spinner motor speed",0.5);
-	colorMatcher.AddColorMatch(aimRed);
-	colorMatcher.AddColorMatch(aimYellow);
-	colorMatcher.AddColorMatch(aimBlue);
-	colorMatcher.AddColorMatch(aimGreen);		
+	SmartDashboard::PutBoolean("is playing back", PlayingBack);
+	SmartDashboard::PutBoolean("is recording", isRecording);	
 }
 void Robot::print(std::vector<std::vector<double>> input)
 {
 	std::ofstream values;
 
 	values.open ("/home/lvuser/vectors.txt");
-	
+
 	for (int j = 0; j < input.size(); j++)
 	{
 		for (int i = 0; i < input.at(j).size(); i++) {
@@ -85,7 +81,7 @@ void Robot::printSD(std::vector<double> input, std::string name)
 void Robot::HandleDrivetrain() {
 
 	double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
-	double turn = ApplyDeadzone(pilot.GetX(LEFT), prefs.GetDouble("deadzone"));
+	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 
 	if(!PlayingBack)
 	{
@@ -211,7 +207,8 @@ void Robot::HandleRecordPlayback() {
 	//playback
 	if (PlayingBack)
 	{
-		const int MOD = runsAfterPlayback - (runsAfterPlayback % 2); 
+		const int MOD = runsAfterPlayback;
+	
 		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(MOD), rev::ControlType::kPosition);
 		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(MOD), rev::ControlType::kPosition);
 		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(MOD), rev::ControlType::kPosition);
@@ -239,26 +236,6 @@ void Robot::TeleopPeriodic() {
 	HandleShooter();
 	//manage intake state, toggle with a button
 	HandleIntake();
-
-}
-
-void Robot::HandleColorWheel() {
-	std::string gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
-	char closestColor;
-	double confidence;
-	std::tie(closestColor, confidence) = ClosestColor(colorSensor);
-	int proximity = (int) colorSensor.GetProximity();
-	SmartDashboard::PutNumber("Proximity", proximity);
-	SmartDashboard::PutNumber("Confidence", confidence);
-	SmartDashboard::PutString("Closest Color", std::string(1, closestColor));
-	if(gameData.length() > 0) {
-		currentColorTarget = gameData[0];
-	}
-	if ((currentColorTarget == closestColor) || closestColor == 'N' || currentColorTarget == 'N') {
-		colorWheelMotor.Set(ControlMode::PercentOutput, 0);
-	} else {
-		colorWheelMotor.Set(ControlMode::PercentOutput, -prefs.GetDouble("color spinner motor speed"));
-	}
 
 }
 
@@ -331,7 +308,7 @@ void Robot::HandleShooter() {
 
 	// The 'shoot' functionality
 	SmartDashboard::PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
-	if (pilot.GetAButton()) {
+	if (pilot.GetXButton()) {
 		if (meetsThreshold) {
 			isUpToSpeed = true;
 		}
@@ -397,6 +374,12 @@ void Robot::HandleIntake(){
 }
 
 void Robot::TestPeriodic() {}
+
+void Robot::DisabledInit()
+{
+	PlayingBack = false;
+	runsAfterPlayback = 5;
+}
 
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }

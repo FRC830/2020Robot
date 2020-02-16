@@ -9,8 +9,8 @@ void Robot::RobotInit() {
 	LFollowMotor.RestoreFactoryDefaults();
 	RLeadMotor.RestoreFactoryDefaults();
 	RFollowMotor.RestoreFactoryDefaults();
-	LFollowMotor.Follow(LLeadMotor, true);
-	RFollowMotor.Follow(RLeadMotor, true);
+	LFollowMotor.Follow(LLeadMotor, false);
+	RFollowMotor.Follow(RLeadMotor, false);
 	prefs.PutDouble("deadzone", 0.1);
 	prefs.PutBoolean("use encoder", false);
 
@@ -85,14 +85,11 @@ void Robot::printSD(std::vector<double> input, std::string name)
 void Robot::HandleDrivetrain() {
 
 	double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
-	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
+	double turn = ApplyDeadzone(pilot.GetX(LEFT), prefs.GetDouble("deadzone"));
 
 	if(!PlayingBack)
 	{
-		speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
-		turn = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
-		targetVelocity = speed;
-		drivetrain.ArcadeDrive(targetVelocity, -turn, true);
+		drivetrain.ArcadeDrive(speed, -turn, true);
 		
 	}
 

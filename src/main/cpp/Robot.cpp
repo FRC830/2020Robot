@@ -9,8 +9,8 @@ void Robot::RobotInit() {
 	LFollowMotor.RestoreFactoryDefaults();
 	RLeadMotor.RestoreFactoryDefaults();
 	RFollowMotor.RestoreFactoryDefaults();
-	LFollowMotor.Follow(LLeadMotor, false);
-	RFollowMotor.Follow(RLeadMotor, false);
+	LFollowMotor.Follow(LLeadMotor, true);
+	RFollowMotor.Follow(RLeadMotor, true);
 	prefs.PutDouble("deadzone", 0.1);
 	prefs.PutBoolean("use encoder", false);
 
@@ -86,7 +86,6 @@ void Robot::HandleDrivetrain() {
 
 	double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
-	drivetrain.ArcadeDrive(speed, -turn, true);
 
 	if(!PlayingBack)
 	{
@@ -223,10 +222,6 @@ void Robot::HandleRecordPlayback() {
 
 		pilot.SetRumble(GenericHID::kLeftRumble, 1);
 		pilot.SetRumble(GenericHID::kRightRumble, 1);
-
-		double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
-		double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
-		drivetrain.ArcadeDrive(speed, -turn, true);
 
 		runsAfterPlayback++;
 		if (leftLeadMotorValues.size() <= runsAfterPlayback)

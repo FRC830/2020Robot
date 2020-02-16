@@ -9,8 +9,8 @@ void Robot::RobotInit() {
 	LFollowMotor.RestoreFactoryDefaults();
 	RLeadMotor.RestoreFactoryDefaults();
 	RFollowMotor.RestoreFactoryDefaults();
-	LFollowMotor.Follow(LLeadMotor, false);
-	RFollowMotor.Follow(RLeadMotor, false); // differential drive inverts the right motor
+	LFollowMotor.Follow(LLeadMotor, true);
+	RFollowMotor.Follow(RLeadMotor, true); // differential drive inverts the right motor
 	prefs.PutDouble("deadzone", 0.1);
 	prefs.PutBoolean("use encoder", false);
 

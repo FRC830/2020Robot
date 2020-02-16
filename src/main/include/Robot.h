@@ -61,8 +61,8 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANPIDController LLeadPID{LLeadMotor};
   rev::CANPIDController RLeadPID{RLeadMotor};
-  rev::CANPIDController LLeadPID{LLeadMotor};
-  rev::CANPIDController RLeadPID{RLeadMotor};
+  rev::CANPIDController LFollowPID{LFollowMotor};
+  rev::CANPIDController RFollowPID{RFollowMotor};
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
   SparkController LLead{LLeadMotor, LLeadPID};

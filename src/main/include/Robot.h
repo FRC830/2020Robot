@@ -24,16 +24,21 @@
 #include <frc/DigitalInput.h>
 #include <frc/AnalogInput.h>
 
+#include <frc/controller/RamseteController.h>
 #include <frc/ADXRS450_Gyro.h>
-#include <frc/DifferentialDriveOdometry.h>
 #include <frc/Encoder.h>
 #include <frc/PWMVictorSPX.h>
 #include <frc/SpeedControllerGroup.h>
 #include <frc/drive/DifferentialDrive.h>
 #include <frc/geometry/Pose2d.h>
 #include <frc/kinematics/DifferentialDriveOdometry.h>
-#include <frc2/command/SubsystemBase.h>
+//#include <frc2/command/SubsystemBase.h>
 #include <units/units.h>
+
+#include <frc/Filesystem.h>
+#include <frc/trajectory/TrajectoryUtil.h>
+#include <wpi/Path.h>
+#include <wpi/SmallString.h>
 
 // #include <frc/cs/CameraServer.h>
 
@@ -53,6 +58,7 @@ class Robot : public frc::TimedRobot {
   void HandleVision();
   void HandleShooter();
   void HandleIntake();
+  void LoadTrajectory(std::string x);
   // define pin numbers for motors
   const int RLeadID = 2;
   const int LLeadID = 4;
@@ -128,26 +134,32 @@ class Robot : public frc::TimedRobot {
   bool lineBreak3WasBroken = false;
 
   // Robot characterization
-  constexpr auto ks = 0.167; // test values, not from actual robot
-  constexpr auto kv = 0.0684; // TODO convert to seconds-per-meter
+  static constexpr auto ks = 0.167; // test values, not from actual robot
+  static constexpr auto kv = 0.0684; // TODO convert to seconds-per-meter
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/entering-constants.html
-  constexpr auto ka = 0.00744; // TODO convert to seconds^2-per-meter
+  static constexpr auto ka = 0.00744; // TODO convert to seconds^2-per-meter
   // test value developed from analyzing characterization
-  constexpr double kPDriveVel = 0.339;
+  static constexpr double kPDriveVel = 0.339;
 
-  constexpr auto kTrackwidth = 27.9;//distance between wheels
-  extern const frc::DifferentialDriveKinematics kDriveKinematics;
+  static constexpr auto kTrackwidth = 27.9;
+  frc::DifferentialDriveKinematics kDriveKinematics{units::meter_t(kTrackwidth)};
 
-  constexpr auto kMaxSpeed = 2_mps;          //change to correct values
-  constexpr auto kMaxAcceleration = 2_mps_sq;//change to correct values
+  static constexpr auto kMaxSpeed = 2_mps; 
+  static constexpr auto kMaxAcceleration = 2_mps_sq;
 
   // Reasonable baseline values for a RAMSETE follower in units of meters and
   // seconds
 
-  // might need changeing
-  constexpr double kRamseteB = 2;     
-  constexpr double kRamseteZeta = 0.7;
+  static constexpr double kRamseteB = 2;     
+  static constexpr double kRamseteZeta = 0.7;
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/creating-drive-subsystem.html
   frc::ADXRS450_Gyro gyro;
-  frc::DifferentialDriveOdometry odometry;
+  frc::DifferentialDriveOdometry odometry{units::radian_t(0)};
+
+  frc::RamseteController controller;
+
+  frc::Trajectory trajectory;
+
+  frc::Timer TimeFromStart;
+
 };

@@ -4,6 +4,7 @@
 class SparkController: public frc::SpeedController {
 public:
     double maxRPM = 5500;
+    double metersToRpm = maxRPM/2;
     bool encoderEnabled = false;
     rev::CANSparkMax motor;
     rev::CANEncoder encoder;
@@ -20,6 +21,9 @@ public:
             return;
         }
         pid.SetReference(maxRPM * speed, rev::ControlType::kVelocity);
+    }
+    void SetSpeed(units::meters_per_second_t speed){
+        pid.SetReference(maxRPM * double(speed), rev::ControlType::kVelocity);
     }
     double Get() const override { return motor.Get(); }
     void SetInverted(bool isInverted) override { motor.SetInverted(isInverted); }

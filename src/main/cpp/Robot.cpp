@@ -2,6 +2,7 @@
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "utility.h"
+
 using namespace frc;
 void Robot::RobotInit() {
 	// Configure drivetrain
@@ -90,19 +91,30 @@ void Robot::HandleLEDStrip() {
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
 void Robot::RobotPeriodic() {
-	double currentGyroAngle = std::fmod(gyro.GetAngle(), 360);
-	odometry.Update(units::degree_t(currentGyroAngle),
-                    units::meter_t(LLead.GetVelocity()),
-                    units::meter_t(RLead.GetVelocity()));
 }
 
 void Robot::AutonomousInit() {
 	ConfigurePIDF(LLeadPID, 0,0,0,0.0001755);
 	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
-
+	TimeFromStart.Start();
 }
 
-void Robot::AutonomousPeriodic() {}
+void Robot::AutonomousPeriodic() {
+	auto currentGyroAngle = units::degree_t(std::fmod(gyro.GetAngle(), 360));
+	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), units::meter_t(LLead.GetPosition()), units::meter_t(RLead.GetPosition()));
+	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 
+  	ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
+	// odometry.Update(units::degree_t(currentGyroAngle),
+    //                 units::meter_t(LLead.GetVelocity()),
+    //                 units::meter_t(RLead.GetVelocity()));
+
+	DifferentialDriveWheelSpeeds wheelSpeeds = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
+	units::meters_per_second_t left = wheelSpeeds.left;
+	units::meters_per_second_t right = wheelSpeeds.right;
+	// drivetrain.TankDrive(left,right,false);
+	LLead.SetSpeed(left);
+	RLead.SetSpeed(right);
+}
 
 void Robot::TeleopInit() {}
 
@@ -125,6 +137,15 @@ void Robot::TeleopPeriodic() {
 	//manage intake state, toggle with a button
 	HandleIntake();
 
+}
+
+void Robot::LoadTrajectory(std::string x){
+	wpi::SmallString<64> deployDirectory;
+	frc::filesystem::GetDeployDirectory(deployDirectory);
+	wpi::sys::path::append(deployDirectory, "paths");
+	wpi::sys::path::append(deployDirectory, x);
+
+	trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
 }
 
 void Robot::HandleColorWheel() {

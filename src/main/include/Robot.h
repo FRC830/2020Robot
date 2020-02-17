@@ -58,7 +58,7 @@ class Robot : public frc::TimedRobot {
   void HandleVision();
   void HandleShooter();
   void HandleIntake();
-  void LoadTrajectory(std::string x);
+  void LoadTrajectory(std::string fileName);
   // define pin numbers for motors
   const int RLeadID = 2;
   const int LLeadID = 4;
@@ -141,7 +141,7 @@ class Robot : public frc::TimedRobot {
   // test value developed from analyzing characterization
   static constexpr double kPDriveVel = 0.339;
 
-  static constexpr auto kTrackwidth = 27.9;
+  static constexpr units::inch_t kTrackwidth = 27.9_in;
   frc::DifferentialDriveKinematics kDriveKinematics{units::meter_t(kTrackwidth)};
 
   static constexpr auto kMaxSpeed = 2_mps; 

@@ -53,6 +53,7 @@ void Robot::RobotInit() {
 	.Add("Front Camera", true)
 	.WithWidget(BuiltInWidgets::kToggleButton);
 
+	
 	// Configure Color Sensor
 	prefs.PutDouble("color spinner motor speed",0.5);
 	colorMatcher.AddColorMatch(aimRed);
@@ -69,8 +70,6 @@ void Robot::HandleDrivetrain() {
 	drivetrain.ArcadeDrive(speed, -turn, true);
 
 	// Output useful values
-	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
-	frc::SmartDashboard::PutNumber("Current R motor velocity", RLead.GetVelocity());
 	frc::SmartDashboard::PutNumber("Desired Speed (Velocity)", speed * 5500);
 	frc::SmartDashboard::PutNumber("Turn", turn);
 	frc::SmartDashboard::PutNumber("left lead position", LLead.GetPosition());
@@ -91,29 +90,43 @@ void Robot::HandleLEDStrip() {
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
 void Robot::RobotPeriodic() {
+	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
+	frc::SmartDashboard::PutNumber("Current R motor velocity", RLead.GetVelocity());
 }
 
 void Robot::AutonomousInit() {
+	LLead.ResetEncoder();
+	RLead.ResetEncoder();
+	gyro.Reset();
 	ConfigurePIDF(LLeadPID, 0,0,0,0.0001755);
 	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
+	TimeFromStart.Reset();
 	TimeFromStart.Start();
+	LoadTrajectory("Straight.wpilib.json");
 }
 
 void Robot::AutonomousPeriodic() {
-	auto currentGyroAngle = units::degree_t(std::fmod(gyro.GetAngle(), 360));
-	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), units::meter_t(LLead.GetPosition()), units::meter_t(RLead.GetPosition()));
+	auto currentGyroAngle = units::degree_t(std::fmod(-gyro.GetAngle(), 360)); // negated so that is clockwise negative
+	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
+	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), LLead.GetDistance(), RLead.GetDistance());
 	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 
   	ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
 	// odometry.Update(units::degree_t(currentGyroAngle),
     //                 units::meter_t(LLead.GetVelocity()),
     //                 units::meter_t(RLead.GetVelocity()));
-
+	SmartDashboard::PutNumber("adjusted (omega)", (double) adjustedSpeeds.omega);
+	SmartDashboard::PutNumber("adjusted (vx)", (double) adjustedSpeeds.vx);
+	SmartDashboard::PutNumber("adjusted (vy)", (double) adjustedSpeeds.vy);
 	DifferentialDriveWheelSpeeds wheelSpeeds = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
 	units::meters_per_second_t left = wheelSpeeds.left;
 	units::meters_per_second_t right = wheelSpeeds.right;
+	SmartDashboard::PutNumber("gyro (degrees)", (double) currentGyroAngle);
+	SmartDashboard::PutNumber("left speed (set) MPS", (double) left);
+	SmartDashboard::PutNumber("right speed (set) MPS", (double) right);
+
 	// drivetrain.TankDrive(left,right,false);
-	LLead.SetSpeed(left);
-	RLead.SetSpeed(right);
+	LLead.SetSpeed(-left*0.25);
+	RLead.SetSpeed(right*0.25);
 }
 
 void Robot::TeleopInit() {}
@@ -139,11 +152,11 @@ void Robot::TeleopPeriodic() {
 
 }
 
-void Robot::LoadTrajectory(std::string x){
+void Robot::LoadTrajectory(std::string fileName){
 	wpi::SmallString<64> deployDirectory;
 	frc::filesystem::GetDeployDirectory(deployDirectory);
-	wpi::sys::path::append(deployDirectory, "paths");
-	wpi::sys::path::append(deployDirectory, x);
+	wpi::sys::path::append(deployDirectory, "output");
+	wpi::sys::path::append(deployDirectory, fileName);
 
 	trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
 }

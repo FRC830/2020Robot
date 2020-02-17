@@ -95,6 +95,10 @@ void Robot::RobotPeriodic() {
 }
 
 void Robot::AutonomousInit() {
+	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	LLead.ResetEncoder();
 	RLead.ResetEncoder();
 	gyro.Reset();
@@ -102,11 +106,11 @@ void Robot::AutonomousInit() {
 	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
 	TimeFromStart.Reset();
 	TimeFromStart.Start();
-	LoadTrajectory("Straight.wpilib.json");
+	LoadTrajectory("Short.wpilib.json");
 }
 
 void Robot::AutonomousPeriodic() {
-	auto currentGyroAngle = units::degree_t(std::fmod(-gyro.GetAngle(), 360)); // negated so that is clockwise negative
+	auto currentGyroAngle = units::degree_t(-gyro.GetAngle()); // negated so that is clockwise negative
 	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
 	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), LLead.GetDistance(), RLead.GetDistance());
 	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 

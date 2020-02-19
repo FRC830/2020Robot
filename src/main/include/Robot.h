@@ -134,7 +134,7 @@ class Robot : public frc::TimedRobot {
   bool lineBreak3WasBroken = false;
 
   // Robot characterization
-  static constexpr auto ks = 0.167; // test values, not from actual robot
+  static constexpr auto ks = 0.167;
   static constexpr auto kv = 0.0684; // TODO convert to seconds-per-meter
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/entering-constants.html
   static constexpr auto ka = 0.00744; // TODO convert to seconds^2-per-meter

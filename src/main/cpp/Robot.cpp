@@ -106,7 +106,7 @@ void Robot::AutonomousInit() {
 	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
 	TimeFromStart.Reset();
 	TimeFromStart.Start();
-	LoadTrajectory("Short.wpilib.json");
+	LoadTrajectory("Straight.wpilib.json");
 }
 
 void Robot::AutonomousPeriodic() {

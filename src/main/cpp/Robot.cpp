@@ -172,7 +172,7 @@ void Robot::HandleRecordPlayback() {
 	}
 
 	//playback
-	if(pilot.GetBButtonPressed())
+	if(pilot.GetBButtonPressed() || pilot.GetBButtonReleased())
 	{
 		LLeadMotor.GetEncoder().SetPosition(0.0);
 		LFollowMotor.GetEncoder().SetPosition(0.0);

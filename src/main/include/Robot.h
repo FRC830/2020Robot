@@ -23,9 +23,11 @@
 #include <Toggle.h>
 #include <frc/DigitalInput.h>
 #include <frc/AnalogInput.h>
-
-
-
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/NetworkTable.h>
+#include <iostream>
+#include <frc/smartdashboard/SmartDashboard.h>
+#include "utility.h"
 // #include <frc/cs/CameraServer.h>
 
 class Robot : public frc::TimedRobot {
@@ -41,9 +43,10 @@ class Robot : public frc::TimedRobot {
   void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
-  void HandleVision();
+  void HandleCamera();
   void HandleShooter();
   void HandleIntake();
+  void HandleElevator();
   // define pin numbers for motors
   const int RLeadID = 2;
   const int LLeadID = 4;
@@ -72,8 +75,15 @@ class Robot : public frc::TimedRobot {
   static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand;
 
   //initializes prefreences widget
+  nt::NetworkTableInstance networkTableInstance = nt::NetworkTableInstance::GetDefault();
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
-
+  //Constant Values
+  const int flywheelSpeedVelocity = 8000;
+  const int intakeBeltSpeedVelocity = 8000;
+  static constexpr double intakeRollerSpeed = 0.5;
+  static constexpr double shooterBeltSpeed = 0.5;
+  static constexpr double reverseBeltSpeed = 0.5;
+  static constexpr double colorSpinnerSpeed = 0.5;
   // LED
   LEDController ledStrip{40, 9};
   int ledMode = 0;
@@ -102,8 +112,6 @@ class Robot : public frc::TimedRobot {
   VictorSPX shooterBelt{shooterID};// top belt
   frc::DigitalInput lineBreak1{0};
   frc::DigitalInput lineBreak2{1};
-  double intakeBeltSpeed = 0;
-  double shooterBeltSpeed = 0.2;
 	bool isUpToSpeed = false;
 
   //Reversing and Counting the balls
@@ -118,5 +126,7 @@ class Robot : public frc::TimedRobot {
   bool lineBreak2WasBroken = false;
   bool lineBreak3WasBroken = false;
 
+  bool frontCamera = true;
 
+  std::shared_ptr<nt::NetworkTable> visionTab2 = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
 };

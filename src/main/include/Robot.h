@@ -61,6 +61,14 @@ class Robot : public frc::TimedRobot {
   const int ColorWheelID = 16;
   const int FlyWheelID = 17;
 
+  //colors	
+  static constexpr auto i2cPort = frc::I2C::Port::kOnboard;	
+  rev::ColorSensorV3 colorSensor{i2cPort};	
+
+  TalonSRX colorWheelMotor{ColorWheelID};	
+
+  char currentColorTarget = 'N';
+
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax RFollowMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};

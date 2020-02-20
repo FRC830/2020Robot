@@ -1,6 +1,5 @@
 #include "Robot.h"
 
-
 using namespace frc;
 void Robot::RobotInit() {
 	// Configure drivetrain
@@ -82,8 +81,6 @@ void Robot::HandleDrivetrain() {
 	}
 
 	// Output useful values
-	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
-	frc::SmartDashboard::PutNumber("Current R motor velocity", RLead.GetVelocity());
 	frc::SmartDashboard::PutNumber("Desired Speed (Velocity)", speed * 5500);
 	frc::SmartDashboard::PutNumber("Turn", turn);
 	frc::SmartDashboard::PutNumber("left lead position", LLead.GetPosition());
@@ -103,15 +100,54 @@ void Robot::HandleLEDStrip() {
 	ledStrip.Set(ledMode % ledStrip.NumModes());
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
-void Robot::RobotPeriodic() {}
-
-void Robot::AutonomousInit() {
-	ConfigurePIDF(LLeadPID, 0,0,0,0.0001755);
-	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
-
+void Robot::RobotPeriodic() {
+	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
+	frc::SmartDashboard::PutNumber("Current R motor velocity", RLead.GetVelocity());
 }
 
-void Robot::AutonomousPeriodic() {}
+void Robot::AutonomousInit() {
+	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+	drivetrain.SetSafetyEnabled(false);
+	LLead.ResetEncoder();
+	RLead.ResetEncoder();
+	gyro.Reset();
+	ConfigurePIDF(LLeadPID, 0,0,0,0.0001755);
+	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
+	TimeFromStart.Reset();
+	TimeFromStart.Start();
+	LoadTrajectory("Straight.wpilib.json");
+}
+
+void Robot::AutonomousPeriodic() {
+	auto currentGyroAngle = units::degree_t(-gyro.GetAngle() - 35); // negated so that is clockwise negative
+	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
+	SmartDashboard::PutNumber("odometry angle", double(units::radian_t(currentGyroAngle)));
+	SmartDashboard::PutNumber("left distance", double(LLead.GetDistance()));
+	SmartDashboard::PutNumber("right distance", double(RLead.GetDistance()));
+	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), LLead.GetDistance(), RLead.GetDistance());
+	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 
+  	ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
+	// odometry.Update(units::degree_t(currentGyroAngle),
+    //                 units::meter_t(LLead.GetVelocity()),
+    //                 units::meter_t(RLead.GetVelocity()));
+	SmartDashboard::PutNumber("time from start",TimeFromStart.Get());
+	SmartDashboard::PutNumber("adjusted (omega)", (double) adjustedSpeeds.omega);
+	SmartDashboard::PutNumber("adjusted (vx)", (double) adjustedSpeeds.vx);
+	SmartDashboard::PutNumber("adjusted (vy)", (double) adjustedSpeeds.vy);
+	DifferentialDriveWheelSpeeds wheelSpeeds = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
+	units::meters_per_second_t left = wheelSpeeds.left;
+	units::meters_per_second_t right = wheelSpeeds.right;
+	SmartDashboard::PutNumber("gyro (degrees)", (double) currentGyroAngle);
+	SmartDashboard::PutNumber("left speed (set) MPS", (double) left);
+	SmartDashboard::PutNumber("right speed (set) MPS", (double) right);
+
+	// drivetrain.TankDrive(left,right,false);
+	LLead.SetSpeed(-left*0.25);
+	RLead.SetSpeed(right*0.25);
+}
 
 void Robot::TeleopInit() {}
 
@@ -238,6 +274,15 @@ void Robot::TeleopPeriodic() {
 	HandleVision();
 	HandleElevator();
 
+}
+
+void Robot::LoadTrajectory(std::string fileName){
+	wpi::SmallString<64> deployDirectory;
+	frc::filesystem::GetDeployDirectory(deployDirectory);
+	wpi::sys::path::append(deployDirectory, "output");
+	wpi::sys::path::append(deployDirectory, fileName);
+
+	trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
 }
 
 void Robot::HandleColorWheel() {
@@ -376,6 +421,11 @@ void Robot::DisabledInit()
 {
 	PlayingBack = false;
 	runsAfterPlayback = 5;
+	drivetrain.SetSafetyEnabled(true);
+	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 }
 
 #ifndef RUNNING_FRC_TESTS

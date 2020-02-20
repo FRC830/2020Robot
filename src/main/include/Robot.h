@@ -161,5 +161,4 @@ std::vector<double> leftFollowMotorValues;
 std::vector<double> rightFollowMotorValues;
 
 double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
-  ////
 };

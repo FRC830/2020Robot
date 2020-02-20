@@ -133,6 +133,8 @@ def handleBallVision(frame):
 	contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) #blobs
 	# https://github.com/jrosebr1/imutils/blob/master/imutils/convenience.py#L162
 	contours = contours[1] 
+	if len(contours) == 0:
+		return frame
 	max_contour = max(contours, key=cv2.contourArea)
 	if len(contours) > 0:
 		((x, y), radius) = cv2.minEnclosingCircle(max_contour) # returns point, radius
@@ -169,6 +171,7 @@ def handleReflectiveVision(frame):
 	upperBound = np.array([upperh, uppers, upperv])
 	# get mask of all values that match bounds, then display part of image that matches bound
 	mask = cv2.inRange(hsvImg, lowerBound, upperBound)
+	return mask
 if __name__ == "__main__":
 	if len(sys.argv) >= 2:
 		configFile = sys.argv[1]
@@ -200,27 +203,36 @@ if __name__ == "__main__":
 
 	videoOutput = inst.putVideo("Camera Output", width, height)
 	visionOutput = inst.putVideo("Vision Processed", width, height)
-	videoSink = CvSink("Rasp PI Sink")
+	videoSink = CvSink("Rasp PI Sink") 
 
 
 	img = np.ndarray((height,width,3))
-	frontCamera = dashboard.getBoolean("Front Camera", True)
+	lastfrontCamera = None
 	dashboard.putNumber("Number of Cameras", len(cameras))
-	if (frontCamera):
-		videoSink.setSource(cameras[0])
-	else:
-		videoSink.setSource(cameras[1])
+
+	
+
 
 	# vision processing
 	while True:
+
+		frontCamera = dashboard.getBoolean("Front Camera", True)
+
+		if(frontCamera != lastfrontCamera):
+			lastfrontCamera = frontCamera 
+			if(frontCamera):
+				videoSink.setSource(cameras[0])
+			else:
+				videoSink.setSource(cameras[1])
+
+
 		timestamp, img = videoSink.grabFrame(img) # this outputs a CvImage
 		if not timestamp: # could not grab frame
 			continue
-		
 		if (frontCamera):
 			processed = handleBallVision(img)
 			visionOutput.putFrame(processed)
 		else:
 			processed = handleReflectiveVision(img)
 			visionOutput.putFrame(processed)
-		thresholdOutput.putFrame(img)
+		videoOutput.putFrame(img)

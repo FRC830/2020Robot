@@ -23,6 +23,13 @@
 #include <Toggle.h>
 #include <frc/DigitalInput.h>
 #include <frc/AnalogInput.h>
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/NetworkTable.h>
+#include <iostream>
+#include <frc/smartdashboard/SmartDashboard.h>
+#include "utility.h"
+
+#include <fstream>
 
 #include <frc/controller/RamseteController.h>
 #include <frc/ADXRS450_Gyro.h>
@@ -46,6 +53,7 @@ class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
   void RobotPeriodic() override;
+  void DisabledInit() override;
   void AutonomousInit() override;
   void AutonomousPeriodic() override;
   void TeleopInit() override;
@@ -55,9 +63,10 @@ class Robot : public frc::TimedRobot {
   void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
-  void HandleVision();
+  void HandleCamera();
   void HandleShooter();
   void HandleIntake();
+  void HandleElevator();
   void LoadTrajectory(std::string fileName);
   // define pin numbers for motors
   const int RLeadID = 2;
@@ -74,9 +83,13 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANPIDController LLeadPID{LLeadMotor};
   rev::CANPIDController RLeadPID{RLeadMotor};
+  rev::CANPIDController LFollowPID{LFollowMotor};
+  rev::CANPIDController RFollowPID{RFollowMotor};
   //defines drivestrain and motor controllers
   SparkController RLead{RLeadMotor, RLeadPID};
   SparkController LLead{LLeadMotor, LLeadPID};
+  SparkController RFollow{RFollowMotor, RFollowPID};
+  SparkController LFollow{LFollowMotor, LFollowPID};
   frc::DifferentialDrive drivetrain{LLead, RLead};
 
   //create controls
@@ -87,20 +100,19 @@ class Robot : public frc::TimedRobot {
   static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand;
 
   //initializes prefreences widget
+  nt::NetworkTableInstance networkTableInstance = nt::NetworkTableInstance::GetDefault();
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
-
+  //Constant Values
+  const int flywheelSpeedVelocity = 8000;
+  const int intakeBeltSpeedVelocity = 8000;
+  static constexpr double intakeRollerSpeed = 0.5;
+  static constexpr double shooterBeltSpeed = 0.5;
+  static constexpr double reverseBeltSpeed = 0.5;
+  static constexpr double colorSpinnerSpeed = 0.5;
   // LED
   LEDController ledStrip{40, 9};
   int ledMode = 0;
 // http://www.revrobotics.com/sparkmax-users-manual/
-
-  //colors
-  static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
-  rev::ColorSensorV3 colorSensor{i2cPort};
-
-  TalonSRX colorWheelMotor{ColorWheelID};
-
-  char currentColorTarget = 'N';
 
   TalonFX flywheelMotor{FlyWheelID};
 
@@ -117,8 +129,6 @@ class Robot : public frc::TimedRobot {
   VictorSPX shooterBelt{shooterID};// top belt
   frc::DigitalInput lineBreak1{0};
   frc::DigitalInput lineBreak2{1};
-  double intakeBeltSpeed = 0;
-  double shooterBeltSpeed = 0.2;
 	bool isUpToSpeed = false;
 
   //Reversing and Counting the balls
@@ -162,4 +172,31 @@ class Robot : public frc::TimedRobot {
 
   frc::Timer TimeFromStart;
 
+  //vision
+  bool frontCamera = true;
+  std::shared_ptr<nt::NetworkTable> visionTab2 = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
+
+  //playback and record
+  void HandleRecordPlayback();
+
+  //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
+  int runsAfterPlayback = 5;
+
+  void print(std::vector<std::vector<double>> input);
+  void printSD(std::vector<double> input, std::string name);
+  bool isRecording = false;
+  bool PlayingBack = false;
+  bool Adown = false;
+  bool recordGo = false;
+
+  double targetVelocity;
+
+  
+  std::vector<double> leftLeadMotorValues;
+std::vector<double> rightLeadMotorValues;
+std::vector<double> leftFollowMotorValues;
+std::vector<double> rightFollowMotorValues;
+
+double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
+  ////
 };

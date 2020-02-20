@@ -127,7 +127,7 @@ void Robot::HandleVision() {
 		if (target < centerCamera) {
 			isAutoAligning = true;
 			drivetrain.ArcadeDrive(0, 0.1, true);
-		} else if (target < centerCamera) {
+		} else if (target > centerCamera) {
 			isAutoAligning = true;
 			drivetrain.ArcadeDrive(0, -0.1, true);
 		} else { // bad read, whatever

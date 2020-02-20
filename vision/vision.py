@@ -182,8 +182,8 @@ if __name__ == "__main__":
 
 	# start NetworkTables
 	ntinst = NetworkTablesInstance.getDefault()
-	dashboard = ntinst.getTable("SmartDashboard")
-	# dashboard = table.getSubTable("vision")
+	table = ntinst.getTable("Shuffleboard")
+	dashboard = table.getSubTable("vision")
 	if server:
 		print("Setting up NetworkTables server")
 		ntinst.startServer()

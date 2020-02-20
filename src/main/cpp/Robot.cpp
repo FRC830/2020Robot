@@ -55,19 +55,17 @@ void Robot::print(std::vector<std::vector<double>> input)
 
 	values.open ("/home/lvuser/vectors.txt");
 
-	for (int j = 0; j < input.size(); j++)
+	for (size_t j = 0; j < input.size(); j++)
 	{
-		for (int i = 0; i < input.at(j).size(); i++) {
+		for (size_t i = 0; i < input.at(j).size(); i++) {
 			values << input.at(j).at(i) << ',';
 		}
 		values << "\n\n";
 	}
 	values.close();
 }
-void Robot::printSD(std::vector<double> input, std::string name)
-{
-	int size = input.size();
-	for (int i = 0; i < size; i++) {
+void Robot::printSD(std::vector<double> input, std::string name) {
+	for (size_t i = 0; i < input.size(); i++) {
 		SmartDashboard::PutNumber(std::to_string(i) + name, input.at(i));
 	}
 }

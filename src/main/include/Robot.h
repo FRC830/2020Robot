@@ -76,6 +76,14 @@ class Robot : public frc::TimedRobot {
   const int ColorWheelID = 16;
   const int FlyWheelID = 17;
 
+  //colors	
+  static constexpr auto i2cPort = frc::I2C::Port::kOnboard;	
+  rev::ColorSensorV3 colorSensor{i2cPort};	
+
+  TalonSRX colorWheelMotor{ColorWheelID};	
+
+  char currentColorTarget = 'N';
+
   //defines motors and PID controllers
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax RFollowMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
@@ -180,7 +188,7 @@ class Robot : public frc::TimedRobot {
   void HandleRecordPlayback();
 
   //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
-  int runsAfterPlayback = 5;
+  size_t runsAfterPlayback = 5; // avoid warnings
 
   void print(std::vector<std::vector<double>> input);
   void printSD(std::vector<double> input, std::string name);

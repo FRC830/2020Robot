@@ -111,6 +111,7 @@ void Robot::AutonomousInit() {
 	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+	drivetrain.SetSafetyEnabled(false);
 	LLead.ResetEncoder();
 	RLead.ResetEncoder();
 	gyro.Reset();
@@ -122,14 +123,18 @@ void Robot::AutonomousInit() {
 }
 
 void Robot::AutonomousPeriodic() {
-	auto currentGyroAngle = units::degree_t(-gyro.GetAngle()); // negated so that is clockwise negative
+	auto currentGyroAngle = units::degree_t(-gyro.GetAngle() - 35); // negated so that is clockwise negative
 	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
+	SmartDashboard::PutNumber("odometry angle", double(units::radian_t(currentGyroAngle)));
+	SmartDashboard::PutNumber("left distance", double(LLead.GetDistance()));
+	SmartDashboard::PutNumber("right distance", double(RLead.GetDistance()));
 	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), LLead.GetDistance(), RLead.GetDistance());
 	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 
   	ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
 	// odometry.Update(units::degree_t(currentGyroAngle),
     //                 units::meter_t(LLead.GetVelocity()),
     //                 units::meter_t(RLead.GetVelocity()));
+	SmartDashboard::PutNumber("time from start",TimeFromStart.Get());
 	SmartDashboard::PutNumber("adjusted (omega)", (double) adjustedSpeeds.omega);
 	SmartDashboard::PutNumber("adjusted (vx)", (double) adjustedSpeeds.vx);
 	SmartDashboard::PutNumber("adjusted (vy)", (double) adjustedSpeeds.vy);
@@ -407,6 +412,11 @@ void Robot::DisabledInit()
 {
 	PlayingBack = false;
 	runsAfterPlayback = 5;
+	drivetrain.SetSafetyEnabled(true);
+	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 }
 
 #ifndef RUNNING_FRC_TESTS

@@ -143,7 +143,7 @@ class Robot : public frc::TimedRobot {
   void HandleRecordPlayback();
 
   //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
-  int runsAfterPlayback = 5;
+  size_t runsAfterPlayback = 5; // avoid warnings
 
   void print(std::vector<std::vector<double>> input);
   void printSD(std::vector<double> input, std::string name);

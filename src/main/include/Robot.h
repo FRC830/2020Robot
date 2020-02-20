@@ -49,7 +49,7 @@ class Robot : public frc::TimedRobot {
   void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
-  void HandleCamera();
+  void HandleVision();
   void HandleShooter();
   void HandleIntake();
   void HandleElevator();
@@ -153,7 +153,7 @@ class Robot : public frc::TimedRobot {
   bool recordGo = false;
 
   double targetVelocity;
-
+  bool isAutoAligning = false;
   
   std::vector<double> leftLeadMotorValues;
 std::vector<double> rightLeadMotorValues;
@@ -161,4 +161,6 @@ std::vector<double> leftFollowMotorValues;
 std::vector<double> rightFollowMotorValues;
 
 double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
+
+  static constexpr double centerCamera = 80.0;
 };

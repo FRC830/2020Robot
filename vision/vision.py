@@ -154,7 +154,7 @@ def handleBallVision(frame):
 			cv2.circle(maskOut, (int(x), int(y)), int(radius), (0, 255, 255), 2)
 			cv2.circle(maskOut, center, 5, (0, 0, 255), -1)
 	else:
-		dashboard.putNumber("centerXball", -1)
+		dashboard.putNumber("centerXball", 80) # center so it wont do anything
 	
 	return maskOut
 def calculateCenter(contour):
@@ -205,7 +205,7 @@ def handleReflectiveVision(frame):
 			cv2.circle(output, (centerX, centerY), 5, (0,0,255), 2)
 			dashboard.putNumber("centerXshooter", centerX)
 	else:
-		dashboard.putNumber("centerXshooter", -1)
+		dashboard.putNumber("centerXshooter", 80) # center so it wont do anything
 	return output
 if __name__ == "__main__":
 	if len(sys.argv) >= 2:
@@ -253,10 +253,10 @@ if __name__ == "__main__":
 		if(frontCamera != lastfrontCamera):
 			lastfrontCamera = frontCamera 
 			if(frontCamera):
-				print('Set source 0 (front camera)')
+				print('Set source 0 (front camera) (ball)')
 				videoSink.setSource(cameras[0])
 			else:
-				print('Set source 1 (back camera)')
+				print('Set source 1 (back camera) (shooter)')
 				videoSink.setSource(cameras[1])
 
 

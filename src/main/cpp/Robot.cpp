@@ -76,8 +76,7 @@ void Robot::HandleDrivetrain() {
 	double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 
-	if(!PlayingBack)
-	{
+	if(!PlayingBack && !isAutoAligning) {
 		drivetrain.ArcadeDrive(speed, -turn, true);
 		
 	}
@@ -116,16 +115,30 @@ void Robot::AutonomousPeriodic() {}
 
 void Robot::TeleopInit() {}
 
-void Robot::HandleCamera() {
+void Robot::HandleVision() {
 	if (pilot.GetBumperPressed(LEFT)) {
 		frontCamera = true;
 	} else if (pilot.GetBumperPressed(RIGHT)) { 
 		frontCamera = false;
 	}
-	visionTab2->PutBoolean("Front Camera", frontCamera);
+	visionTab2->PutBoolean("Front Camera", frontCamera); // frontCamera is balls
+	if (pilot.GetAButton()) {
+		double target = (frontCamera) ? visionTab2->GetNumber("centerXball", centerCamera) : visionTab2->GetNumber("centerXshooter", centerCamera);
+		if (target < centerCamera) {
+			isAutoAligning = true;
+			drivetrain.ArcadeDrive(0, 0.1, true);
+		} else if (target < centerCamera) {
+			isAutoAligning = true;
+			drivetrain.ArcadeDrive(0, -0.1, true);
+		} else { // bad read, whatever
+
+		}
+	} else {
+		isAutoAligning = false;
+	}
 }
 void Robot::HandleRecordPlayback() {
-	if(pilot.GetAButtonPressed()) {
+	if(pilot.GetStartButtonPressed()) {
 		recordGo = false;
 		isRecording = !isRecording;
 		SmartDashboard::PutBoolean("is recording", isRecording);
@@ -152,8 +165,7 @@ void Robot::HandleRecordPlayback() {
 	//allEd
 	SmartDashboard::PutBoolean("all encoders are zero", allEncodersZero);
 
-	if (allEncodersZero)
-	{
+	if (allEncodersZero) {
 		recordGo = true;
 	}
 	if(isRecording && recordGo){
@@ -164,8 +176,7 @@ void Robot::HandleRecordPlayback() {
 	}
 
 	//playback
-	if(pilot.GetBButtonPressed() || pilot.GetBButtonReleased())
-	{
+	if(pilot.GetBButtonPressed() || pilot.GetBButtonReleased()) {
 		LLeadMotor.GetEncoder().SetPosition(0.0);
 		LFollowMotor.GetEncoder().SetPosition(0.0);
 		RLeadMotor.GetEncoder().SetPosition(0.0);
@@ -177,8 +188,7 @@ void Robot::HandleRecordPlayback() {
 		pilot.SetRumble(GenericHID::kLeftRumble, 0);
 		pilot.SetRumble(GenericHID::kRightRumble, 0);
 
-		if (PlayingBack)
-		{
+		if (PlayingBack) {
 			LLeadMotor.GetPIDController().SetP(kPposi);
 			LLeadMotor.GetPIDController().SetI(kIposi);
 			LLeadMotor.GetPIDController().SetD(kDposi);
@@ -197,8 +207,7 @@ void Robot::HandleRecordPlayback() {
 		}
 	}
 	//playback
-	if (PlayingBack)
-	{
+	if (PlayingBack) {
 		const int MOD = runsAfterPlayback;
 	
 		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(MOD), rev::ControlType::kPosition);
@@ -226,7 +235,7 @@ void Robot::TeleopPeriodic() {
 	// HandleColorWheel(); // Currently breaks robot code w/o sensor
 	HandleShooter();
 	HandleIntake();
-	HandleCamera();
+	HandleVision();
 	HandleElevator();
 
 }

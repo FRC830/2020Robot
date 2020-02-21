@@ -114,6 +114,8 @@ void Robot::AutonomousInit() {
 	trajectory = LoadTrajectory("Straight.wpilib.json");
 	/*
 	frc::Transform2d transform = Pose2d(4_m,4_m, Rotation2d(90_deg)) - trajectory.IntialPose();
+	or 
+	frc::Transform2d transform = odometry.GetPose() - trajectory.InitialPose();
 	frc::Trajectory newTrajectory = trajectory.TransformBy(transform);
 	*/
 

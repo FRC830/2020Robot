@@ -110,7 +110,13 @@ void Robot::AutonomousInit() {
 	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
 	TimeFromStart.Reset();
 	TimeFromStart.Start();
+
 	trajectory = LoadTrajectory("Straight.wpilib.json");
+	/*
+	frc::Transform2d transform = Pose2d(4_m,4_m, Rotation2d(90_deg)) - trajectory.IntialPose();
+	frc::Trajectory newTrajectory = trajectory.TransformBy(transform);
+	*/
+
 }
 void Robot::HandlePathweaver() {
 	auto currentGyroAngle = units::degree_t(-gyro.GetAngle() - 35); // negated so that is clockwise negative

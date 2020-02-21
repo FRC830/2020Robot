@@ -12,7 +12,7 @@
 #include <frc/Preferences.h>
 #include <rev/ColorSensorV3.h>
 #include <rev/ColorMatch.h>
-
+#include <frc/smartdashboard/SendableChooser.h>
 #include "ctre/Phoenix.h"
 #include <ctre/phoenix/motorcontrol/can/TalonFX.h>
 #include <frc/shuffleboard/Shuffleboard.h>
@@ -29,7 +29,6 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "utility.h"
 
-#include <fstream>
 
 #include <frc/controller/RamseteController.h>
 #include <frc/ADXRS450_Gyro.h>
@@ -59,15 +58,15 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
-  // double ProcessControllerInput(double);
+  void HandleRecordPlayback();
   void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
   void HandleVision();
   void HandleShooter();
   void HandleIntake();
+  void HandlePathweaver();
   void HandleElevator();
-  void LoadTrajectory(std::string fileName);
   // define pin numbers for motors
   const int RLeadID = 2;
   const int LLeadID = 4;
@@ -173,7 +172,10 @@ class Robot : public frc::TimedRobot {
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/creating-drive-subsystem.html
   frc::ADXRS450_Gyro gyro;
   frc::DifferentialDriveOdometry odometry{units::radian_t(0)};
-
+	frc::SendableChooser<std::string> autonChooser;
+  std::string defaultAuton = "Nothing";
+  std::string simpleAuton = "Simple";
+  std::string pathAuton = "Path";
   frc::RamseteController controller;
 
   frc::Trajectory trajectory;
@@ -185,13 +187,10 @@ class Robot : public frc::TimedRobot {
   std::shared_ptr<nt::NetworkTable> visionTab2 = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
 
   //playback and record
-  void HandleRecordPlayback();
 
   //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
   size_t runsAfterPlayback = 5; // avoid warnings
 
-  void print(std::vector<std::vector<double>> input);
-  void printSD(std::vector<double> input, std::string name);
   bool isRecording = false;
   bool PlayingBack = false;
   bool Adown = false;
@@ -200,7 +199,7 @@ class Robot : public frc::TimedRobot {
   double targetVelocity;
   bool isAutoAligning = false;
   
-  std::vector<double> leftLeadMotorValues;
+  std::vector<double> leftLeadMotorValues {};
 std::vector<double> rightLeadMotorValues;
 std::vector<double> leftFollowMotorValues;
 std::vector<double> rightFollowMotorValues;

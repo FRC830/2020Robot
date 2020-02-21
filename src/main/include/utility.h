@@ -6,6 +6,33 @@
 #include <frc/shuffleboard/Shuffleboard.h>
 #include <frc/shuffleboard/ShuffleboardTab.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/trajectory/Trajectory.h>
+#include <frc/trajectory/TrajectoryUtil.h>
+#include <wpi/SmallString.h>
+#include <wpi/Path.h>
+#include <fstream>
+#include <frc/Filesystem.h>
+void outputToFile(std::vector<std::vector<double>> input, std::string filename) {
+	std::ofstream values;
+	// "/home/lvuser/vectors.txt"
+	values.open(filename);
+
+	for (size_t j = 0; j < input.size(); j++) {
+		for (size_t i = 0; i < input.at(j).size(); i++) {
+			values << input.at(j).at(i) << ',';
+		}
+		values << "\n\n";
+	}
+	values.close();
+}
+frc::Trajectory LoadTrajectory(std::string fileName) {
+	wpi::SmallString<64> deployDirectory;
+	frc::filesystem::GetDeployDirectory(deployDirectory);
+	wpi::sys::path::append(deployDirectory, "output");
+	wpi::sys::path::append(deployDirectory, fileName);
+
+	return frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
+}
 
 // apply deadzone & possible scaling, etc
 double ApplyDeadzone(double val, double deadzone) {
@@ -46,6 +73,12 @@ void ConfigurePIDF(TalonSRX &motor, double p, double i, double d, double f, bool
 	motor.Config_kI(0, i);
 	motor.Config_kD(0, d);
 	motor.Config_kF(0, f);
+}
+void SetPID(rev::CANSparkMax &motor, double p, double i, double d) {
+	auto pid = motor.GetPIDController();
+	pid.SetP(p);
+	pid.SetI(i);
+	pid.SetD(d);
 }
 // For TalonFX
 void ConfigurePIDF(TalonFX &motor, double p, double i, double d, double f, bool reset=true) {

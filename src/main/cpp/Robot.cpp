@@ -47,28 +47,20 @@ void Robot::RobotInit() {
 	colorMatcher.AddColorMatch(aimRed);
 	colorMatcher.AddColorMatch(aimYellow);
 	colorMatcher.AddColorMatch(aimBlue);
-	colorMatcher.AddColorMatch(aimGreen);	
-}
-void Robot::print(std::vector<std::vector<double>> input)
-{
-	std::ofstream values;
+	colorMatcher.AddColorMatch(aimGreen);
 
-	values.open ("/home/lvuser/vectors.txt");
+  	autonChooser.SetDefaultOption(defaultAuton, defaultAuton);
+ 	 autonChooser.AddOption(pathAuton, pathAuton);
+ 	 autonChooser.AddOption(defaultAuton, defaultAuton);
+ 	 autonChooser.AddOption(simpleAuton, simpleAuton);
+  frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
 
-	for (size_t j = 0; j < input.size(); j++)
-	{
-		for (size_t i = 0; i < input.at(j).size(); i++) {
-			values << input.at(j).at(i) << ',';
-		}
-		values << "\n\n";
-	}
-	values.close();
+	RLeadMotor.BurnFlash();
+	RFollowMotor.BurnFlash();
+	LLeadMotor.BurnFlash();
+	LFollowMotor.BurnFlash();
 }
-void Robot::printSD(std::vector<double> input, std::string name) {
-	for (size_t i = 0; i < input.size(); i++) {
-		SmartDashboard::PutNumber(std::to_string(i) + name, input.at(i));
-	}
-}
+
 // Handle teleop drivetrain code
 void Robot::HandleDrivetrain() {
 
@@ -118,10 +110,9 @@ void Robot::AutonomousInit() {
 	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
 	TimeFromStart.Reset();
 	TimeFromStart.Start();
-	LoadTrajectory("Straight.wpilib.json");
+	trajectory = LoadTrajectory("Straight.wpilib.json");
 }
-
-void Robot::AutonomousPeriodic() {
+void Robot::HandlePathweaver() {
 	auto currentGyroAngle = units::degree_t(-gyro.GetAngle() - 35); // negated so that is clockwise negative
 	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
 	SmartDashboard::PutNumber("odometry angle", double(units::radian_t(currentGyroAngle)));
@@ -147,6 +138,22 @@ void Robot::AutonomousPeriodic() {
 	// drivetrain.TankDrive(left,right,false);
 	LLead.SetSpeed(-left*0.25);
 	RLead.SetSpeed(right*0.25);
+}
+void Robot::AutonomousPeriodic() {
+	std::string currentAutonMode = autonChooser.GetSelected();
+	if (currentAutonMode == defaultAuton) {
+		// do nothing
+	} else if (currentAutonMode == simpleAuton) {
+		if (LLead.GetDistance() < units::inch_t(48)) {
+			drivetrain.ArcadeDrive(0.5, 0, true);
+		} else if (LLead.GetDistance() > units::inch_t(48+5)) {
+			drivetrain.ArcadeDrive(-0.5, 0, true);
+		} else {
+			drivetrain.ArcadeDrive(0, 0, true);
+		}
+	} else if (currentAutonMode == pathAuton) {
+		HandlePathweaver();
+	}
 }
 
 void Robot::TeleopInit() {}
@@ -182,9 +189,9 @@ void Robot::HandleRecordPlayback() {
 		LFollowMotor.GetEncoder().SetPosition(0.0);
 		RLeadMotor.GetEncoder().SetPosition(0.0);
 		RFollowMotor.GetEncoder().SetPosition(0.0);
-		if(!isRecording){
-			print({leftLeadMotorValues, leftFollowMotorValues, rightFollowMotorValues, rightLeadMotorValues});
-		}else{
+		if(!isRecording) { // recording has just finished, save to a file
+			outputToFile({leftLeadMotorValues, leftFollowMotorValues, rightFollowMotorValues, rightLeadMotorValues}, "/home/lvuser/vectors.txt");
+		}else { // wipe the array, recording started
 			leftLeadMotorValues.clear();
 			leftFollowMotorValues.clear();
 			rightLeadMotorValues.clear();
@@ -194,16 +201,16 @@ void Robot::HandleRecordPlayback() {
 	}
 	
 	bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
-							RLeadMotor.GetEncoder().GetPosition() == 0.0 &&
-							LFollowMotor.GetEncoder().GetPosition() == 0.0 &&
-							RFollowMotor.GetEncoder().GetPosition() == 0.0
-						);
+	RLeadMotor.GetEncoder().GetPosition() == 0.0 &&
+	LFollowMotor.GetEncoder().GetPosition() == 0.0 &&
+	RFollowMotor.GetEncoder().GetPosition() == 0.0);
 	//allEd
 	SmartDashboard::PutBoolean("all encoders are zero", allEncodersZero);
 
 	if (allEncodersZero) {
 		recordGo = true;
 	}
+	// make sure that encoders are wiped before pushing data
 	if(isRecording && recordGo){
 		leftLeadMotorValues.push_back(LLead.GetPosition());
 		leftFollowMotorValues.push_back(LFollow.GetPosition());
@@ -211,7 +218,7 @@ void Robot::HandleRecordPlayback() {
 		rightFollowMotorValues.push_back(RFollow.GetPosition());
 	}
 
-	//playback
+	// start playback
 	if(pilot.GetBButtonPressed() || pilot.GetBButtonReleased()) {
 		LLeadMotor.GetEncoder().SetPosition(0.0);
 		LFollowMotor.GetEncoder().SetPosition(0.0);
@@ -225,46 +232,25 @@ void Robot::HandleRecordPlayback() {
 		pilot.SetRumble(GenericHID::kRightRumble, 0);
 
 		if (PlayingBack) {
-			LLeadMotor.GetPIDController().SetP(kPposi);
-			LLeadMotor.GetPIDController().SetI(kIposi);
-			LLeadMotor.GetPIDController().SetD(kDposi);
-
-			LFollowMotor.GetPIDController().SetP(kPposi);
-			LFollowMotor.GetPIDController().SetI(kIposi);
-			LFollowMotor.GetPIDController().SetD(kDposi);
-
-			RLeadMotor.GetPIDController().SetP(kPposi);
-			RLeadMotor.GetPIDController().SetI(kIposi);
-			RLeadMotor.GetPIDController().SetD(kDposi);
-
-			RFollowMotor.GetPIDController().SetP(kPposi);
-			RFollowMotor.GetPIDController().SetI(kIposi);
-			RFollowMotor.GetPIDController().SetD(kDposi);
+			SetPID(LLeadMotor, kPposi, kIposi, kDposi);
+			SetPID(RLeadMotor, kPposi, kIposi, kDposi);
+			SetPID(RFollowMotor, kPposi, kIposi, kDposi);
+			SetPID(LFollowMotor, kPposi, kIposi, kDposi);
 		}
 	}
-	//playback
+	// playback
 	if (PlayingBack) {
-		const int MOD = runsAfterPlayback;
 	
-		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(MOD), rev::ControlType::kPosition);
-		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(MOD), rev::ControlType::kPosition);
-		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(MOD), rev::ControlType::kPosition);
-		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(MOD), rev::ControlType::kPosition);
+		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
 
 		pilot.SetRumble(GenericHID::kLeftRumble, 1);
 		pilot.SetRumble(GenericHID::kRightRumble, 1);
 
 		runsAfterPlayback++;
-		if (leftLeadMotorValues.size() <= runsAfterPlayback)
-		{
-			PlayingBack = false;
-			pilot.SetRumble(GenericHID::kLeftRumble, 0);
-			pilot.SetRumble(GenericHID::kRightRumble, 0);
-		}
-	}
-}
-
-void Robot::TeleopPeriodic() {
+		if (leftLeadMotorValues.size() <= runsAfterPlayback) {
 	HandleLEDStrip();
 	HandleDrivetrain();
 	HandleRecordPlayback();
@@ -274,15 +260,6 @@ void Robot::TeleopPeriodic() {
 	HandleVision();
 	HandleElevator();
 
-}
-
-void Robot::LoadTrajectory(std::string fileName){
-	wpi::SmallString<64> deployDirectory;
-	frc::filesystem::GetDeployDirectory(deployDirectory);
-	wpi::sys::path::append(deployDirectory, "output");
-	wpi::sys::path::append(deployDirectory, fileName);
-
-	trajectory = frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
 }
 
 void Robot::HandleColorWheel() {
@@ -312,8 +289,6 @@ void Robot::HandleShooter() {
 	bool lineBreak2Broken = lineBreak2.Get();
 	bool lineBreak3Broken = lineBreak3.Get();
 	
-
-
 	// Start: The 'run in reverse because something bad happened'
 	if (copilot.GetStartButton()) {
 		shooterBelt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
@@ -405,7 +380,6 @@ void Robot::HandleElevator() {
 	
 }
 void Robot::HandleIntake(){
-	//Change to copilot later
 	bool isIntaking = ApplyDeadzone(copilot.GetTriggerAxis(LEFT), 0.2) > 0;
 	intakePiston.Set(isIntaking);
 	if (isIntaking){
@@ -417,8 +391,7 @@ void Robot::HandleIntake(){
 
 void Robot::TestPeriodic() {}
 
-void Robot::DisabledInit()
-{
+void Robot::DisabledInit() {
 	PlayingBack = false;
 	runsAfterPlayback = 5;
 	drivetrain.SetSafetyEnabled(true);

@@ -300,8 +300,8 @@ void Robot::HandleColorWheel() {
 
 // Handle Line Sensor Indexing
 void Robot::HandleShooter() {
-	bool lineBreak1Broken = lineBreak1.Get();
-	bool lineBreak2Broken = lineBreak2.Get();
+	bool lineBreak1Broken = !lineBreak1.Get();
+	bool lineBreak2Broken = !lineBreak2.Get();
 	bool lineBreak3Broken = lineBreak3.Get();
 	
 	// Start: The 'run in reverse because something bad happened'

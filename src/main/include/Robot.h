@@ -127,7 +127,7 @@ class Robot : public frc::TimedRobot {
   //solenoid id 
   const int solenoidID = 0;
   const int intakeMotorID = 5;
-  const int shooterID = 6;
+  // const int shooterID = 6;
   const int intakeBeltID = 7;
   frc::Solenoid intakePiston{solenoidID};
   // Toggle canIntake{false};

@@ -24,8 +24,9 @@ void Robot::RobotInit() {
 	intakeBelt.SetInverted(true);
 
 	// Configure Line break sensors & belts
-	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
-	frc::SmartDashboard::PutNumber("Line Break Sensor 2", 2);
+	SmartDashboard::PutBoolean("Line Break Sensor 1", false);
+	SmartDashboard::PutBoolean("Line Break Sensor 2", false);
+	SmartDashboard::PutBoolean("Line Break Sensor 3", false);
 	// shooterBelt.SetInverted(true);
 	
 	// Configure Vision

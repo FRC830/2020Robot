@@ -132,7 +132,7 @@ class Robot : public frc::TimedRobot {
   frc::Solenoid intakePiston{solenoidID};
   // Toggle canIntake{false};
   // Toggle isShooting{false};
-  VictorSPX intakeMotor{intakeMotorID};
+  TalonSRX intakeMotor{intakeMotorID};
   TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
   //VictorSPX shooterBelt{shooterID};// top belt
   frc::DigitalInput lineBreak1{0};

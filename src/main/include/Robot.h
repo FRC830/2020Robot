@@ -162,8 +162,8 @@ class Robot : public frc::TimedRobot {
   static constexpr units::inch_t kTrackwidth = 27.9_in;
   frc::DifferentialDriveKinematics kDriveKinematics{units::meter_t(kTrackwidth)};
 
-  static constexpr auto kMaxSpeed = 2_mps; 
-  static constexpr auto kMaxAcceleration = 2_mps_sq;
+  static constexpr auto kMaxSpeed = 1_mps; 
+  static constexpr auto kMaxAcceleration = 1_mps_sq;
 
   // Reasonable baseline values for a RAMSETE follower in units of meters and
   // seconds

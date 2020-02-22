@@ -111,7 +111,7 @@ void Robot::AutonomousInit() {
 	TimeFromStart.Reset();
 	TimeFromStart.Start();
 
-	trajectory = LoadTrajectory("Short.wpilib.json");
+	trajectory = LoadTrajectory("auton1.wpilib.json");
 	
 	// frc::Transform2d transform = Pose2d(4_m,4_m, Rotation2d(90_deg)) - trajectory.IntialPose();
 	//  
@@ -144,8 +144,8 @@ void Robot::HandlePathweaver() {
 	SmartDashboard::PutNumber("right speed (set) MPS", (double) right);
 
 	// drivetrain.TankDrive(left,right,false);
-	LLead.SetSpeed(-left);
-	RLead.SetSpeed(right);
+	LLead.SetSpeed(0.5*-left);
+	RLead.SetSpeed(0.5*right);
 }
 void Robot::AutonomousPeriodic() {
 	std::string currentAutonMode = autonChooser.GetSelected();

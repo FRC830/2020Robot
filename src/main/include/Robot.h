@@ -38,10 +38,9 @@
 #include <frc/drive/DifferentialDrive.h>
 #include <frc/geometry/Pose2d.h>
 #include <frc/kinematics/DifferentialDriveOdometry.h>
-//#include <Trajectory.h>
+#include <frc/trajectory/Trajectory.h>
 //#include <frc2/command/SubsystemBase.h>
 #include <units/units.h>
-
 #include <frc/Filesystem.h>
 #include <frc/trajectory/TrajectoryUtil.h>
 #include <wpi/Path.h>
@@ -135,7 +134,7 @@ class Robot : public frc::TimedRobot {
   // Toggle isShooting{false};
   VictorSPX intakeMotor{intakeMotorID};
   TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
-  VictorSPX shooterBelt{shooterID};// top belt
+  //VictorSPX shooterBelt{shooterID};// top belt
   frc::DigitalInput lineBreak1{0};
   frc::DigitalInput lineBreak2{1};
 	bool isUpToSpeed = false;

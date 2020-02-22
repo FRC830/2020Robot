@@ -26,7 +26,7 @@ void Robot::RobotInit() {
 	// Configure Line break sensors & belts
 	frc::SmartDashboard::PutNumber("Line Break Sensor", 2);
 	frc::SmartDashboard::PutNumber("Line Break Sensor 2", 2);
-	shooterBelt.SetInverted(true);
+	// shooterBelt.SetInverted(true);
 	
 	// Configure Vision
 	MakeSlider(visionTab, "ballLowerH", 15, 179);
@@ -106,22 +106,22 @@ void Robot::AutonomousInit() {
 	LLead.ResetEncoder();
 	RLead.ResetEncoder();
 	gyro.Reset();
-	ConfigurePIDF(LLeadPID, 0,0,0,0.0001755);
-	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
+	ConfigurePIDF(LLeadPID, 0.001,0,0,0);
+	ConfigurePIDF(RLeadPID, 0.001,0,0,0);
 	TimeFromStart.Reset();
 	TimeFromStart.Start();
 
-	trajectory = LoadTrajectory("Straight.wpilib.json");
-	/*
-	frc::Transform2d transform = Pose2d(4_m,4_m, Rotation2d(90_deg)) - trajectory.IntialPose();
-	or 
+	trajectory = LoadTrajectory("Short.wpilib.json");
+	
+	// frc::Transform2d transform = Pose2d(4_m,4_m, Rotation2d(90_deg)) - trajectory.IntialPose();
+	//  
 	frc::Transform2d transform = odometry.GetPose() - trajectory.InitialPose();
-	frc::Trajectory newTrajectory = trajectory.TransformBy(transform);
-	*/
+	trajectory = trajectory.TransformBy(transform);
+	
 
 }
 void Robot::HandlePathweaver() {
-	auto currentGyroAngle = units::degree_t(-gyro.GetAngle() - 35); // negated so that is clockwise negative
+	auto currentGyroAngle = units::degree_t(-gyro.GetAngle()); // negated so that is clockwise negative
 	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
 	SmartDashboard::PutNumber("odometry angle", double(units::radian_t(currentGyroAngle)));
 	SmartDashboard::PutNumber("left distance", double(LLead.GetDistance()));
@@ -144,8 +144,8 @@ void Robot::HandlePathweaver() {
 	SmartDashboard::PutNumber("right speed (set) MPS", (double) right);
 
 	// drivetrain.TankDrive(left,right,false);
-	LLead.SetSpeed(-left*0.25);
-	RLead.SetSpeed(right*0.25);
+	LLead.SetSpeed(-left);
+	RLead.SetSpeed(right);
 }
 void Robot::AutonomousPeriodic() {
 	std::string currentAutonMode = autonChooser.GetSelected();
@@ -258,7 +258,14 @@ void Robot::HandleRecordPlayback() {
 		pilot.SetRumble(GenericHID::kRightRumble, 1);
 
 		runsAfterPlayback++;
-		if (leftLeadMotorValues.size() <= runsAfterPlayback) {
+		if (leftLeadMotorValues.size() <= runsAfterPlayback) {	
+			PlayingBack = false;	
+			pilot.SetRumble(GenericHID::kLeftRumble, 0);	
+			pilot.SetRumble(GenericHID::kRightRumble, 0);	
+		}
+	}
+}
+void Robot::TeleopPeriodic() {
 	HandleLEDStrip();
 	HandleDrivetrain();
 	HandleRecordPlayback();
@@ -299,7 +306,7 @@ void Robot::HandleShooter() {
 	
 	// Start: The 'run in reverse because something bad happened'
 	if (copilot.GetStartButton()) {
-		shooterBelt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
+		// shooterBelt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
 		intakeBelt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
 		intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
 		return; // do not run any other shooter code
@@ -307,12 +314,12 @@ void Robot::HandleShooter() {
 	// Back: The 'run in reverse to move ball back to the front'
 	if (copilot.GetBackButton()){
 		if (!lineBreak2Broken){
-			shooterBelt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
+			// shooterBelt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
 			intakeBelt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
 			intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
 
 		} else {
-			shooterBelt.Set(ControlMode::PercentOutput, 0);
+			// shooterBelt.Set(ControlMode::PercentOutput, 0);
 			intakeBelt.Set(ControlMode::PercentOutput, 0);
 		}
 		// already handled sensor here, prevent it from being handled later
@@ -353,7 +360,7 @@ void Robot::HandleShooter() {
 		}
 		flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
 		if (isUpToSpeed) {
-			shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
+			// shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
 			intakeBelt.Set(ControlMode::Velocity, intakeBeltSpeedVelocity);
 		}
 		return; // do not run intake code
@@ -362,10 +369,10 @@ void Robot::HandleShooter() {
 	// The 'intake' functionality
 	if (!lineBreak1Broken && !lineBreak2Broken) {
 		intakeBelt.Set(ControlMode::PercentOutput, 0);
-		shooterBelt.Set(ControlMode::PercentOutput, 0);
+		// shooterBelt.Set(ControlMode::PercentOutput, 0);
 	} else {
 		intakeBelt.Set(ControlMode::Velocity, intakeBeltSpeedVelocity);
-		shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
+		// shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
 	}
 
 	frc::SmartDashboard::PutBoolean("meets threshold", meetsThreshold);

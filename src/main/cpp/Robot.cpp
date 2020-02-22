@@ -73,7 +73,6 @@ void Robot::HandleDrivetrain() {
 	}
 
 	// Output useful values
-	frc::SmartDashboard::PutNumber("Desired Speed (Velocity)", speed * 5500);
 	frc::SmartDashboard::PutNumber("Turn", turn);
 	frc::SmartDashboard::PutNumber("left lead position", LLead.GetPosition());
 	frc::SmartDashboard::PutNumber("right lead position", RLead.GetPosition());
@@ -270,8 +269,8 @@ void Robot::TeleopPeriodic() {
 	HandleDrivetrain();
 	HandleRecordPlayback();
 	// HandleColorWheel(); // Currently breaks robot code w/o sensor
-	HandleShooter();
 	HandleIntake();
+	HandleShooter();
 	HandleVision();
 	HandleElevator();
 
@@ -300,8 +299,8 @@ void Robot::HandleColorWheel() {
 
 // Handle Line Sensor Indexing
 void Robot::HandleShooter() {
-	bool lineBreak1Broken = !lineBreak1.Get();
-	bool lineBreak2Broken = !lineBreak2.Get();
+	bool lineBreak1Broken = lineBreak1.Get();
+	bool lineBreak2Broken = lineBreak2.Get();
 	bool lineBreak3Broken = lineBreak3.Get();
 	
 	// Start: The 'run in reverse because something bad happened'
@@ -396,6 +395,7 @@ void Robot::HandleElevator() {
 }
 void Robot::HandleIntake(){
 	bool isIntaking = ApplyDeadzone(copilot.GetTriggerAxis(LEFT), 0.2) > 0;
+	frc::SmartDashboard::PutBoolean("is intaking",isIntaking);
 	intakePiston.Set(isIntaking);
 	if (isIntaking){
 		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);

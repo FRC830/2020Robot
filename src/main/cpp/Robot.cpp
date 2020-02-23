@@ -18,7 +18,8 @@ void Robot::RobotInit() {
 	flywheelMotor.SetInverted(false);
 	flywheelMotor.SetNeutralMode(motorcontrol::NeutralMode::Coast);
 	frc::ShuffleboardTab &visionTab = frc::Shuffleboard::GetTab("vision");
-	
+	frc::SmartDashboard::PutNumber("LED MODE", ledMode);
+	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 	// configure intake
 	ConfigurePIDF(intakeBelt, .03, 6E-05, 0, 0);
 	intakeBelt.SetInverted(true);
@@ -83,14 +84,17 @@ void Robot::HandleDrivetrain() {
 // Handle LED Strip code
 void Robot::HandleLEDStrip() {
 	double angle = copilot.GetPOV();
-	if (angle >= 45 && angle <= 135) {
+	bool ledModeDown = angle >= 45 && angle <= 135;
+	bool ledModeUp = angle >= 225 && angle <= 315;
+	if (ledUp.rising_edge(ledModeUp)) {
 		ledMode--;
-	} else if (angle >= 225 && angle <= 315 ) {
+	} else if (ledDown.rising_edge(ledModeDown)) {
 		ledMode++;
 	} else {
-		return;
+		/// return;
 	}
-
+	frc::SmartDashboard::PutNumber("timer", ledStrip.getTime());
+	frc::SmartDashboard::PutNumber("LED MODE", ledMode);
 	ledStrip.Set(ledMode % ledStrip.NumModes());
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }

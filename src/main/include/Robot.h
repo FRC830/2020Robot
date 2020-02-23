@@ -210,4 +210,6 @@ std::vector<double> rightFollowMotorValues;
 double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
 
   static constexpr double centerCamera = 80.0;
+
+  bool reversedpath = false;
 };

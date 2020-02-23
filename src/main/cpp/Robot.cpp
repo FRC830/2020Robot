@@ -127,14 +127,32 @@ void Robot::AutonomousInit() {
 
 }
 void Robot::HandlePathweaver() {
-	auto currentGyroAngle = units::degree_t(-gyro.GetAngle()); // negated so that is clockwise negative
+	
+	units::degree_t currentGyroAngle;
+	units::meters_per_second_t left;
+	units::meters_per_second_t right;
+	if(reversedpath){
+		currentGyroAngle = units::degree_t(-gyro.GetAngle()+180); // negated so that is clockwise negative
+	}else{
+		currentGyroAngle = units::degree_t(-gyro.GetAngle()); // negated so that is clockwise negative
+	}
+
+	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), LLead.GetDistance(), RLead.GetDistance());
+	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 
+  	ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
+	DifferentialDriveWheelSpeeds wheelSpeeds = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
+	if(reversedpath){
+		left = -wheelSpeeds.right;
+		right = -wheelSpeeds.left;
+	} else {
+		left = wheelSpeeds.left;
+		right = wheelSpeeds.right;
+	}
+
 	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
 	SmartDashboard::PutNumber("odometry angle", double(units::radian_t(currentGyroAngle)));
 	SmartDashboard::PutNumber("left distance", double(LLead.GetDistance()));
 	SmartDashboard::PutNumber("right distance", double(RLead.GetDistance()));
-	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), LLead.GetDistance(), RLead.GetDistance());
-	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 
-  	ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
 	// odometry.Update(units::degree_t(currentGyroAngle),
     //                 units::meter_t(LLead.GetVelocity()),
     //                 units::meter_t(RLead.GetVelocity()));
@@ -142,9 +160,7 @@ void Robot::HandlePathweaver() {
 	SmartDashboard::PutNumber("adjusted (omega)", (double) adjustedSpeeds.omega);
 	SmartDashboard::PutNumber("adjusted (vx)", (double) adjustedSpeeds.vx);
 	SmartDashboard::PutNumber("adjusted (vy)", (double) adjustedSpeeds.vy);
-	DifferentialDriveWheelSpeeds wheelSpeeds = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
-	units::meters_per_second_t left = wheelSpeeds.left;
-	units::meters_per_second_t right = wheelSpeeds.right;
+
 	SmartDashboard::PutNumber("gyro (degrees)", (double) currentGyroAngle);
 	SmartDashboard::PutNumber("left speed (set) MPS", (double) left);
 	SmartDashboard::PutNumber("right speed (set) MPS", (double) right);
@@ -152,8 +168,11 @@ void Robot::HandlePathweaver() {
 	// drivetrain.TankDrive(left,right,false);
 	LLead.SetSpeed(0.5*-left);
 	RLead.SetSpeed(0.5*right);
+	drivetrain.Feed();
 }
+
 void Robot::AutonomousPeriodic() {
+	
 	std::string currentAutonMode = autonChooser.GetSelected();
 	if (currentAutonMode == defaultAuton) {
 		// do nothing
@@ -423,7 +442,7 @@ void Robot::TestPeriodic() {}
 void Robot::DisabledInit() {
 	PlayingBack = false;
 	runsAfterPlayback = 5;
-	drivetrain.SetSafetyEnabled(true);
+	//drivetrain.SetSafetyEnabled(true);
 	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);

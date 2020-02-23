@@ -421,8 +421,20 @@ void Robot::HandleShooter() {
 
 }
 void Robot::HandleElevator() {
-	
+
+	bool isElevating = pilot.GetYButton();
+	frc::SmartDashboard::PutBoolean("is Elevating", isElevating);
+
+	if(isElevating){
+		elevatorMotor.Set(ControlMode::PercentOutput, elevatorSpeed);
+	}
+	else{
+		elevatorMotor.Set(ControlMode::PercentOutput, 0);
+	}
+
 }
+
+
 void Robot::HandleIntake(){
 	bool isIntaking = ApplyDeadzone(copilot.GetTriggerAxis(LEFT), 0.2) > 0;
 	bool isOuttaking = copilot.GetXButton();

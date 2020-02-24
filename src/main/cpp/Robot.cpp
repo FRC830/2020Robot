@@ -1,4 +1,4 @@
-#include "Robot.h"
+#include "Robot.h"																														
 
 using namespace frc;
 void Robot::RobotInit() {
@@ -117,20 +117,21 @@ void Robot::AutonomousInit() {
 	TimeFromStart.Reset();
 	TimeFromStart.Start();
 
-	trajectory = LoadTrajectory("auton1.wpilib.json");
-	
-	// frc::Transform2d transform = Pose2d(4_m,4_m, Rotation2d(90_deg)) - trajectory.IntialPose();
-	//  
+	// initializes and sets up au
+	trajectory = LoadTrajectory("Short.wpilib.json"); 
 	frc::Transform2d transform = odometry.GetPose() - trajectory.InitialPose();
 	trajectory = trajectory.TransformBy(transform);
 	
+	//odometry.ResetPosition(trajectory.InitialPose, gyro.GetAngle());
+
 
 }
 void Robot::HandlePathweaver() {
-	
+
 	units::degree_t currentGyroAngle;
 	units::meters_per_second_t left;
 	units::meters_per_second_t right;
+
 	if(reversedpath){
 		currentGyroAngle = units::degree_t(-gyro.GetAngle()+180); // negated so that is clockwise negative
 	}else{
@@ -141,6 +142,7 @@ void Robot::HandlePathweaver() {
 	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 
   	ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
 	DifferentialDriveWheelSpeeds wheelSpeeds = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
+	// driving backwards should need l and r reversed along with reversed input to motors
 	if(reversedpath){
 		left = -wheelSpeeds.right;
 		right = -wheelSpeeds.left;
@@ -148,7 +150,18 @@ void Robot::HandlePathweaver() {
 		left = wheelSpeeds.left;
 		right = wheelSpeeds.right;
 	}
-
+/*
+	if(units::second_t(TimeFromStart.Get()) > trajectory.TotalTime()){
+		double error = ErrorBetween(flywheelMotor.GetSelectedSensorVelocity(0), flywheelSpeedVelocity);
+		if (error <= .1) {
+			//intakeBelt.Set(ControlMode::Velocity, intakeBeltShootVelocity);
+		}
+		trajectory = LoadTrajectory("ballpickup.wpilib.json"); 
+		reversedpath = true;
+		//resets timer
+		TimeFromStart.Reset();
+	}
+	*/
 	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
 	SmartDashboard::PutNumber("odometry angle", double(units::radian_t(currentGyroAngle)));
 	SmartDashboard::PutNumber("left distance", double(LLead.GetDistance()));
@@ -172,7 +185,8 @@ void Robot::HandlePathweaver() {
 }
 
 void Robot::AutonomousPeriodic() {
-	
+	//flywheelSpeedVelocity = SmartDashboard::GetNumber("FLYWHEEL SPEED",flywheelSpeedVelocity);
+
 	std::string currentAutonMode = autonChooser.GetSelected();
 	if (currentAutonMode == defaultAuton) {
 		// do nothing
@@ -185,6 +199,8 @@ void Robot::AutonomousPeriodic() {
 			drivetrain.ArcadeDrive(0, 0, true);
 		}
 	} else if (currentAutonMode == pathAuton) {
+	// spin flywheel
+	flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
 		HandlePathweaver();
 	}
 }
@@ -230,7 +246,6 @@ void Robot::HandleRecordPlayback() {
 			rightLeadMotorValues.clear();
 			rightFollowMotorValues.clear();
 		}
-
 	}
 	
 	bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
@@ -299,7 +314,6 @@ void Robot::TeleopPeriodic() {
 	HandleShooter();
 	HandleVision();
 	HandleElevator();
-
 }
 
 void Robot::HandleColorWheel() {

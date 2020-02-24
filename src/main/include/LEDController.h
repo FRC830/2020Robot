@@ -101,7 +101,7 @@ class LEDController {
         _set_all(251,215,4);
     }
     void dot(double animationTime) {
-        if (modeChange) {
+        if (modeChange) { // clear all
             _set_all(0,0,0);
         }
         double timerMod = std::fmod(timer.Get(), animationTime);

@@ -45,6 +45,7 @@
 #include <frc/trajectory/TrajectoryUtil.h>
 #include <wpi/Path.h>
 #include <wpi/SmallString.h>
+#include <RecordSaves.h>
 
 
 // #include <frc/cs/CameraServer.h>
@@ -176,6 +177,7 @@ class Robot : public frc::TimedRobot {
   frc::ADXRS450_Gyro gyro;
   frc::DifferentialDriveOdometry odometry{units::radian_t(0)};
 	frc::SendableChooser<std::string> autonChooser;
+  frc::SendableChooser<std::string> saveChooser;
   std::string defaultAuton = "Nothing";
   std::string simpleAuton = "Simple";
   std::string pathAuton = "Path";
@@ -202,10 +204,11 @@ class Robot : public frc::TimedRobot {
   double targetVelocity;
   bool isAutoAligning = false;
   
-  std::vector<double> leftLeadMotorValues {};
-std::vector<double> rightLeadMotorValues;
-std::vector<double> leftFollowMotorValues;
-std::vector<double> rightFollowMotorValues;
+  RecordSaves tempsave;
+  RecordSaves PermSave1{"/home/lvuser/vectors1.txt"};
+  RecordSaves PermSave2{"/home/lvuser/vectors2.txt"};
+  RecordSaves PermSaveAuton{"/home/lvuser/vectorsAuton.txt"};
+  char currentPlayButton = 'n';
 
 double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
 

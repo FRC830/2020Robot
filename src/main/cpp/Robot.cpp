@@ -57,6 +57,12 @@ void Robot::RobotInit() {
  	 autonChooser.AddOption(defaultAuton, defaultAuton);
  	 autonChooser.AddOption(simpleAuton, simpleAuton);
   frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
+  
+  saveChooser.SetDefaultOption("vector", "vector");
+ 	 saveChooser.AddOption("file1", "file1");
+ 	 saveChooser.AddOption("file2", "file2");
+	 saveChooser.AddOption("Auton-Incomplete-Do not use", "Auton");
+	frc::SmartDashboard::PutData("save record to", &saveChooser);
 
 	RLeadMotor.BurnFlash();
 	RFollowMotor.BurnFlash();
@@ -199,16 +205,27 @@ void Robot::HandleRecordPlayback() {
 		LFollowMotor.GetEncoder().SetPosition(0.0);
 		RLeadMotor.GetEncoder().SetPosition(0.0);
 		RFollowMotor.GetEncoder().SetPosition(0.0);
-		if(!isRecording) { // recording has just finished, save to a file
-			outputToFile({leftLeadMotorValues, leftFollowMotorValues, rightFollowMotorValues, rightLeadMotorValues}, "/home/lvuser/vectors.txt");
-		}else { // wipe the array, recording started
-			leftLeadMotorValues.clear();
-			leftFollowMotorValues.clear();
-			rightLeadMotorValues.clear();
-			rightFollowMotorValues.clear();
+		if(isRecording) { // wipe the array, recording started
+			tempsave.leftLeadMotorValues.clear();
+			tempsave.leftFollowMotorValues.clear();
+			tempsave.rightLeadMotorValues.clear();
+			tempsave.rightFollowMotorValues.clear();
 		}
 
 	}
+	//saving record
+	if(pilot.GetBumperPressed(LEFT))
+	{
+		std::string selectedSave = saveChooser.GetSelected();
+		if(selectedSave == "file1"){
+			tempsave.outputToFile("/home/lvuser/vectors1.txt");
+		}else if(selectedSave == "file2"){
+			tempsave.outputToFile("/home/lvuser/vectors2.txt");
+		}else if(selectedSave == "Auton"){
+			tempsave.outputToFile("/home/lvuser/vectorsAuton.txt");
+		}
+	}
+
 	
 	bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
 	RLeadMotor.GetEncoder().GetPosition() == 0.0 &&
@@ -222,14 +239,15 @@ void Robot::HandleRecordPlayback() {
 	}
 	// make sure that encoders are wiped before pushing data
 	if(isRecording && recordGo){
-		leftLeadMotorValues.push_back(LLead.GetPosition());
-		leftFollowMotorValues.push_back(LFollow.GetPosition());
-		rightLeadMotorValues.push_back(RLead.GetPosition());
-		rightFollowMotorValues.push_back(RFollow.GetPosition());
+		tempsave.leftLeadMotorValues.push_back(LLead.GetPosition());
+		tempsave.leftFollowMotorValues.push_back(LFollow.GetPosition());
+		tempsave.rightLeadMotorValues.push_back(RLead.GetPosition());
+		tempsave.rightFollowMotorValues.push_back(RFollow.GetPosition());
 	}
-
+    std::cout << "\n handle recordplayback \n"; 	
 	// start playback
-	if(pilot.GetBButtonPressed() || pilot.GetBButtonReleased()) {
+	if((pilot.GetBButtonPressed() && currentPlayButton == 'n') || (pilot.GetBButtonReleased() && currentPlayButton == 'b')) {
+		std::cout << "\n inside if \n";
 		LLeadMotor.GetEncoder().SetPosition(0.0);
 		LFollowMotor.GetEncoder().SetPosition(0.0);
 		RLeadMotor.GetEncoder().SetPosition(0.0);
@@ -246,21 +264,83 @@ void Robot::HandleRecordPlayback() {
 			SetPID(RLeadMotor, kPposi, kIposi, kDposi);
 			SetPID(RFollowMotor, kPposi, kIposi, kDposi);
 			SetPID(LFollowMotor, kPposi, kIposi, kDposi);
+			currentPlayButton='b';
+		}else{
+			currentPlayButton='n';
 		}
 	}
+	if((pilot.GetXButtonPressed() && currentPlayButton == 'n') || (pilot.GetXButtonReleased() && currentPlayButton == 'x')) {
+		LLeadMotor.GetEncoder().SetPosition(0.0);
+		LFollowMotor.GetEncoder().SetPosition(0.0);
+		RLeadMotor.GetEncoder().SetPosition(0.0);
+		RFollowMotor.GetEncoder().SetPosition(0.0); // returns in 1ms, motor doesnt actually set till 50ms
+		
+		PlayingBack = !PlayingBack;
+		SmartDashboard::PutBoolean("is playing back", PlayingBack);
+		runsAfterPlayback = 0;
+		pilot.SetRumble(GenericHID::kLeftRumble, 0);
+		pilot.SetRumble(GenericHID::kRightRumble, 0);
+
+		if (PlayingBack) {
+			SetPID(LLeadMotor, kPposi, kIposi, kDposi);
+			SetPID(RLeadMotor, kPposi, kIposi, kDposi);
+			SetPID(RFollowMotor, kPposi, kIposi, kDposi);
+			SetPID(LFollowMotor, kPposi, kIposi, kDposi);
+			currentPlayButton='x';
+		}else{
+			currentPlayButton='n';
+		}
+	}
+	if((pilot.GetYButtonPressed() && currentPlayButton == 'n') || (pilot.GetYButtonReleased() && currentPlayButton == 'y')) {
+		LLeadMotor.GetEncoder().SetPosition(0.0);
+		LFollowMotor.GetEncoder().SetPosition(0.0);
+		RLeadMotor.GetEncoder().SetPosition(0.0);
+		RFollowMotor.GetEncoder().SetPosition(0.0); // returns in 1ms, motor doesnt actually set till 50ms
+		
+		PlayingBack = !PlayingBack;
+		SmartDashboard::PutBoolean("is playing back", PlayingBack);
+		runsAfterPlayback = 0;
+		pilot.SetRumble(GenericHID::kLeftRumble, 0);
+		pilot.SetRumble(GenericHID::kRightRumble, 0);
+
+		if (PlayingBack) {
+			SetPID(LLeadMotor, kPposi, kIposi, kDposi);
+			SetPID(RLeadMotor, kPposi, kIposi, kDposi);
+			SetPID(RFollowMotor, kPposi, kIposi, kDposi);
+			SetPID(LFollowMotor, kPposi, kIposi, kDposi);
+			currentPlayButton='y';
+		}else{
+			currentPlayButton='n'; 
+		}
+	}
+	
 	// playback
 	if (PlayingBack) {
-	
-		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-
+		std::cout << "\n playing back \n";
+		switch(currentPlayButton){
+			case 'b':
+				tempsave.setToIndex(runsAfterPlayback, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});
+			break;
+			case 'x':
+				PermSave1.setToIndex(runsAfterPlayback, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});
+			break;
+			case 'y':
+				PermSave2.setToIndex(runsAfterPlayback, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});
+			break;
+		}
+		std::cout << "made it through" << std::endl;
+		
+		
+		/*LLeadMotor.GetPIDController().SetReference(tempsave.leftLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		LFollowMotor.GetPIDController().SetReference(tempsave.leftFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		RLeadMotor.GetPIDController().SetReference(tempsave.rightLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		RFollowMotor.GetPIDController().SetReference(tempsave.rightFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
+		*/
 		pilot.SetRumble(GenericHID::kLeftRumble, 1);
 		pilot.SetRumble(GenericHID::kRightRumble, 1);
 
 		runsAfterPlayback++;
-		if (leftLeadMotorValues.size() <= runsAfterPlayback) {	
+		if (tempsave.leftLeadMotorValues.size() <= runsAfterPlayback) {	
 			PlayingBack = false;	
 			pilot.SetRumble(GenericHID::kLeftRumble, 0);	
 			pilot.SetRumble(GenericHID::kRightRumble, 0);	
@@ -270,7 +350,7 @@ void Robot::HandleRecordPlayback() {
 void Robot::TeleopPeriodic() {
 	HandleLEDStrip();
 	HandleDrivetrain();
-	// HandleRecordPlayback();
+	HandleRecordPlayback();
 	// HandleColorWheel(); // Currently breaks robot code w/o sensor
 	HandleIntake();
 	HandleShooter();

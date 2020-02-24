@@ -111,8 +111,8 @@ class Robot : public frc::TimedRobot {
   nt::NetworkTableInstance networkTableInstance = nt::NetworkTableInstance::GetDefault();
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
   //Constant Values
-  int flywheelSpeedVelocity = 10000;
-  int intakeBeltSpeedVelocity = 8000;
+  int flywheelSpeedVelocity = 12100;
+  int intakeBeltSpeedVelocity = 5000;
   int intakeBeltShootVelocity = 15000;
   static constexpr double intakeRollerSpeed = 0.5;
   // static constexpr double shooterBeltSpeed = 0.5;

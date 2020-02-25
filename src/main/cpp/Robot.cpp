@@ -371,6 +371,7 @@ void Robot::HandleShooter() {
 		}
 		if (lineBreak3Broken) {
 			intakeBelt.Set(ControlMode::PercentOutput, -0.85);
+			flywheelMotor.Set(TalonFXControlMode::PercentOutput, -0.3);
 		} else {
 			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
 		}
@@ -378,7 +379,7 @@ void Robot::HandleShooter() {
 		if (!meetsThreshold) {
 			isUpToSpeed = false;
 		}
-		flywheelMotor.Set(TalonFXControlMode::PercentOutput, 0);
+		flywheelMotor.NeutralMode(); //Set(TalonFXControlMode::PercentOutput, 0);
 	}
 	
 	// Log variables
@@ -397,13 +398,16 @@ void Robot::HandleShooter() {
 			isUpToSpeed = true;
 		}
 		// if not broken and is not up to speed, run flywheel
-		// if not broken and is up to speed, run belts too
+		// if not broken and is up to speed, run flywheel and belts
+		// if broken and not up to speed, run belts in reverse
 		// if broken and is not up to speed, run belts in reverse
 		if (lineBreak3Broken && !isUpToSpeed) {
 			intakeBelt.Set(ControlMode::PercentOutput, -0.85);
+			flywheelMotor.Set(TalonFXControlMode::PercentOutput, -0.3);
 		} else {
 			intakeBelt.Set(ControlMode::Velocity, intakeBeltShootVelocity);
-		} if (!lineBreak3Broken) {
+		}
+		if (!lineBreak3Broken) {
 			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
 		}
 		return; // do not run intake code
@@ -411,13 +415,13 @@ void Robot::HandleShooter() {
 
 	if (runShooter || runFlywheel) {
 		if (!lineBreak3Broken) {
-			intakeBelt.Set(ControlMode::PercentOutput, 0);
+			intakeBelt.NeutralOutput(); // Set(ControlMode::PercentOutput, 0);
 		}
 		return;
 	}
 	// The 'intake' functionality
 	if (!lineBreak2Broken) {
-		intakeBelt.Set(ControlMode::PercentOutput, 0);
+		intakeBelt.NeutralOutput();
 		// shooterBelt.Set(ControlMode::PercentOutput, 0);
 	} else if (!lineBreak3Broken) { // don't care
 		intakeBelt.Set(ControlMode::PercentOutput, 0.9);

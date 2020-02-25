@@ -71,12 +71,13 @@ void Robot::HandleDrivetrain() {
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 
 	if(!PlayingBack && !isAutoAligning) {
-		drivetrain.ArcadeDrive(speed, -turn, true);
+		drivetrain.ArcadeDrive(speed*speed*speed, -(turn*turn*turn), false);
 		
 	}
 
 	// Output useful values
 	frc::SmartDashboard::PutNumber("Turn", turn);
+	frc::SmartDashboard::PutNumber("Speed", speed);
 	frc::SmartDashboard::PutNumber("left lead position", LLead.GetPosition());
 	frc::SmartDashboard::PutNumber("right lead position", RLead.GetPosition());
 }

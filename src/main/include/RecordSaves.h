@@ -16,11 +16,11 @@ public:
 
             values.open(path);
 
-            for (std::vector<double> vect : {
-                    leftLeadMotorValues,
-                    rightLeadMotorValues,
-                    leftFollowMotorValues,       
-                    rightFollowMotorValues,
+            for (std::vector<double>* vect : {
+                    &leftLeadMotorValues,
+                    &rightLeadMotorValues,
+                    &leftFollowMotorValues,       
+                    &rightFollowMotorValues,
                 }) {
                 std::string input_str;
                 std::getline(values, input_str );
@@ -28,7 +28,7 @@ public:
                 double i;
                 while (ss >> i)
                 {
-                    vect.push_back(i);
+                    vect->push_back(i);
                     if (ss.peek() == ',')
                     ss.ignore();
                 }
@@ -45,7 +45,7 @@ public:
             leftFollowMotorValues,       
             rightFollowMotorValues,
         };
-
+        
         for (size_t j = 0; j < input.size(); j++) {
             for (size_t i = 0; i < input.at(j).size(); i++) {
                 values << input.at(j).at(i) << ',';

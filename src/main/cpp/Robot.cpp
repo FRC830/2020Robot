@@ -214,8 +214,9 @@ void Robot::HandleRecordPlayback() {
 
 	}
 	//saving record
-	if(pilot.GetBumperPressed(LEFT))
+	if(pilot.GetBackButtonPressed())
 	{
+		std::cout << "saving" << std::endl;
 		std::string selectedSave = saveChooser.GetSelected();
 		if(selectedSave == "file1"){
 			tempsave.outputToFile("/home/lvuser/vectors1.txt");
@@ -244,7 +245,7 @@ void Robot::HandleRecordPlayback() {
 		tempsave.rightLeadMotorValues.push_back(RLead.GetPosition());
 		tempsave.rightFollowMotorValues.push_back(RFollow.GetPosition());
 	}
-    std::cout << "\n handle recordplayback \n"; 	
+     	
 	// start playback
 	if((pilot.GetBButtonPressed() && currentPlayButton == 'n') || (pilot.GetBButtonReleased() && currentPlayButton == 'b')) {
 		std::cout << "\n inside if \n";

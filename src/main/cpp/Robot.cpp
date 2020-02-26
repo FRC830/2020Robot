@@ -14,8 +14,9 @@ void Robot::RobotInit() {
 	prefs.PutDouble("deadzone", 0.1);
 	// Configure flywheel
 	ConfigurePIDF(flywheelMotor, .02, 6E-05, 0, 0);
-	flywheelMotor.ConfigClosedloopRamp(2);
-	flywheelMotor.SetInverted(false);
+	//flywheelMotor.ConfigClosedloopRamp(4);
+	flywheelMotor.SetInverted(true);
+	elevatorMotor.SetInverted(true);
 	flywheelMotor.SetNeutralMode(motorcontrol::NeutralMode::Coast);
 	frc::ShuffleboardTab &visionTab = frc::Shuffleboard::GetTab("vision");
 	frc::SmartDashboard::PutNumber("LED MODE", ledMode);
@@ -47,13 +48,14 @@ void Robot::RobotInit() {
 	MakeSlider(visionTab, "tapeUpperS", 255);
 	MakeSlider(visionTab, "tapeUpperV", 255);
 
+	elevatorMotor.SetSelectedSensorPosition(0);
+
 	visionTab2->PutBoolean("Front Camera", true);
 	// Configure Color Sensor
 	colorMatcher.AddColorMatch(aimRed);
 	colorMatcher.AddColorMatch(aimYellow);
 	colorMatcher.AddColorMatch(aimBlue);
 	colorMatcher.AddColorMatch(aimGreen);
-
   	autonChooser.SetDefaultOption(defaultAuton, defaultAuton);
  	 autonChooser.AddOption(pathAuton, pathAuton);
  	 autonChooser.AddOption(defaultAuton, defaultAuton);
@@ -201,7 +203,7 @@ void Robot::AutonomousPeriodic() {
 		}
 	} else if (currentAutonMode == pathAuton) {
 	// spin flywheel
-	flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
+	flywheelMotor.Set(TalonFXControlMode::PercentOutput, flywheelSpeedVelocity);
 		HandlePathweaver();
 	}
 }
@@ -379,23 +381,42 @@ void Robot::HandleShooter() {
 	flywheelSpeedVelocity = SmartDashboard::GetNumber("FLYWHEEL SPEED",flywheelSpeedVelocity);
 	intakeBeltShootVelocity = SmartDashboard::GetNumber("INTAKE BELT",intakeBeltShootVelocity);
 	// The 'spin flywheel' functionality
-	if (runFlywheel) {
+	if (!meetsThreshold) {
+		isUpToSpeed = false;
+	}
+
+	if (runShooter) { // If run the shooter
 		if (meetsThreshold) {
 			isUpToSpeed = true;
 		}
-		if (lineBreak3Broken) {
+		if (lineBreak3Broken && !isUpToSpeed) { // run belt back when touching sensor and not up to speed
 			intakeBelt.Set(ControlMode::PercentOutput, -0.85);
-			flywheelMotor.Set(TalonFXControlMode::PercentOutput, -0.3);
-		} else {
+		}
+		if (isUpToSpeed) { // run belts forward when up to speed
+			intakeBelt.Set(ControlMode::Velocity, intakeBeltShootVelocity);
+		}
+		if (!lineBreak3Broken || isUpToSpeed) { // run flywheel if not touching sensor OR already up to speed
 			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
 		}
-	} else {
-		if (!meetsThreshold) {
-			isUpToSpeed = false;
+	} else if (runFlywheel) { // Run the flywheel
+		if (meetsThreshold) {
+			isUpToSpeed = true;
 		}
-		flywheelMotor.NeutralMode(); //Set(TalonFXControlMode::PercentOutput, 0);
+		if (lineBreak3Broken) { // run belts back when touching sensor
+			intakeBelt.Set(ControlMode::PercentOutput, -0.85);
+		} else { // otherwise run flywheel
+			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
+		}
 	}
-	
+	// stopping belt
+	if ((runFlywheel && !runShooter && !lineBreak3Broken) || (runShooter && !lineBreak3Broken && !isUpToSpeed)) {
+		intakeBelt.Set(ControlMode::PercentOutput, 0);
+	}
+	// stopping flywheel
+	if (!runFlywheel && !runShooter) {
+		flywheelMotor.Set(TalonFXControlMode::PercentOutput, 0);
+	}
+
 	// Log variables
 	SmartDashboard::PutBoolean("Line Break Sensor 1", lineBreak1Broken);
 	SmartDashboard::PutBoolean("Line Break Sensor 2", lineBreak2Broken);
@@ -407,46 +428,22 @@ void Robot::HandleShooter() {
 
 	// The 'shoot' functionality
 	SmartDashboard::PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
-	if (runShooter) {
-		if (meetsThreshold) {
-			isUpToSpeed = true;
-		}
-		// if not broken and is not up to speed, run flywheel
-		// if not broken and is up to speed, run flywheel and belts
-		// if broken and not up to speed, run belts in reverse
-		// if broken and is not up to speed, run belts in reverse
-		if (lineBreak3Broken && !isUpToSpeed) {
-			intakeBelt.Set(ControlMode::PercentOutput, -0.85);
-			flywheelMotor.Set(TalonFXControlMode::PercentOutput, -0.3);
-		} else {
-			intakeBelt.Set(ControlMode::Velocity, intakeBeltShootVelocity);
-		}
-		if (!lineBreak3Broken) {
-			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
-		}
+
+	if (runFlywheel || runShooter) {
 		return; // do not run intake code
 	}
-
-	if (runShooter || runFlywheel) {
-		if (!lineBreak3Broken) {
-			intakeBelt.NeutralOutput(); // Set(ControlMode::PercentOutput, 0);
-		}
-		return;
-	}
 	// The 'intake' functionality
-	if (!lineBreak2Broken) {
-		intakeBelt.NeutralOutput();
-		// shooterBelt.Set(ControlMode::PercentOutput, 0);
-	} else if (!lineBreak3Broken) { // don't care
+	if (!lineBreak1Broken) {
+		intakeBelt.Set(ControlMode::PercentOutput, 0);
+	} else if (!lineBreak3Broken && flywheelMotor.GetSelectedSensorVelocity(0) < 50) {
 		intakeBelt.Set(ControlMode::PercentOutput, 0.9);
-		// shooterBelt.Set(ControlMode::PercentOutput, shooterBeltSpeed);
 	}
 	frc::SmartDashboard::PutBoolean("meets threshold", meetsThreshold);
 	frc::SmartDashboard::PutBoolean("is up to speed", isUpToSpeed);
 }
 void Robot::HandleElevator() {
-
-	bool isElevating = pilot.GetYButton();
+	frc::SmartDashboard::PutNumber("encoder position", elevatorMotor.GetSelectedSensorPosition());
+	bool isElevating = copilot.GetYButton();
 	frc::SmartDashboard::PutBoolean("is Elevating", isElevating);
 
 	if(isElevating){

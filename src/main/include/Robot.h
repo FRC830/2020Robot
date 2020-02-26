@@ -112,9 +112,9 @@ class Robot : public frc::TimedRobot {
   nt::NetworkTableInstance networkTableInstance = nt::NetworkTableInstance::GetDefault();
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
   //Constant Values
-  int flywheelSpeedVelocity = -12100;
+  int flywheelSpeedVelocity = 12100;
   int intakeBeltSpeedVelocity = 5000;
-  int intakeBeltShootVelocity = 15000;
+  int intakeBeltShootVelocity = 12000;
   static constexpr double intakeRollerSpeed = 0.8;
   // static constexpr double shooterBeltSpeed = 0.5;
   static constexpr double reverseBeltSpeed = 1;
@@ -217,9 +217,10 @@ double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
 
 
   //Elevator
-
-  double elevatorSpeed = 0.1;
+  int goingUp = 300000;
+  int goingDown = 350000;
+  double elevatorSpeed = 0.3;
   TalonFX elevatorMotor{ElevatorID};
 
-
+  //double scaleFactor = 
 };

@@ -16,7 +16,7 @@ void Robot::RobotInit() {
 	prefs.PutDouble("deadzone", 0.1);
 
 	// Configure flywheel
-	ConfigurePIDF(flywheelMotor, .02, 6E-05, 0, 0);
+	ConfigurePIDF(flywheelMotor, .05, 6E-05, 0, 0);
 	flywheelMotor.ConfigClosedloopRamp(2);
 	flywheelMotor.SetInverted(true);
 	flywheelMotor.SetNeutralMode(motorcontrol::NeutralMode::Coast);
@@ -226,12 +226,15 @@ void Robot::HandleVision() {
 	visionTab2->PutBoolean("Front Camera", frontCamera); // frontCamera is balls
 	if (pilot.GetAButton()) {
 		double target = (frontCamera) ? visionTab2->GetNumber("centerXball", centerCamera) : visionTab2->GetNumber("centerXshooter", centerCamera);
+		double error = ErrorBetween(target, centerCamera);
+		error = std::max(0.2, error);
+		visionTab2->PutNumber("error", error);
 		if (target < centerCamera) {
 			isAutoAligning = true;
-			drivetrain.ArcadeDrive(0, 0.1, true);
+			drivetrain.ArcadeDrive(0, 0.4*error, false);
 		} else if (target > centerCamera) {
 			isAutoAligning = true;
-			drivetrain.ArcadeDrive(0, -0.1, true);
+			drivetrain.ArcadeDrive(0, -0.4*error, false);
 		} else { // bad read, whatever
 
 		}
@@ -366,7 +369,7 @@ void Robot::HandleShooter() {
 		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
 		return;
 	}
-	
+
 	double error = ErrorBetween(flywheelMotor.GetSelectedSensorVelocity(0), flywheelSpeedVelocity);
 	bool meetsThreshold = (error <= .1);
 	bool runFlywheel = ApplyDeadzone(copilot.GetTriggerAxis(RIGHT), prefs.GetDouble("deadzone")) > 0;
@@ -380,7 +383,10 @@ void Robot::HandleShooter() {
 	SmartDashboard::PutNumber("current intake velocity", intakeBelt.GetSelectedSensorVelocity(0));
 	SmartDashboard::PutNumber("current flywheel velocity", flywheelMotor.GetSelectedSensorVelocity(0));
 	SmartDashboard::PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
-
+	if (copilot.GetBumper(RIGHT)) {
+		flywheelMotor.Set(ControlMode::PercentOutput, .95);
+		return;
+	}
 	// Update the status of up to speed
 	if ((runShooter || runFlywheel) && meetsThreshold) {
 		isUpToSpeed = true;
@@ -390,7 +396,11 @@ void Robot::HandleShooter() {
 	frc::SmartDashboard::PutBoolean("meets threshold", meetsThreshold);
 	frc::SmartDashboard::PutBoolean("is up to speed", isUpToSpeed);
 	// The 'spin flywheel && shoot' functionality
-	if (runFlywheel || (runShooter && !isUpToSpeed)) {
+	if (runShooter && isUpToSpeed) { // fire!
+		flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
+		intakeBelt.Set(ControlMode::Velocity, intakeBeltShootVelocity);
+		return;
+	} else if (runFlywheel || (runShooter && !isUpToSpeed)) {
 		if (lineBreak3Broken) { // run belts & flywheel back when touching sensor
 			intakeBelt.Set(ControlMode::PercentOutput, -0.85);
 			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelReverseVelocity);
@@ -399,20 +409,16 @@ void Robot::HandleShooter() {
 			intakeBelt.Set(ControlMode::PercentOutput, 0);
 		}
 		return;
-	} else if (runShooter && isUpToSpeed) { // fire!
-		flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
-		intakeBelt.Set(ControlMode::Velocity, intakeBeltShootVelocity);
-		return;
 	} else { // not spinning or shooting, so stop flywheel
 		flywheelMotor.Set(TalonFXControlMode::PercentOutput, 0);
 	}
 
 	// The 'intake' functionality
-	if (!lineBreak1Broken) {
+	if (!lineBreak2Broken) { 
 		intakeBelt.Set(ControlMode::PercentOutput, 0);
 	} else if (!lineBreak3Broken && flywheelMotor.GetSelectedSensorVelocity(0) < flywheelStoppedVelocity) {
 		// make sure flywheel is not spinning and we aren't out of room
-		intakeBelt.Set(ControlMode::PercentOutput, 0.9);
+		intakeBelt.Set(ControlMode::PercentOutput, 0.7);
 	}
 
 }
@@ -439,7 +445,7 @@ void Robot::HandleIntake(){
 	intakePiston.Set(isIntaking || isOuttaking);
 
 	if (isOuttaking) { // give outtake priority
-		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
+		intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
 	} else if (isIntaking) {
 		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
 	} else {

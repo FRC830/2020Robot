@@ -113,10 +113,10 @@ class Robot : public frc::TimedRobot {
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
   //Constant Values
   int flywheelSpeedVelocity = 12100;
-  int intakeBeltSpeedVelocity = 5000;
+  static const int intakeBeltSpeedVelocity = 5000;
   int intakeBeltShootVelocity = 12000;
+  static const int flywheelStoppedVelocity = 50;
   static constexpr double intakeRollerSpeed = 0.8;
-  // static constexpr double shooterBeltSpeed = 0.5;
   static constexpr double reverseBeltSpeed = 1;
   static constexpr double forwardBeltSpeed = 1;
   static constexpr double colorSpinnerSpeed = 0.5;
@@ -147,12 +147,6 @@ class Robot : public frc::TimedRobot {
   //Linebreak Sensor 3 has a value of 0 when both sensors are facing eachother
   //Linebreak sensors can be displaced by about 9.5 inches from each other and about up to 1 cm of vertical displacement
   frc::DigitalInput lineBreak3{2};
-  int ballsStored = 0;
-  int ballsShot = 0;
-
-  bool lineBreak1WasBroken = false;
-  bool lineBreak2WasBroken = false;
-  bool lineBreak3WasBroken = false;
 
   // Robot characterization
   static constexpr auto ks = 0.167;

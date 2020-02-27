@@ -387,26 +387,18 @@ void Robot::HandleShooter() {
 	frc::SmartDashboard::PutBoolean("meets threshold", meetsThreshold);
 	frc::SmartDashboard::PutBoolean("is up to speed", isUpToSpeed);
 	// The 'spin flywheel && shoot' functionality
-	if (runShooter) { // If run the shooter
-		if (!isUpToSpeed) {
-			if (lineBreak3Broken) { // run belt back when touching sensor and not up to speed
-				intakeBelt.Set(ControlMode::PercentOutput, -0.85);
-			} else { // stop belts, spin up flywheel
-				intakeBelt.Set(ControlMode::PercentOutput, 0);
-				flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
-			}
-		} else { // if it is up to speed, ignore line break
-			intakeBelt.Set(ControlMode::Velocity, intakeBeltShootVelocity);
-		}
-		return; // ignore intake code
-	} else if (runFlywheel) { // Run the flywheel
+	if (runFlywheel || (runShooter && !isUpToSpeed)) {
 		if (lineBreak3Broken) { // run belts back when touching sensor
 			intakeBelt.Set(ControlMode::PercentOutput, -0.85);
 		} else { // otherwise run flywheel and stop running belt back
 			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
 			intakeBelt.Set(ControlMode::PercentOutput, 0);
 		}
-		return; // ignore intake code
+		return;
+	} else if (runShooter && isUpToSpeed) { // fire!
+		flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
+		intakeBelt.Set(ControlMode::Velocity, intakeBeltShootVelocity);
+		return;
 	} else { // not spinning or shooting, so stop flywheel
 		flywheelMotor.Set(TalonFXControlMode::PercentOutput, 0);
 	}

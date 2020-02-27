@@ -212,7 +212,10 @@ void Robot::AutonomousPeriodic() {
 	}
 }
 
-void Robot::TeleopInit() {}
+void Robot::TeleopInit() {
+	// reset elevator
+	elevatorMotor.SetSelectedSensorPosition(0);
+}
 
 void Robot::HandleVision() {
 	if (pilot.GetBumperPressed(LEFT)) {
@@ -316,7 +319,7 @@ void Robot::HandleRecordPlayback() {
 void Robot::TeleopPeriodic() {
 	HandleLEDStrip();
 	HandleDrivetrain();
-	// HandleRecordPlayback();
+	// HandleRecordPlayback(); // breaks elevator
 	// HandleColorWheel(); // Currently breaks robot code w/o sensor
 	HandleIntake();
 	HandleShooter();
@@ -381,7 +384,7 @@ void Robot::HandleShooter() {
 	// Update the status of up to speed
 	if ((runShooter || runFlywheel) && meetsThreshold) {
 		isUpToSpeed = true;
-	} else if (!meetsThreshold) { // NOTE if it cannot spin down correctly, change this back to an if not else if
+	} else if (!meetsThreshold) { // Does not check this if we are shooting/running flywheel and it was up to speed at one point
 		isUpToSpeed = false;
 	}
 	frc::SmartDashboard::PutBoolean("meets threshold", meetsThreshold);
@@ -414,9 +417,16 @@ void Robot::HandleShooter() {
 
 }
 void Robot::HandleElevator() {
-	frc::SmartDashboard::PutNumber("encoder position", elevatorMotor.GetSelectedSensorPosition());
-	if(copilot.GetYButton()){
+	double encoder = elevatorMotor.GetSelectedSensorPosition();
+	frc::SmartDashboard::PutNumber("encoder position", encoder);
+	bool down = ApplyDeadzone(pilot.GetTriggerAxis(LEFT), prefs.GetDouble("deadzone")) > 0;
+	bool up = ApplyDeadzone(pilot.GetTriggerAxis(RIGHT), prefs.GetDouble("deadzone")) > 0;
+	bool scaryReverse = pilot.GetBackButton();
+
+	if(((up && encoder < maxElevatorUp) || (down && encoder > minElevatorDown)) && encoder < elevatorBreaksPoint){
 		elevatorMotor.Set(ControlMode::PercentOutput, elevatorSpeed);
+	} else if (scaryReverse) {
+		elevatorMotor.Set(ControlMode::PercentOutput, -elevatorSpeed);
 	} else {
 		elevatorMotor.Set(ControlMode::PercentOutput, 0);
 	}

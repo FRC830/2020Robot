@@ -212,8 +212,9 @@ double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
 
 
   //Elevator
-  int goingUp = 300000;
-  int goingDown = 350000;
+  int elevatorBreaksPoint = 600000;
+  int maxElevatorUp = 300000;
+  int minElevatorDown = 250000;
   double elevatorSpeed = 0.3;
   TalonFX elevatorMotor{ElevatorID};
 

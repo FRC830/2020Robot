@@ -450,6 +450,8 @@ void Robot::DisabledInit() {
 	PlayingBack = false;
 	runsAfterPlayback = 5;
 	//drivetrain.SetSafetyEnabled(true);
+
+	// Make sure it is back in coast mode
 	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);

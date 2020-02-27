@@ -388,8 +388,9 @@ void Robot::HandleShooter() {
 	frc::SmartDashboard::PutBoolean("is up to speed", isUpToSpeed);
 	// The 'spin flywheel && shoot' functionality
 	if (runFlywheel || (runShooter && !isUpToSpeed)) {
-		if (lineBreak3Broken) { // run belts back when touching sensor
+		if (lineBreak3Broken) { // run belts & flywheel back when touching sensor
 			intakeBelt.Set(ControlMode::PercentOutput, -0.85);
+			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelReverseVelocity);
 		} else { // otherwise run flywheel and stop running belt back
 			flywheelMotor.Set(TalonFXControlMode::Velocity, flywheelSpeedVelocity);
 			intakeBelt.Set(ControlMode::PercentOutput, 0);

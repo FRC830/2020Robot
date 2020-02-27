@@ -115,6 +115,7 @@ class Robot : public frc::TimedRobot {
   int flywheelSpeedVelocity = 12100;
   static const int intakeBeltSpeedVelocity = 5000;
   int intakeBeltShootVelocity = 12000;
+  static const int flywheelReverseVelocity = -1000;
   static const int flywheelStoppedVelocity = 50;
   static constexpr double intakeRollerSpeed = 0.8;
   static constexpr double reverseBeltSpeed = 1;

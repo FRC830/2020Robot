@@ -215,6 +215,7 @@ double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
   int elevatorBreaksPoint = 600000;
   int maxElevatorUp = 300000;
   int minElevatorDown = 250000;
+  //Max wants this elevatorspeed value to change to 0.6 so that we can elevate faster
   double elevatorSpeed = 0.3;
   TalonFX elevatorMotor{ElevatorID};
 

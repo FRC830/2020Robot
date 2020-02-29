@@ -161,8 +161,6 @@ void Robot::HandlePathweaver() {
 	// SmartDashboard::PutNumber("right speed (set) MPS", (double) right);
 	// Make sure to feed!!
 }
-void Robot::HandlePathweaver() {
-
 void Robot::AutonomousPeriodic() {
 	//flywheelRPM = SmartDashboard::GetNumber("FLYWHEEL SPEED",flywheelRPM);
 	std::string currentAutonMode = autonChooser.GetSelected();

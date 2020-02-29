@@ -27,7 +27,6 @@ void outputToFile(std::vector<std::vector<double>> input, std::string filename) 
 	values.close();
 }
 
-
 // apply deadzone & possible scaling, etc
 double ApplyDeadzone(double val, double deadzone) {
 	return fabs(val) < deadzone ? 0 : val;
@@ -67,6 +66,12 @@ void ConfigurePIDF(TalonSRX &motor, double p, double i, double d, double f, bool
 	motor.Config_kI(0, i);
 	motor.Config_kD(0, d);
 	motor.Config_kF(0, f);
+}
+void SetPID(rev::CANSparkMax &motor, double p, double i, double d) {
+	auto pid = motor.GetPIDController();
+	pid.SetP(p);
+	pid.SetI(i);
+	pid.SetD(d);
 }
 // For TalonFX
 void ConfigurePIDF(TalonFX &motor, double p, double i, double d, double f, bool reset=true) {

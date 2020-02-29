@@ -128,13 +128,13 @@ def handleBallVision(frame):
 
 	mask = cv2.erode(mask, None, iterations=2)
 	mask = cv2.dilate(mask, None, iterations=2)
-	
+	maskOut = cv2.bitwise_and(img, img, mask=mask)
 	# Find 'parent' contour(s) with simple chain countour algorithm
 	contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) #blobs
 	# https://github.com/jrosebr1/imutils/blob/master/imutils/convenience.py#L162
 	contours = contours[1] 
 	if len(contours) == 0:
-		return frame
+		return maskOut
 	max_contour = max(contours, key=cv2.contourArea)
 	if len(contours) > 0:
 		((x, y), radius) = cv2.minEnclosingCircle(max_contour) # returns point, radius
@@ -148,30 +148,56 @@ def handleBallVision(frame):
 		dashboard.putNumber("Distance Away", distanceAway)
 		
 		if radius > dashboard.getNumber("Min Radius", 1):
-			M = cv2.moments(max_contour)
-			center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-			dashboard.putNumber("centerX", center[0])
+			center = calculateCenter(max_contour)
+			dashboard.putNumber("centerXball", center["x"])
 
-			cv2.circle(img, (int(x), int(y)), int(radius), (0, 255, 255), 2)
-			cv2.circle(img, center, 5, (0, 0, 255), -1)
+			cv2.circle(maskOut, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+			cv2.circle(maskOut, (center["x"], center["y"]), 5, (0, 0, 255), -1)
+	else:
+		dashboard.putNumber("centerXball", 80) # center so it wont do anything
 	
-	maskOut = cv2.bitwise_and(img, img, mask=mask)
 	return maskOut
-
+def calculateCenter(contour):
+		M = cv2.moments(contour)
+		x = 80
+		y= 60
+		try:
+			x = int(M["m10"] / M["m00"])
+		except ZeroDivisionError:
+			pass
+		try:
+			y = int(M["m01"] / M["m00"])
+		except ZeroDivisionError:
+			pass
+		return {"x": x, "y": y}
 def handleReflectiveVision(frame):
 	img = frame.astype(dtype="uint8")
 	hsvImg = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-	lowerh = dashboard.getNumber("tapeLowerH", 15)
-	lowers = dashboard.getNumber("tapeLowerS", 100)
-	lowerv = dashboard.getNumber("tapeLowerV", 130)
-	upperh = dashboard.getNumber("tapeUpperH", 60)
+	lowerh = dashboard.getNumber("tapeLowerH", 0)
+	lowers = dashboard.getNumber("tapeLowerS", 0)
+	lowerv = dashboard.getNumber("tapeLowerV", 0)
+	upperh = dashboard.getNumber("tapeUpperH", 255)
 	uppers = dashboard.getNumber("tapeUpperS", 255)
 	upperv = dashboard.getNumber("tapeUpperV", 255)
 	lowerBound = np.array([lowerh, lowers, lowerv])
 	upperBound = np.array([upperh, uppers, upperv])
 	# get mask of all values that match bounds, then display part of image that matches bound
 	mask = cv2.inRange(hsvImg, lowerBound, upperBound)
-	return mask
+	output = cv2.bitwise_and(frame, frame, mask=mask)
+	mask = cv2.erode(mask, None, iterations=2)
+	mask = cv2.dilate(mask, None, iterations=2)
+	im2,contours,hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+	if len(contours) >= 1:
+		# find the biggest countour (c) by the area
+		largest = max(contours, key=cv2.contourArea)
+		# draw the biggest contour (c) in green
+		#cv2.drawContours(output, contours, -1, (0, 255, 255), 3)
+		c = calculateCenter(largest)
+		cv2.circle(output, (c["x"], c["y"]), 5, (0,0,255), 2)
+		dashboard.putNumber("centerXshooter", c["x"])
+	else:
+		dashboard.putNumber("centerXshooter", 80) # center so it wont do anything
+	return output
 if __name__ == "__main__":
 	if len(sys.argv) >= 2:
 		configFile = sys.argv[1]
@@ -210,9 +236,6 @@ if __name__ == "__main__":
 	lastfrontCamera = None
 	dashboard.putNumber("Number of Cameras", len(cameras))
 
-	
-
-
 	# vision processing
 	while True:
 
@@ -221,8 +244,10 @@ if __name__ == "__main__":
 		if(frontCamera != lastfrontCamera):
 			lastfrontCamera = frontCamera 
 			if(frontCamera):
+				print('Set source 0 (front camera) (ball)')
 				videoSink.setSource(cameras[0])
 			else:
+				print('Set source 1 (back camera) (shooter)')
 				videoSink.setSource(cameras[1])
 
 

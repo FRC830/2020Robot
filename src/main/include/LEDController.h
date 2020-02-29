@@ -2,7 +2,7 @@
 #include <frc/AddressableLED.h>
 #include <frc/Timer.h>
 #include "enums.h"
-BETTER_ENUM(LED_MODE, int, Red, Green, Rainbow, SolidBlue, SolidYellow, Dot, Ratpack, None)
+BETTER_ENUM(LED_MODE, int, Red, Rainbow, SolidBlue, SolidYellow, Dot, Ratpack, None)
 class LEDController {
     public:
         LED_MODE oldMode = LED_MODE::None;
@@ -45,9 +45,6 @@ class LEDController {
             case LED_MODE::Red:
                 _set_all(255, 0, 0);
                 break;
-            case LED_MODE::Green:
-                _set_all(0, 255, 0);
-                break;
             case LED_MODE::Rainbow:
                 rainbow();
                 break;
@@ -58,7 +55,7 @@ class LEDController {
                 ratyellow();
                 break;
             case LED_MODE::Ratpack:
-                ratpack(.2);
+                ratpack(.5);
                 break;
             case LED_MODE::Dot:
                 dot(1.0);
@@ -86,8 +83,17 @@ class LEDController {
         // Check bounds
         firstPixelHue %= 180;
     }
+    double getTime() {
+        return timer.Get();
+    }
     void ratpack(double interval) {
-        (std::fmod(timer.Get(), interval * 2.0) < interval) ? ratblue() : ratyellow();
+
+        if (std::fmod(timer.Get(), interval * 2.0) < interval) {
+            ratblue();
+        } else {
+            ratyellow();
+        }
+        // (std::fmod(timer.Get(), interval * 2.0) < interval) ? ratblue() : ratyellow();
     }
     void ratblue() {
         _set_all(58,55,171);
@@ -96,7 +102,7 @@ class LEDController {
         _set_all(251,215,4);
     }
     void dot(double animationTime) {
-        if (modeChange) {
+        if (modeChange) { // clear all
             _set_all(0,0,0);
         }
         double timerMod = std::fmod(timer.Get(), animationTime);

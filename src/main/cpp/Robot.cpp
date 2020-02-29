@@ -112,45 +112,73 @@ void Robot::AutonomousInit() {
 	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	drivetrain.SetSafetyEnabled(false);
+	ConfigurePIDF(LLeadPID, 0.001,0,0,0);
+	ConfigurePIDF(RLeadPID, 0.001,0,0,0);
 	LLead.ResetEncoder();
 	RLead.ResetEncoder();
 	gyro.Reset();
-	ConfigurePIDF(LLeadPID, 0,0,0,0.0001755);
-	ConfigurePIDF(RLeadPID, 0,0,0,0.0001755);
-	TimeFromStart.Reset();
-	TimeFromStart.Start();
-	LoadTrajectory("Straight.wpilib.json");
+	std::string currentAutonMode = autonChooser.GetSelected();
+	//odometry.ResetPosition(trajectory.InitialPose, gyro.GetAngle());
+
+
+}
+void Robot::HandlePathweaver() {
+	if (stage == 0) {
+		pathProcessor.runPathUntilFinished("auton2", false);
+		intakeMotor.Set(ControlMode::PercentOutput, 0.5);
+	} else if (stage == 1) {
+		intakeMotor.Set(ControlMode::PercentOutput, 0);
+		flywheelMotor.Set(ControlMode::Velocity, (int) (flywheelRPM / kTalonRPMConversionFactor));
+		pathProcessor.runPathUntilFinished("return", true);
+	} else if (stage == 2) {
+		intakeBelt.Set(ControlMode::Velocity, intakeBeltFireTicks);
+	}
+	drivetrain.Feed();
+	if (pathProcessor.pathCompleted() && stage == 0) {
+		stage = 1;
+	} else if (pathProcessor.pathCompleted() && stage == 1) {
+		stage = 2;
+	}
+	// SmartDashboard::PutNumber("odometry angle", double(units::radian_t(currentGyroAngle)));
+	// SmartDashboard::PutNumber("left distance", double(LLead.GetDistance()));
+	// SmartDashboard::PutNumber("right distance", double(RLead.GetDistance()));
+	// // odometry.Update(units::degree_t(currentGyroAngle),
+    // //                 units::meter_t(LLead.GetVelocity()),
+    // //                 units::meter_t(RLead.GetVelocity()));
+	// SmartDashboard::PutNumber("time from start",TimeFromStart.Get());
+	// SmartDashboard::PutNumber("adjusted (omega)", (double) adjustedSpeeds.omega);
+	// SmartDashboard::PutNumber("adjusted (vx)", (double) adjustedSpeeds.vx);
+	// SmartDashboard::PutNumber("adjusted (vy)", (double) adjustedSpeeds.vy);
+
+	// SmartDashboard::PutNumber("gyro (degrees)", (double) currentGyroAngle);
+	// SmartDashboard::PutNumber("left speed (set) MPS", (double) left);
+	// SmartDashboard::PutNumber("right speed (set) MPS", (double) right);
+	// Make sure to feed!!
 }
 
 void Robot::AutonomousPeriodic() {
-	auto currentGyroAngle = units::degree_t(-gyro.GetAngle() - 35); // negated so that is clockwise negative
-	// https://docs.wpilib.org/en/latest/docs/software/advanced-control/trajectories/troubleshooting.html
-	SmartDashboard::PutNumber("odometry angle", double(units::radian_t(currentGyroAngle)));
-	SmartDashboard::PutNumber("left distance", double(LLead.GetDistance()));
-	SmartDashboard::PutNumber("right distance", double(RLead.GetDistance()));
-	Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), LLead.GetDistance(), RLead.GetDistance());
-	const Trajectory::State goal = trajectory.Sample(units::second_t(TimeFromStart.Get())); 
-  	ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
-	// odometry.Update(units::degree_t(currentGyroAngle),
-    //                 units::meter_t(LLead.GetVelocity()),
-    //                 units::meter_t(RLead.GetVelocity()));
-	SmartDashboard::PutNumber("time from start",TimeFromStart.Get());
-	SmartDashboard::PutNumber("adjusted (omega)", (double) adjustedSpeeds.omega);
-	SmartDashboard::PutNumber("adjusted (vx)", (double) adjustedSpeeds.vx);
-	SmartDashboard::PutNumber("adjusted (vy)", (double) adjustedSpeeds.vy);
-	DifferentialDriveWheelSpeeds wheelSpeeds = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
-	units::meters_per_second_t left = wheelSpeeds.left;
-	units::meters_per_second_t right = wheelSpeeds.right;
-	SmartDashboard::PutNumber("gyro (degrees)", (double) currentGyroAngle);
-	SmartDashboard::PutNumber("left speed (set) MPS", (double) left);
-	SmartDashboard::PutNumber("right speed (set) MPS", (double) right);
-
-	// drivetrain.TankDrive(left,right,false);
-	LLead.SetSpeed(-left*0.25);
-	RLead.SetSpeed(right*0.25);
+	//flywheelRPM = SmartDashboard::GetNumber("FLYWHEEL SPEED",flywheelRPM);
+	std::string currentAutonMode = autonChooser.GetSelected();
+	if (currentAutonMode == defaultAuton) {
+		// do nothing
+	} else if (currentAutonMode == simpleAuton) {
+		if (LLead.GetDistance() < units::inch_t(48)) {
+			drivetrain.ArcadeDrive(0.5, 0, true);
+		} else if (LLead.GetDistance() > units::inch_t(48+5)) {
+			drivetrain.ArcadeDrive(-0.5, 0, true);
+		} else {
+			drivetrain.ArcadeDrive(0, 0, true);
+		}
+	} else if (currentAutonMode == pathAuton) {
+	// spin flywheel
+		HandlePathweaver();
+	}
 }
 
-void Robot::TeleopInit() {}
+void Robot::TeleopInit() {
+	// reset elevator
+	elevatorMotor.SetSelectedSensorPosition(0);
+}
 
 void Robot::HandleCamera() {
 	if (pilot.GetBumperPressed(LEFT)) {

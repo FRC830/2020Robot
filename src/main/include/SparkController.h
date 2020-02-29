@@ -1,3 +1,4 @@
+#pragma once
 #include <rev/CANSparkMax.h>
 #include <rev/CANPIDController.h>
 #include <math.h>

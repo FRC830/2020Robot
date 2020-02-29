@@ -1,3 +1,4 @@
+#pragma once
 #include <frc/AddressableLED.h>
 #include <frc/Timer.h>
 #include "enums.h"

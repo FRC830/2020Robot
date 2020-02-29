@@ -1,5 +1,4 @@
-  #pragma once
-
+#pragma once
 #include <string>
 
 #include <frc/TimedRobot.h>
@@ -46,7 +45,8 @@
 #include <frc/trajectory/TrajectoryUtil.h>
 #include <wpi/Path.h>
 #include <wpi/SmallString.h>
-
+#include <AHRS.h> // navx
+#include "PathProcessor.h"
 // #include <frc/cs/CameraServer.h>
 
 class Robot : public frc::TimedRobot {
@@ -159,8 +159,7 @@ class Robot : public frc::TimedRobot {
   // test value developed from analyzing characterization
   static constexpr double kPDriveVel = 0.339;
 
-  static constexpr units::inch_t kTrackwidth = 27.9_in;
-  frc::DifferentialDriveKinematics kDriveKinematics{units::meter_t(kTrackwidth)};
+
 
   static constexpr auto kMaxSpeed = 2_mps; 
   static constexpr auto kMaxAcceleration = 2_mps_sq;
@@ -180,6 +179,7 @@ class Robot : public frc::TimedRobot {
 
   frc::Timer TimeFromStart;
 
+  PathProcessor pathProcessor{LLead, RLead};
   //vision
   bool frontCamera = true;
   std::shared_ptr<nt::NetworkTable> visionTab2 = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
@@ -206,5 +206,22 @@ std::vector<double> leftFollowMotorValues;
 std::vector<double> rightFollowMotorValues;
 
 double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
-  ////
+  Toggle ledUp;
+  Toggle ledDown;
+  static constexpr double centerCamera = 80.0;
+
+  bool reversedpath = false;
+
+
+  //Elevator
+  int elevatorBreaksPoint = 600000;
+  int maxElevatorUp = 300000;
+  int minElevatorDown = 250000;
+  //Max wants this elevatorspeed value to change to 0.6 so that we can elevate faster
+  double elevatorSpeedUp = 0.5;
+  double elevatorSpeedDown = 0.6;
+  TalonFX elevatorMotor{ElevatorID};
+  int stage = 0;
+
+  //double scaleFactor = 
 };

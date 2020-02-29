@@ -1,3 +1,4 @@
+#pragma once
 #include <rev/ColorSensorV3.h>
 #include <rev/ColorMatch.h>
 #include <frc/util/Color.h>
@@ -6,6 +7,26 @@
 #include <frc/shuffleboard/Shuffleboard.h>
 #include <frc/shuffleboard/ShuffleboardTab.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/trajectory/Trajectory.h>
+#include <frc/trajectory/TrajectoryUtil.h>
+#include <wpi/SmallString.h>
+#include <wpi/Path.h>
+#include <fstream>
+#include <frc/Filesystem.h>
+void outputToFile(std::vector<std::vector<double>> input, std::string filename) {
+	std::ofstream values;
+	// "/home/lvuser/vectors.txt"
+	values.open(filename);
+
+	for (size_t j = 0; j < input.size(); j++) {
+		for (size_t i = 0; i < input.at(j).size(); i++) {
+			values << input.at(j).at(i) << ',';
+		}
+		values << "\n\n";
+	}
+	values.close();
+}
+
 
 // apply deadzone & possible scaling, etc
 double ApplyDeadzone(double val, double deadzone) {

@@ -45,7 +45,7 @@
 #include <frc/trajectory/TrajectoryUtil.h>
 #include <wpi/Path.h>
 #include <wpi/SmallString.h>
-
+#include <AHRS.h> // navx
 
 // #include <frc/cs/CameraServer.h>
 
@@ -74,12 +74,13 @@ class Robot : public frc::TimedRobot {
   const int RFollowID = 1;
   const int LFollowID = 3;
   const int ColorWheelID = 16;
-  const int FlyWheelID = 17;
+  const int FlyWheelID = 10;
+  const int FollowFlywheelID = 11;
   const int ElevatorID = 18;
 
   //colors	
   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;	
-  rev::ColorSensorV3 colorSensor{i2cPort};	
+  rev::ColorSensorV3 colorSensor{i2cPort};
 
   TalonSRX colorWheelMotor{ColorWheelID};	
 
@@ -112,14 +113,18 @@ class Robot : public frc::TimedRobot {
   nt::NetworkTableInstance networkTableInstance = nt::NetworkTableInstance::GetDefault();
   frc::Preferences& prefs = *frc::Preferences::GetInstance();
   //Constant Values
-  int flywheelSpeedVelocity = 20000; // 20000
-  static const int intakeBeltSpeedVelocity = 5000;
-  int intakeBeltShootVelocity = 12000;
-  static const int flywheelReverseVelocity = -3000;
-  static const int flywheelStoppedVelocity = 50;
+  static constexpr double kTalonRPMConversionFactor = 10.0 / 2048.0 * 60.0; // 100ms, 2048 ticks
+  // static const int kBeltRPMConversionFactor = 50 / 1024 * 60; // 20ms, 1024 ticks
+  static const int intakeBeltFeedTicks = 5000;
+  int intakeBeltFireTicks = 12000;
+
+  double flywheelRPM = 5800;
+  static constexpr double flywheelReverseRPM = 900;
+  static constexpr double flywheelStoppedRPM = 10;
+
   static constexpr double intakeRollerSpeed = 0.8;
-  static constexpr double reverseBeltSpeed = 1;
-  static constexpr double forwardBeltSpeed = 1;
+  static constexpr double reverseBeltSpeed = 0.85;
+  static constexpr double forwardBeltSpeed = 0.7;
   static constexpr double colorSpinnerSpeed = 0.5;
   // LED
   LEDController ledStrip{40, 9};
@@ -127,28 +132,18 @@ class Robot : public frc::TimedRobot {
 // http://www.revrobotics.com/sparkmax-users-manual/
 
   TalonFX flywheelMotor{FlyWheelID};
-
-  //solenoid id 
+  TalonFX flywheelMotorFollow{FollowFlywheelID};
   const int solenoidID = 0;
   const int intakeMotorID = 5;
-  // const int shooterID = 6;
   const int intakeBeltID = 7;
   frc::Solenoid intakePiston{solenoidID};
-  // Toggle canIntake{false};
-  // Toggle isShooting{false};
   TalonSRX intakeMotor{intakeMotorID};
   TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
-  //VictorSPX shooterBelt{shooterID};// top belt
   frc::DigitalInput lineBreak1{0};
   frc::DigitalInput lineBreak2{1};
-	bool isUpToSpeed = false;
-
-  //Reversing and Counting the balls
-  //Linebreak Sensor 3 has a value of 1 when both sensors are not facing eachother
-  //Linebreak Sensor 3 has a value of 0 when both sensors are facing eachother
-  //Linebreak sensors can be displaced by about 9.5 inches from each other and about up to 1 cm of vertical displacement
   frc::DigitalInput lineBreak3{2};
 
+	bool isUpToSpeed = false;
   // Robot characterization
   static constexpr auto ks = 0.167;
   static constexpr auto kv = 0.0684; // TODO convert to seconds-per-meter
@@ -169,7 +164,7 @@ class Robot : public frc::TimedRobot {
   static constexpr double kRamseteB = 2;     
   static constexpr double kRamseteZeta = 0.7;
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/creating-drive-subsystem.html
-  frc::ADXRS450_Gyro gyro;
+  AHRS gyro = AHRS{frc::SPI::Port::kMXP};
   frc::DifferentialDriveOdometry odometry{units::radian_t(0)};
 	frc::SendableChooser<std::string> autonChooser;
   std::string defaultAuton = "Nothing";
@@ -216,7 +211,8 @@ double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
   int maxElevatorUp = 300000;
   int minElevatorDown = 250000;
   //Max wants this elevatorspeed value to change to 0.6 so that we can elevate faster
-  double elevatorSpeed = 0.3;
+  double elevatorSpeedUp = 0.5;
+  double elevatorSpeedDown = 0.6;
   TalonFX elevatorMotor{ElevatorID};
 
   //double scaleFactor = 

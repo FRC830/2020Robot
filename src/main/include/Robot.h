@@ -65,7 +65,7 @@ class Robot : public frc::TimedRobot {
   void HandleVision();
   void HandleShooter();
   void HandleIntake();
-  void HandlePathweaver();
+  void AutonIntakeAndShoot(std::string trenchPath, std::string shootPath);
   void HandleElevator();
   // define pin numbers for motors
   const int RLeadID = 2;
@@ -144,12 +144,12 @@ class Robot : public frc::TimedRobot {
 
 	bool isUpToSpeed = false;
   // Robot characterization
-  static constexpr auto ks = 0.167;
-  static constexpr auto kv = 0.0684; // TODO convert to seconds-per-meter
+  //static constexpr auto ks = 0.167;
+  //static constexpr auto kv = 0.0684; // TODO convert to seconds-per-meter
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/entering-constants.html
-  static constexpr auto ka = 0.00744; // TODO convert to seconds^2-per-meter
+  //static constexpr auto ka = 0.00744; // TODO convert to seconds^2-per-meter
   // test value developed from analyzing characterization
-  static constexpr double kPDriveVel = 0.339;
+  //static constexpr double kPDriveVel = 0.339;
 
 
 
@@ -163,16 +163,14 @@ class Robot : public frc::TimedRobot {
   static constexpr double kRamseteZeta = 0.7;
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/creating-drive-subsystem.html
   AHRS gyro = AHRS{frc::SPI::Port::kMXP};
-  frc::DifferentialDriveOdometry odometry{units::radian_t(0)};
 	frc::SendableChooser<std::string> autonChooser;
-  std::string defaultAuton = "Nothing";
+  std::string noneAuton = "Nothing";
   std::string simpleAuton = "Simple";
-  std::string pathAuton = "Path";
-  frc::RamseteController controller;
+  std::string basicAuton = "Basic";
+  std::string middlePathAuton = "Middle Path Auton";
+  std::string leftPathAuton = "Left Path Auton";
 
-  frc::Trajectory trajectory;
-
-  frc::Timer TimeFromStart;
+  frc::Timer SimpleTimeFromStart;
 
   PathProcessor pathProcessor{LLead, RLead};
   //vision
@@ -214,6 +212,7 @@ double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
   double elevatorSpeedDown = 0.6;
   TalonFX elevatorMotor{ElevatorID};
   int stage = 0;
+  bool timerStarted = false;
+  frc::Timer BasicTimer;
 
-  //double scaleFactor = 
 };

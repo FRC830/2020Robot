@@ -67,10 +67,12 @@ void Robot::RobotInit() {
 	colorMatcher.AddColorMatch(aimGreen);
 
 	// Configure auton
-  	autonChooser.SetDefaultOption(defaultAuton, defaultAuton);
-	autonChooser.AddOption(pathAuton, pathAuton);
-	autonChooser.AddOption(defaultAuton, defaultAuton);
-	autonChooser.AddOption(simpleAuton, simpleAuton);
+  	autonChooser.SetDefaultOption(simpleAuton, simpleAuton);
+	autonChooser.AddOption(middlePathAuton, middlePathAuton); // starts from center of field
+	autonChooser.AddOption(leftPathAuton, leftPathAuton); // starts from right side of field, but driver sees it as left
+	autonChooser.AddOption(noneAuton, noneAuton); // do nothing
+	autonChooser.AddOption(basicAuton, basicAuton); // go forward, shoot, go back
+	autonChooser.AddOption(simpleAuton, simpleAuton); // very simple, just get off line
   	frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
 
 }
@@ -106,7 +108,7 @@ void Robot::HandleLEDStrip() {
 	ledStrip.Set(ledMode % ledStrip.NumModes());
 
 	// Output useful values
-	frc::SmartDashboard::PutNumber("timer", ledStrip.getTime());
+	frc::SmartDashboard::PutNumber("Led Timer", ledStrip.getTime());
 	frc::SmartDashboard::PutNumber("LED MODE", ledMode);
 	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
@@ -122,20 +124,21 @@ void Robot::AutonomousInit() {
 	ConfigurePIDF(RLeadPID, 0.001,0,0,0);
 	LLead.ResetEncoder();
 	RLead.ResetEncoder();
+	SimpleTimeFromStart.Start();
 	gyro.Reset();
 	std::string currentAutonMode = autonChooser.GetSelected();
 	//odometry.ResetPosition(trajectory.InitialPose, gyro.GetAngle());
 
 
 }
-void Robot::HandlePathweaver() {
+void Robot::AutonIntakeAndShoot(std::string trenchPath, std::string shootPath) {
 	if (stage == 0) {
-		pathProcessor.runPathUntilFinished("auton2", false);
+		pathProcessor.runPathUntilFinished(trenchPath, false);
 		intakeMotor.Set(ControlMode::PercentOutput, 0.5);
 	} else if (stage == 1) {
 		intakeMotor.Set(ControlMode::PercentOutput, 0);
 		flywheelMotor.Set(ControlMode::Velocity, (int) (flywheelRPM / kTalonRPMConversionFactor));
-		pathProcessor.runPathUntilFinished("return", true);
+		pathProcessor.runPathUntilFinished(shootPath, true);
 	} else if (stage == 2) {
 		intakeBelt.Set(ControlMode::Velocity, intakeBeltFireTicks);
 	}
@@ -164,19 +167,39 @@ void Robot::HandlePathweaver() {
 void Robot::AutonomousPeriodic() {
 	//flywheelRPM = SmartDashboard::GetNumber("FLYWHEEL SPEED",flywheelRPM);
 	std::string currentAutonMode = autonChooser.GetSelected();
-	if (currentAutonMode == defaultAuton) {
+	if (currentAutonMode == noneAuton) {
 		// do nothing
-	} else if (currentAutonMode == simpleAuton) {
-		if (LLead.GetDistance() < units::inch_t(48)) {
-			drivetrain.ArcadeDrive(0.5, 0, true);
-		} else if (LLead.GetDistance() > units::inch_t(48+5)) {
-			drivetrain.ArcadeDrive(-0.5, 0, true);
-		} else {
-			drivetrain.ArcadeDrive(0, 0, true);
+	} else if (currentAutonMode == basicAuton) {
+
+		flywheelMotor.Set(TalonFXControlMode::Velocity, (int) (flywheelRPM / kTalonRPMConversionFactor));
+		if (LLead.GetDistance() < units::inch_t(115)) {
+			drivetrain.ArcadeDrive(0.5, 0, false);
+		} else if (!timerStarted) {
+			timerStarted = true;
+			BasicTimer.Start();
+		} else if (timerStarted && BasicTimer.Get() < 5) {
+			drivetrain.ArcadeDrive(0,0,false);
+			intakeBelt.Set(ControlMode::Velocity, intakeBeltFireTicks);
+		} else if (BasicTimer.Get() > 5) {
+			intakeBelt.Set(ControlMode::PercentOutput, 0);
+			if (LLead.GetDistance() > units::inch_t(-60)) {
+				drivetrain.ArcadeDrive(-0.5,0,false);
+			} else {
+				drivetrain.ArcadeDrive(0,0,false);
+			}
 		}
-	} else if (currentAutonMode == pathAuton) {
+	} else if (currentAutonMode == simpleAuton) {
+		if(SimpleTimeFromStart.Get() < 2){
+			drivetrain.ArcadeDrive(-0.5,0,false);
+		} else {
+			drivetrain.ArcadeDrive(0,0,false);
+		}
+		
+	} else if (currentAutonMode == leftPathAuton) {
+		// TODO
+	} else if (currentAutonMode == middlePathAuton) {
 	// spin flywheel
-		HandlePathweaver();
+		AutonIntakeAndShoot("middletrench","middleshoot");
 	}
 }
 

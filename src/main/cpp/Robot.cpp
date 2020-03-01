@@ -56,12 +56,13 @@ void Robot::RobotInit() {
  	 autonChooser.AddOption(pathAuton, pathAuton);
  	 autonChooser.AddOption(defaultAuton, defaultAuton);
  	 autonChooser.AddOption(simpleAuton, simpleAuton);
+	  autonChooser.AddOption(playbackAuton, playbackAuton);
   frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
   
   saveChooser.SetDefaultOption("vector", "vector");
  	 saveChooser.AddOption("file1", "file1");
  	 saveChooser.AddOption("file2", "file2");
-	 saveChooser.AddOption("Auton-Incomplete-Do not use", "Auton");
+	 saveChooser.AddOption("Auton-Incomplete", "Auton");
 	frc::SmartDashboard::PutData("save record to", &saveChooser);
 
 	RLeadMotor.BurnFlash();
@@ -126,7 +127,12 @@ void Robot::AutonomousInit() {
 	frc::Transform2d transform = odometry.GetPose() - trajectory.InitialPose();
 	trajectory = trajectory.TransformBy(transform);
 	
-
+	if (autonChooser.GetSelected() == playbackAuton) {
+		LLeadMotor.GetEncoder().SetPosition(0.0);
+		LFollowMotor.GetEncoder().SetPosition(0.0);
+		RLeadMotor.GetEncoder().SetPosition(0.0);
+		RFollowMotor.GetEncoder().SetPosition(0.0);
+	}
 }
 void Robot::HandlePathweaver() {
 	auto currentGyroAngle = units::degree_t(-gyro.GetAngle()); // negated so that is clockwise negative
@@ -157,6 +163,7 @@ void Robot::HandlePathweaver() {
 }
 void Robot::AutonomousPeriodic() {
 	std::string currentAutonMode = autonChooser.GetSelected();
+	std::cout << "current Aunton mode: " << currentAutonMode << std::endl;
 	if (currentAutonMode == defaultAuton) {
 		// do nothing
 	} else if (currentAutonMode == simpleAuton) {
@@ -169,6 +176,13 @@ void Robot::AutonomousPeriodic() {
 		}
 	} else if (currentAutonMode == pathAuton) {
 		HandlePathweaver();
+	}else if (currentAutonMode == playbackAuton) {
+		std::cout << "permsaveauton" << std::endl;
+		PermSaveAuton.setToIndex(autonCounter, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});	
+		if (autonCounter < PermSaveAuton.leftFollowMotorValues.size())
+		{
+			autonCounter++;
+		}
 	}
 }
 

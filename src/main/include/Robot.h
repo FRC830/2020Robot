@@ -182,6 +182,7 @@ class Robot : public frc::TimedRobot {
   std::string defaultAuton = "Nothing";
   std::string simpleAuton = "Simple";
   std::string pathAuton = "Path";
+  std::string playbackAuton = "playback";
   frc::RamseteController controller;
 
   frc::Trajectory trajectory;
@@ -196,6 +197,8 @@ class Robot : public frc::TimedRobot {
 
   //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
   size_t runsAfterPlayback = 5; // avoid warnings
+
+  size_t autonCounter = 5; // avoid warnings
 
   bool isRecording = false;
   bool PlayingBack = false;

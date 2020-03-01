@@ -197,6 +197,7 @@ void Robot::HandleVision() {
 	}
 }
 void Robot::HandleRecordPlayback() {
+	std::cout << currentPlayButton << std::endl;
 	if(pilot.GetStartButtonPressed()) {
 		recordGo = false;
 		isRecording = !isRecording;
@@ -271,6 +272,7 @@ void Robot::HandleRecordPlayback() {
 		}
 	}
 	if((pilot.GetXButtonPressed() && currentPlayButton == 'n') || (pilot.GetXButtonReleased() && currentPlayButton == 'x')) {
+		std::cout << "x edge";
 		LLeadMotor.GetEncoder().SetPosition(0.0);
 		LFollowMotor.GetEncoder().SetPosition(0.0);
 		RLeadMotor.GetEncoder().SetPosition(0.0);
@@ -341,10 +343,32 @@ void Robot::HandleRecordPlayback() {
 		pilot.SetRumble(GenericHID::kRightRumble, 1);
 
 		runsAfterPlayback++;
-		if (tempsave.leftLeadMotorValues.size() <= runsAfterPlayback) {	
-			PlayingBack = false;	
-			pilot.SetRumble(GenericHID::kLeftRumble, 0);	
-			pilot.SetRumble(GenericHID::kRightRumble, 0);	
+		switch(currentPlayButton){
+			case 'b':
+				if (tempsave.leftLeadMotorValues.size() <= runsAfterPlayback) {	
+					PlayingBack = false;	
+					currentPlayButton = 'n';
+					pilot.SetRumble(GenericHID::kLeftRumble, 0);	
+					pilot.SetRumble(GenericHID::kRightRumble, 0);	
+				}
+				break;
+			case 'x':
+				if (PermSave1.leftLeadMotorValues.size() <= runsAfterPlayback) {	
+					PlayingBack = false;	
+					currentPlayButton = 'n';
+					pilot.SetRumble(GenericHID::kLeftRumble, 0);	
+					pilot.SetRumble(GenericHID::kRightRumble, 0);	
+				}
+				break;
+			case 'y':
+				if (PermSave2.leftLeadMotorValues.size() <= runsAfterPlayback) {	
+					PlayingBack = false;	
+					currentPlayButton = 'n';
+					pilot.SetRumble(GenericHID::kLeftRumble, 0);	
+					pilot.SetRumble(GenericHID::kRightRumble, 0);	
+				}
+				break;
+
 		}
 	}
 }

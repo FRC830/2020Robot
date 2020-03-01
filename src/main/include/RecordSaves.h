@@ -23,16 +23,21 @@ public:
                     &rightFollowMotorValues,
                 }) {
                 std::string input_str;
-                std::getline(values, input_str );
+                std::getline(values, input_str);
                 std::stringstream ss(input_str);
                 double i;
                 while (ss >> i)
                 {
                     vect->push_back(i);
                     if (ss.peek() == ',')
-                    ss.ignore();
+                        ss.ignore();
                 }
             }
+        }
+
+        if (leftFollowMotorValues.empty() || rightFollowMotorValues.empty() || leftFollowMotorValues.empty() || rightFollowMotorValues.empty())
+        {
+            std::cout << "\n Vecotrs Empty " << path << std::endl;
         }
     }
     void outputToFile(std::string filename) {

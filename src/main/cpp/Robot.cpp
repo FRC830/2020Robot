@@ -392,7 +392,8 @@ void Robot::HandleShooter() {
 		if (!meetsThreshold) {
 			isUpToSpeed = false;
 		}
-		flywheelMotor.Set(TalonFXControlMode::PercentOutput, 0);
+		//flywheelMotor.Set(TalonFXControlMode::PercentOutput, 0);
+		flywheelMotor.Set(TalonFXControlMode::Velocity, 0);
 	}
 	
 	// Log variables

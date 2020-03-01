@@ -149,18 +149,27 @@ def handleBallVision(frame):
 		
 		if radius > dashboard.getNumber("Min Radius", 1):
 			center = calculateCenter(max_contour)
-			dashboard.putNumber("centerXball", center[0])
+			dashboard.putNumber("centerXball", center["x"])
 
 			cv2.circle(maskOut, (int(x), int(y)), int(radius), (0, 255, 255), 2)
-			cv2.circle(maskOut, center, 5, (0, 0, 255), -1)
+			cv2.circle(maskOut, (center["x"], center["y"]), 5, (0, 0, 255), -1)
 	else:
 		dashboard.putNumber("centerXball", 80) # center so it wont do anything
 	
 	return maskOut
 def calculateCenter(contour):
 		M = cv2.moments(contour)
-		center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-		return center
+		x = 80
+		y= 60
+		try:
+			x = int(M["m10"] / M["m00"])
+		except ZeroDivisionError:
+			pass
+		try:
+			y = int(M["m01"] / M["m00"])
+		except ZeroDivisionError:
+			pass
+		return {"x": x, "y": y}
 def handleReflectiveVision(frame):
 	img = frame.astype(dtype="uint8")
 	hsvImg = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -175,35 +184,17 @@ def handleReflectiveVision(frame):
 	# get mask of all values that match bounds, then display part of image that matches bound
 	mask = cv2.inRange(hsvImg, lowerBound, upperBound)
 	output = cv2.bitwise_and(frame, frame, mask=mask)
-
+	mask = cv2.erode(mask, None, iterations=2)
+	mask = cv2.dilate(mask, None, iterations=2)
 	im2,contours,hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-	if len(contours) >= 2:
-		# draw in blue the contours that were founded
-		# cv2.drawContours(output, contours, -1, 255, 3)
-
+	if len(contours) >= 1:
 		# find the biggest countour (c) by the area
-		contours.sort(key=cv2.contourArea, reverse=True)
-		largest = contours[0]
-		second = contours[1]
-		# make sure they are equivalent
-		diff = 1
-		if cv2.contourArea(largest) > 0:
-			diff = (cv2.contourArea(largest) - cv2.contourArea(second)) / cv2.contourArea(largest)
-		if (diff < .5):
-			x,y,w,h = cv2.boundingRect(largest)
-
-			# draw the biggest contour (c) in green
-			cv2.rectangle(output,(x,y),(x+w,y+h),(0,255,0),2)
-
-			# draw the second contour (c) in red
-			x2,y2,w2,h2 = cv2.boundingRect(second)
-			cv2.rectangle(output,(x2,y2),(x2+w2,y2+h2),(0,255,0),2)
-			cl = calculateCenter(largest)
-			cs = calculateCenter(second)
-			centerX = int((cl[0] +cs[0]) / 2)
-			centerY = int((cl[1] +cs[1]) / 2)
-			cv2.circle(output, (centerX, centerY), 5, (0,0,255), 2)
-			dashboard.putNumber("centerXshooter", centerX)
+		largest = max(contours, key=cv2.contourArea)
+		# draw the biggest contour (c) in green
+		#cv2.drawContours(output, contours, -1, (0, 255, 255), 3)
+		c = calculateCenter(largest)
+		cv2.circle(output, (c["x"], c["y"]), 5, (0,0,255), 2)
+		dashboard.putNumber("centerXshooter", c["x"])
 	else:
 		dashboard.putNumber("centerXshooter", 80) # center so it wont do anything
 	return output

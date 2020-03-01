@@ -322,7 +322,9 @@ void Robot::HandleRecordPlayback() {
 		std::cout << "\n playing back \n";
 		switch(currentPlayButton){
 			case 'b':
-				tempsave.setToIndex(runsAfterPlayback, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});
+				if(tempsave.leftFollowMotorValues.size() != 0){
+					tempsave.setToIndex(runsAfterPlayback, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});
+				}
 			break;
 			case 'x':
 				PermSave1.setToIndex(runsAfterPlayback, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});

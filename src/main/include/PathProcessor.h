@@ -30,8 +30,8 @@ class PathProcessor {
     frc::RamseteController controller;
     bool pathChanged = true;
     std::string old_path = "NOTHING";
-    AHRS gyro{frc::SPI::Port::kMXP};
-    PathProcessor(SparkController &leftMotor, SparkController &rightMotor) : leftMotor(leftMotor), rightMotor(rightMotor) {
+    AHRS &gyro;
+    PathProcessor(SparkController &leftMotor, SparkController &rightMotor, AHRS &aGyro) : leftMotor(leftMotor), rightMotor(rightMotor), gyro(aGyro) {
 
     }
     void setPath(std::string newPath) {
@@ -44,7 +44,7 @@ class PathProcessor {
         wpi::SmallString<64> deployDirectory;
         frc::filesystem::GetDeployDirectory(deployDirectory);
         wpi::sys::path::append(deployDirectory, "output");
-        wpi::sys::path::append(deployDirectory, fileName + ".path");
+        wpi::sys::path::append(deployDirectory, fileName + ".wpilib.json");
 
         return frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
     }
@@ -56,18 +56,25 @@ class PathProcessor {
             old_path = path;
         }
         if (pathCompleted()) {
+            std::cout << timer.Get() << " " << currentPath.TotalTime() << path << "\n";
             // This is bad, should not be running after path is finished!
         }
         runCurrentPath(reverse);
 
     }
+    std::string getCurrentPath() {
+        return old_path;
+    }
+    double getCurrentAngle() {
+        return gyro.GetYaw();
+    }
     void runCurrentPath(bool reverse) {
         units::degree_t currentGyroAngle;
         units::meters_per_second_t left;
         units::meters_per_second_t right;
-        double rawGyro = gyro.GetPitch();
+        double rawGyro = gyro.GetYaw();
         if(reverse) {
-            currentGyroAngle = units::degree_t(-rawGyro+180); // negated so that is clockwise negative
+            currentGyroAngle = units::degree_t(-rawGyro); // negated so that is clockwise negative
         }else{
             currentGyroAngle = units::degree_t(-rawGyro); // negated so that is clockwise negative
         }
@@ -84,8 +91,8 @@ class PathProcessor {
             left = wheelSpeeds.left;
             right = wheelSpeeds.right;
         }
-        leftMotor.SetSpeed(0.5*-left);
-        rightMotor.SetSpeed(0.5*right);
+        leftMotor.SetSpeed(-left);
+        rightMotor.SetSpeed(right);
         // Make sure to feed
     }
     bool pathCompleted() {

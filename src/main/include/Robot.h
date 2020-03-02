@@ -114,8 +114,8 @@ class Robot : public frc::TimedRobot {
   //Constant Values
   static constexpr double kTalonRPMConversionFactor = 10.0 / 2048.0 * 60.0; // 100ms, 2048 ticks
   // static const int kBeltRPMConversionFactor = 50 / 1024 * 60; // 20ms, 1024 ticks
-  static const int intakeBeltFeedTicks = 5000;
-  int intakeBeltFireTicks = 12000;
+  static const int beltFeedTicks = 5000;
+  int beltFireTicks = 12000;
 
   double flywheelRPM = 5800;
   static constexpr double flywheelReverseRPM = 900;
@@ -134,10 +134,10 @@ class Robot : public frc::TimedRobot {
   TalonFX flywheelMotorFollow{FollowFlywheelID};
   const int solenoidID = 0;
   const int intakeMotorID = 5;
-  const int intakeBeltID = 7;
+  const int beltID = 7;
   frc::Solenoid intakePiston{solenoidID};
   TalonSRX intakeMotor{intakeMotorID};
-  TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
+  TalonSRX belt{beltID}; // vertical + bottom
   frc::DigitalInput lineBreak1{0};
   frc::DigitalInput lineBreak2{1};
   frc::DigitalInput lineBreak3{2};
@@ -168,11 +168,11 @@ class Robot : public frc::TimedRobot {
   std::string simpleAuton = "Simple";
   std::string basicAuton = "Basic";
   std::string middlePathAuton = "Middle Path Auton";
-  std::string leftPathAuton = "Left Path Auton";
+  std::string straightPathAuton = "Straight Path Auton";
 
   frc::Timer SimpleTimeFromStart;
 
-  PathProcessor pathProcessor{LLead, RLead};
+  PathProcessor pathProcessor{LLead, RLead, gyro};
   //vision
   bool frontCamera = true;
   std::shared_ptr<nt::NetworkTable> visionTab2 = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");

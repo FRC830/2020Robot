@@ -1,5 +1,4 @@
-  #pragma once
-
+#pragma once
 #include <string>
 
 #include <frc/TimedRobot.h>
@@ -46,7 +45,7 @@
 #include <wpi/Path.h>
 #include <wpi/SmallString.h>
 #include <AHRS.h> // navx
-
+#include "PathProcessor.h"
 // #include <frc/cs/CameraServer.h>
 
 class Robot : public frc::TimedRobot {
@@ -66,9 +65,11 @@ class Robot : public frc::TimedRobot {
   void HandleVision();
   void HandleShooter();
   void HandleIntake();
-  void HandlePathweaver();
+  void AutonIntakeAndShoot(std::string trenchPath, std::string shootPath);
   void HandleElevator();
-  // define pin numbers for motors
+  /*=============
+  Pins & IDs
+  =============*/
   const int RLeadID = 2;
   const int LLeadID = 4;
   const int RFollowID = 1;
@@ -77,16 +78,36 @@ class Robot : public frc::TimedRobot {
   const int FlyWheelID = 10;
   const int FollowFlywheelID = 11;
   const int ElevatorID = 18;
+  const int solenoidID = 0;
+  const int intakeMotorID = 5;
+  const int beltID = 7;
+  static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
+  static constexpr auto MXPPort = frc::SPI::Port::kMXP;
+  /*=============
+  Driverstation
+  =============*/
 
-  //colors	
-  static constexpr auto i2cPort = frc::I2C::Port::kOnboard;	
+  nt::NetworkTableInstance networkTableInstance = nt::NetworkTableInstance::GetDefault();
+  frc::Preferences& prefs = *frc::Preferences::GetInstance();
+  std::shared_ptr<nt::NetworkTable> debugTab = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("debug");
+	frc::SendableChooser<std::string> autonChooser;
+  std::string noneAuton = "Nothing";
+  std::string simpleAuton = "Simple";
+  std::string basicAuton = "Basic";
+  std::string middlePathAuton = "Middle Path Auton";
+  std::string straightPathAuton = "Straight Path Auton";
+  std::shared_ptr<nt::NetworkTable> visionTab = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
+
+  /*=============
+  Color Sensor
+  =============*/
   rev::ColorSensorV3 colorSensor{i2cPort};
-
   TalonSRX colorWheelMotor{ColorWheelID};	
-
   char currentColorTarget = 'N';
 
-  //defines motors and PID controllers
+  /*=============
+  Drivetrain
+  =============*/
   rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax RFollowMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax LLeadMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
@@ -102,88 +123,66 @@ class Robot : public frc::TimedRobot {
   SparkController LFollow{LFollowMotor, LFollowPID};
   frc::DifferentialDrive drivetrain{LLead, RLead};
 
-  //create controls
-  frc::XboxController pilot{0};
-  frc::XboxController copilot{1};
-  //frc::GenericHID::kLeftHand to LEFT, etc
+  /*=============
+  Controls
+  =============*/
   static const frc::GenericHID::JoystickHand LEFT = frc::GenericHID::kLeftHand;
   static const frc::GenericHID::JoystickHand RIGHT = frc::GenericHID::kRightHand;
+  frc::XboxController pilot{0};
+  frc::XboxController copilot{1};
 
-  //initializes prefreences widget
-  nt::NetworkTableInstance networkTableInstance = nt::NetworkTableInstance::GetDefault();
-  frc::Preferences& prefs = *frc::Preferences::GetInstance();
-  //Constant Values
+  /*=============
+  flywheel, intake, belts
+  =============*/
   static constexpr double kTalonRPMConversionFactor = 10.0 / 2048.0 * 60.0; // 100ms, 2048 ticks
-  // static const int kBeltRPMConversionFactor = 50 / 1024 * 60; // 20ms, 1024 ticks
-  static const int intakeBeltFeedTicks = 5000;
-  int intakeBeltFireTicks = 12000;
-
+  static const int beltFeedTicks = 5000;
+  int beltFireTicks = 12000;
   double flywheelRPM = 5800;
   static constexpr double flywheelReverseRPM = 900;
   static constexpr double flywheelStoppedRPM = 10;
-
   static constexpr double intakeRollerSpeed = 0.8;
   static constexpr double reverseBeltSpeed = 0.85;
   static constexpr double forwardBeltSpeed = 0.7;
   static constexpr double colorSpinnerSpeed = 0.5;
-  // LED
-  LEDController ledStrip{40, 9};
-  int ledMode = 0;
-// http://www.revrobotics.com/sparkmax-users-manual/
-
   TalonFX flywheelMotor{FlyWheelID};
   TalonFX flywheelMotorFollow{FollowFlywheelID};
-  const int solenoidID = 0;
-  const int intakeMotorID = 5;
-  const int intakeBeltID = 7;
   frc::Solenoid intakePiston{solenoidID};
   TalonSRX intakeMotor{intakeMotorID};
-  TalonSRX intakeBelt{intakeBeltID}; // vertical + bottom
+  TalonSRX belt{beltID}; // vertical + bottom
   frc::DigitalInput lineBreak1{0};
   frc::DigitalInput lineBreak2{1};
   frc::DigitalInput lineBreak3{2};
 
 	bool isUpToSpeed = false;
-  // Robot characterization
-  static constexpr auto ks = 0.167;
-  static constexpr auto kv = 0.0684; // TODO convert to seconds-per-meter
-  // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/entering-constants.html
-  static constexpr auto ka = 0.00744; // TODO convert to seconds^2-per-meter
-  // test value developed from analyzing characterization
-  static constexpr double kPDriveVel = 0.339;
 
-  static constexpr units::inch_t kTrackwidth = 27.9_in;
-  frc::DifferentialDriveKinematics kDriveKinematics{units::meter_t(kTrackwidth)};
-
+  /*=============
+  autonomous
+  =============*/
+  frc::Timer SimpleTimeFromStart;
   static constexpr auto kMaxSpeed = 1_mps; 
   static constexpr auto kMaxAcceleration = 1_mps_sq;
 
-  // Reasonable baseline values for a RAMSETE follower in units of meters and
-  // seconds
-
+  // Reasonable baseline values for a RAMSETE follower in units of meters and seconds
   static constexpr double kRamseteB = 2;     
   static constexpr double kRamseteZeta = 0.7;
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/creating-drive-subsystem.html
-  AHRS gyro = AHRS{frc::SPI::Port::kMXP};
-  frc::DifferentialDriveOdometry odometry{units::radian_t(0)};
-	frc::SendableChooser<std::string> autonChooser;
-  std::string defaultAuton = "Nothing";
-  std::string simpleAuton = "Simple";
-  std::string pathAuton = "Path";
-  frc::RamseteController controller;
+  AHRS gyro = AHRS{MXPPort};
 
-  frc::Trajectory trajectory;
+  PathProcessor pathProcessor{LLead, RLead, gyro};
 
-  frc::Timer TimeFromStart;
-
-  //vision
+  int stage = 0;
+  bool timerStarted = false;
+  frc::Timer BasicTimer;
+  static constexpr double centerCamera = 80.0;
+  /*=============
+  vision
+  =============*/
   bool frontCamera = true;
-  std::shared_ptr<nt::NetworkTable> visionTab2 = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
-
-  //playback and record
-
-  //when we reset the motors there are some reidual values. Therefore, we want to ignore the first two durring playback.
+  /*=============
+  playback and record
+  =============*/
   size_t runsAfterPlayback = 5; // avoid warnings
+  //when we reset the motors there are some residual values
 
   bool isRecording = false;
   bool PlayingBack = false;
@@ -194,26 +193,27 @@ class Robot : public frc::TimedRobot {
   bool isAutoAligning = false;
   
   std::vector<double> leftLeadMotorValues {};
-std::vector<double> rightLeadMotorValues;
-std::vector<double> leftFollowMotorValues;
-std::vector<double> rightFollowMotorValues;
+  std::vector<double> rightLeadMotorValues;
+  std::vector<double> leftFollowMotorValues;
+  std::vector<double> rightFollowMotorValues;
 
-double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
+  double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
+
+  /*=============
+  LED Strip
+  =============*/
+  LEDController ledStrip{40, 9};
+  int ledMode = 0;
   Toggle ledUp;
   Toggle ledDown;
-  static constexpr double centerCamera = 80.0;
-
-  bool reversedpath = false;
-
-
-  //Elevator
+  /*=============
+  Elevator
+  =============*/
   int elevatorBreaksPoint = 600000;
   int maxElevatorUp = 300000;
   int minElevatorDown = 250000;
-  //Max wants this elevatorspeed value to change to 0.6 so that we can elevate faster
   double elevatorSpeedUp = 0.5;
   double elevatorSpeedDown = 0.6;
   TalonFX elevatorMotor{ElevatorID};
-
-  //double scaleFactor = 
+  double inputScale = 1.0;
 };

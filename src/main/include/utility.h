@@ -1,3 +1,4 @@
+#pragma once
 #include <rev/ColorSensorV3.h>
 #include <rev/ColorMatch.h>
 #include <frc/util/Color.h>
@@ -24,14 +25,6 @@ void outputToFile(std::vector<std::vector<double>> input, std::string filename) 
 		values << "\n\n";
 	}
 	values.close();
-}
-frc::Trajectory LoadTrajectory(std::string fileName) {
-	wpi::SmallString<64> deployDirectory;
-	frc::filesystem::GetDeployDirectory(deployDirectory);
-	wpi::sys::path::append(deployDirectory, "output");
-	wpi::sys::path::append(deployDirectory, fileName);
-
-	return frc::TrajectoryUtil::FromPathweaverJson(deployDirectory);
 }
 
 // apply deadzone & possible scaling, etc

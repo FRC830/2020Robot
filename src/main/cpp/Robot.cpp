@@ -34,6 +34,7 @@ void Robot::RobotInit() {
 	flywheelMotor.SetInverted(true);
 	flywheelMotor.SetNeutralMode(motorcontrol::NeutralMode::Coast);
 	SmartDashboard::PutNumber("FLYWHEEL RPM",flywheelRPM);
+	flywheelMotor.ConfigStatorCurrentLimit(StatorCurrentLimitConfiguration{true,20,30,0.5}); // if above 30A for .5s, limit to 20A
 	/*=============
 	Elevator
 	=============*/

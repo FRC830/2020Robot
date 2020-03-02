@@ -53,7 +53,7 @@ void Robot::RobotInit() {
 	LED Strip
 	=============*/
 	debugTab->PutNumber("LED MODE", ledMode);
-	debugTab->PutString("current LED mode", ledStrip.Get());
+	SmartDashboard::PutString("current LED mode", ledStrip.Get());
 
 	/*=============
 	Line break sensors
@@ -235,7 +235,10 @@ void Robot::HandleShooter() {
 	bool lineBreak1Broken = !lineBreak1.Get();
 	bool lineBreak2Broken = !lineBreak2.Get();
 	bool lineBreak3Broken = !lineBreak3.Get();
-	
+	debugTab->PutBoolean("Sensor 1 Broken", lineBreak1Broken);
+	debugTab->PutBoolean("Sensor 2 Broken", lineBreak2Broken);
+	debugTab->PutBoolean("Sensor 3 Broken", lineBreak3Broken);
+
 	// Back: The 'run in reverse manually'
 	if (copilot.GetBackButton()) {
 		belt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
@@ -256,9 +259,7 @@ void Robot::HandleShooter() {
 	flywheelRPM = SmartDashboard::GetNumber("FLYWHEEL RPM",flywheelRPM);
 	beltFireTicks = SmartDashboard::GetNumber("INTAKE BELT",beltFireTicks);
 	// Log variables
-	debugTab->PutBoolean("Sensor 1 Broken", lineBreak1Broken);
-	debugTab->PutBoolean("Sensor 2 Broken", lineBreak2Broken);
-	debugTab->PutBoolean("Sensor 3 Broken", lineBreak3Broken);
+
 	debugTab->PutNumber("current intake velocity", belt.GetSelectedSensorVelocity(0));
 	debugTab->PutNumber("current flywheel velocity", flywheelMotor.GetSelectedSensorVelocity(0) * kTalonRPMConversionFactor);
 	debugTab->PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
@@ -352,8 +353,8 @@ void Robot::HandleLEDStrip() {
 
 	// Output useful values
 	debugTab->PutNumber("Led Timer", ledStrip.getTime());
-	SmartDashboard::PutNumber("LED MODE", ledMode);
-	debugTab->PutString("current LED mode", ledStrip.Get());
+	debugTab->PutNumber("LED MODE", ledMode);
+	SmartDashboard::PutString("current LED mode", ledStrip.Get());
 }
 
 

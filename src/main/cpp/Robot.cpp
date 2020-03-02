@@ -52,15 +52,15 @@ void Robot::RobotInit() {
 	/*=============
 	LED Strip
 	=============*/
-	frc::SmartDashboard::PutNumber("LED MODE", ledMode);
-	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
+	debugTab->PutNumber("LED MODE", ledMode);
+	debugTab->PutString("current LED mode", ledStrip.Get());
 
 	/*=============
 	Line break sensors
 	=============*/
-	SmartDashboard::PutBoolean("Line Break Sensor 1", false);
-	SmartDashboard::PutBoolean("Line Break Sensor 2", false);
-	SmartDashboard::PutBoolean("Line Break Sensor 3", false);
+	debugTab->PutBoolean("Line Break Sensor 1", false);
+	debugTab->PutBoolean("Line Break Sensor 2", false);
+	debugTab->PutBoolean("Line Break Sensor 3", false);
 
 	/*=============
 	Vision
@@ -158,14 +158,13 @@ void Robot::TeleopPeriodic() {
 	HandleElevator();
 }
 void Robot::AutonomousPeriodic() {
-	//flywheelRPM = SmartDashboard::GetNumber("FLYWHEEL SPEED",flywheelRPM);
 	std::string currentAutonMode = autonChooser.GetSelected();
 	if (currentAutonMode == noneAuton) {
 		// do nothing
 	} else if (currentAutonMode == basicAuton) {
 
 		flywheelMotor.Set(TalonFXControlMode::Velocity, 10500);
-		SmartDashboard::PutNumber("current distance", (double) units::inch_t(LLead.GetDistance()));
+		debugTab->PutNumber("current distance", (double) units::inch_t(LLead.GetDistance()));
 		if (RLead.GetDistance() < units::inch_t(115) && BasicTimer.Get() < 3) {
 			drivetrain.ArcadeDrive(-0.5, 0, false);
 		} else if (!timerStarted) {
@@ -218,21 +217,21 @@ void Robot::HandleDrivetrain() {
 	}
 
 	// Output useful values
-	frc::SmartDashboard::PutNumber("Yaw",gyro.GetYaw());
-	frc::SmartDashboard::PutNumber("Pitch",gyro.GetPitch());
-	frc::SmartDashboard::PutNumber("Roll",gyro.GetRoll());
-	frc::SmartDashboard::PutNumber("Turn", turn);
-	frc::SmartDashboard::PutNumber("left lead position", LLead.GetPosition());
-	frc::SmartDashboard::PutNumber("right lead position", RLead.GetPosition());
-	frc::SmartDashboard::PutNumber("Current L motor velocity", LLead.GetVelocity());
-	frc::SmartDashboard::PutNumber("Current R motor velocity", RLead.GetVelocity());
+	debugTab->PutNumber("Yaw",gyro.GetYaw());
+	debugTab->PutNumber("Pitch",gyro.GetPitch());
+	debugTab->PutNumber("Roll",gyro.GetRoll());
+	debugTab->PutNumber("Turn", turn);
+	debugTab->PutNumber("left lead position", LLead.GetPosition());
+	debugTab->PutNumber("right lead position", RLead.GetPosition());
+	debugTab->PutNumber("Current L motor velocity", LLead.GetVelocity());
+	debugTab->PutNumber("Current R motor velocity", RLead.GetVelocity());
 }
 
 
 
 // Handle Line Sensor Indexing
 void Robot::HandleShooter() {
-	SmartDashboard::PutNumber("get current",flywheelMotor.GetOutputCurrent()); // above 30 is bad
+	debugTab->PutNumber("get current",flywheelMotor.GetOutputCurrent()); // above 30 is bad
 	bool lineBreak1Broken = !lineBreak1.Get();
 	bool lineBreak2Broken = !lineBreak2.Get();
 	bool lineBreak3Broken = !lineBreak3.Get();
@@ -257,12 +256,12 @@ void Robot::HandleShooter() {
 	flywheelRPM = SmartDashboard::GetNumber("FLYWHEEL RPM",flywheelRPM);
 	beltFireTicks = SmartDashboard::GetNumber("INTAKE BELT",beltFireTicks);
 	// Log variables
-	SmartDashboard::PutBoolean("Sensor 1 Broken", lineBreak1Broken);
-	SmartDashboard::PutBoolean("Sensor 2 Broken", lineBreak2Broken);
-	SmartDashboard::PutBoolean("Sensor 3 Broken", lineBreak3Broken);
-	SmartDashboard::PutNumber("current intake velocity", belt.GetSelectedSensorVelocity(0));
-	SmartDashboard::PutNumber("current flywheel velocity", flywheelMotor.GetSelectedSensorVelocity(0) * kTalonRPMConversionFactor);
-	SmartDashboard::PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
+	debugTab->PutBoolean("Sensor 1 Broken", lineBreak1Broken);
+	debugTab->PutBoolean("Sensor 2 Broken", lineBreak2Broken);
+	debugTab->PutBoolean("Sensor 3 Broken", lineBreak3Broken);
+	debugTab->PutNumber("current intake velocity", belt.GetSelectedSensorVelocity(0));
+	debugTab->PutNumber("current flywheel velocity", flywheelMotor.GetSelectedSensorVelocity(0) * kTalonRPMConversionFactor);
+	debugTab->PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
 	// Update the status of up to speed
 	if ((runShooter || runFlywheel) && meetsThreshold) {
 		isUpToSpeed = true;
@@ -271,8 +270,8 @@ void Robot::HandleShooter() {
 	if (!meetsThreshold) {
 		isUpToSpeed = false;
 	}
-	frc::SmartDashboard::PutBoolean("meets threshold", meetsThreshold);
-	frc::SmartDashboard::PutBoolean("is up to speed", isUpToSpeed);
+	debugTab->PutBoolean("meets threshold", meetsThreshold);
+	debugTab->PutBoolean("is up to speed", isUpToSpeed);
 	// The 'spin flywheel && shoot' functionality
 	if (runShooter && isUpToSpeed) { // fire!
 		flywheelMotor.Set(TalonFXControlMode::Velocity, (int) (flywheelRPM / kTalonRPMConversionFactor));
@@ -302,7 +301,7 @@ void Robot::HandleShooter() {
 }
 void Robot::HandleElevator() {
 	double encoder = elevatorMotor.GetSelectedSensorPosition();
-	frc::SmartDashboard::PutNumber("elevator encoder", encoder);
+	debugTab->PutNumber("elevator encoder", encoder);
 	bool down = ApplyDeadzone(pilot.GetTriggerAxis(LEFT), prefs.GetDouble("deadzone")) > 0;
 	bool up = ApplyDeadzone(pilot.GetTriggerAxis(RIGHT), prefs.GetDouble("deadzone")) > 0;
 	bool scaryReverse = pilot.GetBackButton();
@@ -352,9 +351,9 @@ void Robot::HandleLEDStrip() {
 	ledStrip.Set(ledMode % ledStrip.NumModes());
 
 	// Output useful values
-	frc::SmartDashboard::PutNumber("Led Timer", ledStrip.getTime());
-	frc::SmartDashboard::PutNumber("LED MODE", ledMode);
-	frc::SmartDashboard::PutString("current LED mode", ledStrip.Get());
+	debugTab->PutNumber("Led Timer", ledStrip.getTime());
+	SmartDashboard::PutNumber("LED MODE", ledMode);
+	debugTab->PutString("current LED mode", ledStrip.Get());
 }
 
 
@@ -364,9 +363,9 @@ void Robot::HandleColorWheel() {
 	double confidence;
 	std::tie(closestColor, confidence) = ClosestColor(colorSensor);
 	int proximity = (int) colorSensor.GetProximity();
-	SmartDashboard::PutNumber("Proximity", proximity);
-	SmartDashboard::PutNumber("Confidence", confidence);
-	SmartDashboard::PutString("Closest Color", std::string(1, closestColor));
+	debugTab->PutNumber("Proximity", proximity);
+	debugTab->PutNumber("Confidence", confidence);
+	debugTab->PutString("Closest Color", std::string(1, closestColor));
 	if(gameData.length() > 0) {
 		currentColorTarget = gameData[0];
 	}
@@ -407,7 +406,7 @@ void Robot::HandleRecordPlayback() {
 	if(pilot.GetStartButtonPressed()) {
 		recordGo = false;
 		isRecording = !isRecording;
-		SmartDashboard::PutBoolean("is recording", isRecording);
+		debugTab->PutBoolean("is recording", isRecording);
 		LLeadMotor.GetEncoder().SetPosition(0.0);
 		LFollowMotor.GetEncoder().SetPosition(0.0);
 		RLeadMotor.GetEncoder().SetPosition(0.0);
@@ -427,7 +426,7 @@ void Robot::HandleRecordPlayback() {
 	LFollowMotor.GetEncoder().GetPosition() == 0.0 &&
 	RFollowMotor.GetEncoder().GetPosition() == 0.0);
 	//allEd
-	SmartDashboard::PutBoolean("all encoders are zero", allEncodersZero);
+	debugTab->PutBoolean("all encoders are zero", allEncodersZero);
 
 	if (allEncodersZero) {
 		recordGo = true;
@@ -448,7 +447,7 @@ void Robot::HandleRecordPlayback() {
 		RFollowMotor.GetEncoder().SetPosition(0.0); // returns in 1ms, motor doesnt actually set till 50ms
 		
 		PlayingBack = !PlayingBack;
-		SmartDashboard::PutBoolean("is playing back", PlayingBack);
+		debugTab->PutBoolean("is playing back", PlayingBack);
 		runsAfterPlayback = 0;
 		pilot.SetRumble(GenericHID::kLeftRumble, 0);
 		pilot.SetRumble(GenericHID::kRightRumble, 0);
@@ -480,9 +479,9 @@ void Robot::HandleRecordPlayback() {
 	}
 }
 void Robot::AutonIntakeAndShoot(std::string trenchPath, std::string shootPath) {
-	SmartDashboard::PutNumber("current stage", stage);
-	SmartDashboard::PutString("current path", pathProcessor.getCurrentPath());
-	SmartDashboard::PutNumber("current gyro", pathProcessor.getCurrentAngle());
+	debugTab->PutNumber("current stage", stage);
+	debugTab->PutString("current path", pathProcessor.getCurrentPath());
+	debugTab->PutNumber("current gyro", pathProcessor.getCurrentAngle());
 	if (stage == 0) {
 		pathProcessor.runPathUntilFinished(trenchPath, false);
 		intakePiston.Set(true);

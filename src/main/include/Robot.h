@@ -82,7 +82,7 @@ class Robot : public frc::TimedRobot {
   const int intakeMotorID = 5;
   const int beltID = 7;
   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
-  static constexpr MXPPort = frc::SPI::Port::kMXP;
+  static constexpr auto MXPPort = frc::SPI::Port::kMXP;
   /*=============
   Driverstation
   =============*/
@@ -96,7 +96,7 @@ class Robot : public frc::TimedRobot {
   std::string basicAuton = "Basic";
   std::string middlePathAuton = "Middle Path Auton";
   std::string straightPathAuton = "Straight Path Auton";
-  std::shared_ptr<nt::NetworkTable> visionTab2 = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
+  std::shared_ptr<nt::NetworkTable> visionTab = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
 
   /*=============
   Color Sensor

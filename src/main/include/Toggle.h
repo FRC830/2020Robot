@@ -28,7 +28,7 @@ public:
 		// if true and previously false
 		bool is_rising_edge = (button_state && !prev_state);
 		prev_state = button_state;
-		return is_rising_edge;	
+		return is_rising_edge;
 	}
 
 	bool operator= (const bool state) {

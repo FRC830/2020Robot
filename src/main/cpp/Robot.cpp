@@ -229,13 +229,14 @@ void Robot::HandleDrivetrain() {
 }
 
 
-
 // Handle Line Sensor Indexing
 void Robot::HandleShooter() {
+	
 	debugTab->PutNumber("get current",flywheelMotor.GetOutputCurrent()); // above 30 is bad
 	bool lineBreak1Broken = !lineBreak1.Get();
 	bool lineBreak2Broken = !lineBreak2.Get();
 	bool lineBreak3Broken = !lineBreak3.Get();
+
 	debugTab->PutBoolean("Sensor 1 Broken", lineBreak1Broken);
 	debugTab->PutBoolean("Sensor 2 Broken", lineBreak2Broken);
 	debugTab->PutBoolean("Sensor 3 Broken", lineBreak3Broken);
@@ -270,9 +271,12 @@ void Robot::HandleShooter() {
 	debugTab->PutBoolean("meets threshold", meetsThreshold);
 	debugTab->PutBoolean("is up to speed", isUpToSpeed);
 	// The 'spin flywheel && shoot' functionality
+	ignoreCountingOut = true;
 	if (runShooter && isUpToSpeed) { // fire!
+		ignoreCountingOut = false;
 		flywheelMotor.Set(TalonFXControlMode::Velocity, (int) (flywheelRPM / kTalonRPMConversionFactor));
 		belt.Set(ControlMode::Velocity, beltFireTicks);
+		//intakeMotor.Set(ControlMode::PercentOutput, 0.3);
 		return;
 	} else if (runFlywheel || (runShooter && !isUpToSpeed)) {
 		if (lineBreak3Broken) { // run belts & flywheel back when touching sensor
@@ -289,11 +293,19 @@ void Robot::HandleShooter() {
 
 	// The 'intake' functionality
 	if (!lineBreak2Broken) { 
+		ignoreCountingIn = false;
 		belt.Set(ControlMode::PercentOutput, 0);
 	} else if (!lineBreak3Broken && (flywheelMotor.GetSelectedSensorVelocity(0) * kTalonRPMConversionFactor) < flywheelStoppedRPM) {
 		// make sure flywheel is not spinning and we aren't out of room
+		ignoreCountingIn = false;
 		belt.Set(ControlMode::PercentOutput, forwardBeltSpeed);
 	}
+		if (LinebreakIn.rising_edge(lineBreak2Broken) && !ignoreCountingIn) {
+		count++;
+	} else if (LinebreakOut.rising_edge(lineBreak3Broken) && !ignoreCountingOut) {
+		count--;
+	}
+	SmartDashboard::PutNumber("Current Number of balls", count);
 
 }
 void Robot::HandleElevator() {
@@ -315,14 +327,16 @@ void Robot::HandleElevator() {
 		elevatorMotor.Set(ControlMode::PercentOutput, 0);
 	}
 
+
 }
 void Robot::HandleIntake(){
 	bool isIntaking = ApplyDeadzone(copilot.GetTriggerAxis(LEFT), 0.2) > 0;
 	bool isOuttaking = copilot.GetXButton();
 	intakePiston.Set(isIntaking || isOuttaking);
-
+	ignoreCountingIn = false;
 	if (isOuttaking) { // give outtake priority
 		intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
+		ignoreCountingIn = true;
 	} else if (isIntaking) {
 		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
 	} else {

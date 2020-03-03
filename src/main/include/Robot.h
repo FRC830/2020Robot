@@ -216,4 +216,12 @@ class Robot : public frc::TimedRobot {
   double elevatorSpeedDown = 0.6;
   TalonFX elevatorMotor{ElevatorID};
   double inputScale = 1.0;
+  /*===========
+  Counting balls
+  */
+  Toggle LinebreakIn{false};
+  Toggle LinebreakOut{false};
+  bool ignoreCountingOut = true;
+  bool ignoreCountingIn = true;
+  int count = 0;
 };

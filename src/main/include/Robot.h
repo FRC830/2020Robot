@@ -136,7 +136,7 @@ class Robot : public frc::TimedRobot {
   =============*/
   static constexpr double kTalonRPMConversionFactor = 10.0 / 2048.0 * 60.0; // 100ms, 2048 ticks
   static const int beltFeedTicks = 5000;
-  int beltFireTicks = 12000;
+  int beltFireTicks = 11000;
   double flywheelRPM = 5800;
   static constexpr double flywheelReverseRPM = 900;
   static constexpr double flywheelStoppedRPM = 10;

@@ -27,7 +27,7 @@ void Robot::RobotInit() {
 	/*=============
 	Flywheel
 	=============*/
-	ConfigurePIDF(flywheelMotor, .05, 6E-05, 0, 0);
+	ConfigurePIDF(flywheelMotor, .04, 6E-05, 0, 0);
 	flywheelMotorFollow.Follow(flywheelMotor);
 	flywheelMotorFollow.SetInverted(false);
 	flywheelMotor.ConfigClosedloopRamp(2);
@@ -240,19 +240,14 @@ void Robot::HandleShooter() {
 	debugTab->PutBoolean("Sensor 2 Broken", lineBreak2Broken);
 	debugTab->PutBoolean("Sensor 3 Broken", lineBreak3Broken);
 
-	// Back: The 'run in reverse manually'
-	if (copilot.GetBackButton()) {
-		belt.Set(ControlMode::PercentOutput, -reverseBeltSpeed);
-		intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
+	// Manual Belt controls
+	double manualBeltPower = ApplyDeadzone(copilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+	if (manualBeltPower != 0) {
+		belt.Set(ControlMode::PercentOutput, manualBeltPower);
+		double intakeSpeed = (manualBeltPower > 0) ? intakeRollerSpeed : -intakeRollerSpeed;
+		intakeMotor.Set(ControlMode::PercentOutput, intakeSpeed);
 		return;
 	}
-	// Start: The 'run forward manually'
-	if (copilot.GetStartButton()){
-		belt.Set(ControlMode::PercentOutput, forwardBeltSpeed);
-		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
-		return;
-	}
-
 	double error = ErrorBetween(flywheelMotor.GetSelectedSensorVelocity(0) * kTalonRPMConversionFactor, flywheelRPM);
 	bool meetsThreshold = (error <= .1);
 	bool runFlywheel = ApplyDeadzone(copilot.GetTriggerAxis(RIGHT), prefs.GetDouble("deadzone")) > 0;

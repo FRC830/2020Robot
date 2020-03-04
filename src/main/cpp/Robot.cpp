@@ -115,8 +115,13 @@ void Robot::AutonomousInit() {
 	LLead.ResetEncoder();
 	RLead.ResetEncoder();
 	gyro.Reset();
-	ConfigurePIDF(LLeadPID, 0.001,0,0,0);
-	ConfigurePIDF(RLeadPID, 0.001,0,0,0);
+	//ConfigurePIDF(LLeadPID, 0.001,0,0,0);
+	//ConfigurePIDF(RLeadPID, 0.001,0,0,0);
+
+	SetPID(LLeadMotor, kPposi, kIposi, kDposi);
+	SetPID(RLeadMotor, kPposi, kIposi, kDposi);
+	SetPID(RFollowMotor, kPposi, kIposi, kDposi);
+	SetPID(LFollowMotor, kPposi, kIposi, kDposi);
 	TimeFromStart.Reset();
 	TimeFromStart.Start();
 
@@ -133,6 +138,8 @@ void Robot::AutonomousInit() {
 		RLeadMotor.GetEncoder().SetPosition(0.0);
 		RFollowMotor.GetEncoder().SetPosition(0.0);
 	}
+
+	autonCounter = 5;
 }
 void Robot::HandlePathweaver() {
 	auto currentGyroAngle = units::degree_t(-gyro.GetAngle()); // negated so that is clockwise negative
@@ -162,8 +169,9 @@ void Robot::HandlePathweaver() {
 	RLead.SetSpeed(0.5*right);
 }
 void Robot::AutonomousPeriodic() {
+	
 	std::string currentAutonMode = autonChooser.GetSelected();
-	std::cout << "current Aunton mode: " << currentAutonMode << std::endl;
+	std::cout << "current Auton mode: " << currentAutonMode << std::endl;
 	if (currentAutonMode == defaultAuton) {
 		// do nothing
 	} else if (currentAutonMode == simpleAuton) {
@@ -177,12 +185,15 @@ void Robot::AutonomousPeriodic() {
 	} else if (currentAutonMode == pathAuton) {
 		HandlePathweaver();
 	}else if (currentAutonMode == playbackAuton) {
-		std::cout << "permsaveauton" << std::endl;
-		PermSaveAuton.setToIndex(autonCounter, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});	
-		if (autonCounter < PermSaveAuton.leftFollowMotorValues.size())
+		//std::cout << "permsaveauton" << std::endl;
+		PermSave1.setToIndex(autonCounter, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});	
+	//	tempsave.setToIndex(runsAfterPlayback, {&LLeadMotor,&LFollowMotor,&RLeadMotor,&RFollowMotor});
+		autonCounter++;
+		/*if (autonCounter < PermSaveAuton.leftFollowMotorValues.size())
 		{
 			autonCounter++;
-		}
+		}*/
+
 	}
 }
 

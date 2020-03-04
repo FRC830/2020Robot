@@ -40,7 +40,7 @@ void Robot::RobotInit() {
 	=============*/
 	elevatorMotor.SetInverted(true);
 	elevatorMotor.SetSelectedSensorPosition(0);
-
+	elevatorMotor.SetNeutralMode(motorcontrol::NeutralMode::Brake);
 	/*=============
 	Intake Motor + Belt
 	=============*/
@@ -242,7 +242,7 @@ void Robot::HandleShooter() {
 	debugTab->PutBoolean("Sensor 3 Broken", lineBreak3Broken);
 
 	// Manual Belt controls
-	double manualBeltPower = ApplyDeadzone(copilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+	double manualBeltPower = ApplyDeadzone(-copilot.GetY(LEFT), prefs.GetDouble("deadzone"));
 	if (manualBeltPower != 0) {
 		belt.Set(ControlMode::PercentOutput, manualBeltPower);
 		double intakeSpeed = (manualBeltPower > 0) ? intakeRollerSpeed : -intakeRollerSpeed;

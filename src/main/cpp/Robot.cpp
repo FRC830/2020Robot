@@ -38,6 +38,7 @@ void Robot::RobotInit() {
 	/*=============
 	Elevator
 	=============*/
+	elevatorMotor.ConfigFactoryDefault();
 	elevatorMotor.SetInverted(true);
 	elevatorMotor.SetSelectedSensorPosition(0);
 	elevatorMotor.SetNeutralMode(motorcontrol::NeutralMode::Brake);

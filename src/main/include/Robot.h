@@ -204,7 +204,7 @@ class Robot : public frc::TimedRobot {
   /*=============
   LED Strip
   =============*/
-  LEDController ledStrip{40, 9};
+  LEDController ledStrip{36, 9};
   int ledMode = 0;
   Toggle ledUp;
   Toggle ledDown;

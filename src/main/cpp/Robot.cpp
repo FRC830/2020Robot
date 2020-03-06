@@ -243,7 +243,8 @@ void Robot::HandleShooter() {
 	debugTab->PutBoolean("Sensor 3 Broken", lineBreak3Broken);
 
 	// Manual Belt controls
-	double manualBeltPower = ApplyDeadzone(-copilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+	SmartDashboard::PutNumber("read", copilot.GetY(LEFT));
+	double manualBeltPower = ApplyDeadzone(-copilot.GetY(LEFT), .35);
 	if (manualBeltPower != 0) {
 		belt.Set(ControlMode::PercentOutput, manualBeltPower);
 		double intakeSpeed = (manualBeltPower > 0) ? intakeRollerSpeed : -intakeRollerSpeed;

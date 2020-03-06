@@ -22,8 +22,8 @@ class LEDController {
     void Set(int index) {
         // https://stackoverflow.com/questions/11452920/how-to-cast-int-to-enum-in-c
         if (index < 0) { 
-            std::cout << "WARNING: Set index < 0; using 0.\n";
-            index = 0;
+            std::cout << "WARNING: Set index < 0; using negated index.\n";
+            index = -index;
         }
         _set(LED_MODE::_from_integral(index));
     }

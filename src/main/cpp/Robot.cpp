@@ -214,7 +214,7 @@ void Robot::HandleDrivetrain() {
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 
 	if(!PlayingBack && !isAutoAligning) {
-		drivetrain.ArcadeDrive(speed * .75 * inputScale, -(turn * .75), true);
+		drivetrain.ArcadeDrive(speed * .65 * inputScale, -(turn * .75), true);
 		
 	}
 

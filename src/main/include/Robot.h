@@ -142,7 +142,7 @@ class Robot : public frc::TimedRobot {
   double flywheelRPM = 4000;
   static constexpr double flywheelReverseRPM = 900;
   static constexpr double flywheelStoppedRPM = 10;
-  static constexpr double intakeRollerSpeed = 0.8;
+  static constexpr double intakeRollerSpeed = 0.6;
   static constexpr double reverseBeltSpeed = 0.85;
   static constexpr double forwardBeltSpeed = 0.7;
   static constexpr double colorSpinnerSpeed = 0.5;
@@ -214,7 +214,7 @@ class Robot : public frc::TimedRobot {
   int elevatorBreaksPoint = 600000;
   int maxElevatorUp = 300000;
   int minElevatorDown = 250000;
-  double elevatorSpeedUp = 0.5;
+  double elevatorSpeedUp = 0.75;
   double elevatorSpeedDown = 0.6;
   TalonFX elevatorMotor{ElevatorID};
   double inputScale = 1.0;

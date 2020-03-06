@@ -212,9 +212,12 @@ void Robot::HandleDrivetrain() {
 
 	double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
-
+	double sensitivityScale = .65;
 	if(!PlayingBack && !isAutoAligning) {
-		drivetrain.ArcadeDrive(speed * .65 * inputScale, -(turn * .75), true);
+		if (std::fabs(speed) > .95) {
+			sensitivityScale = 1.0;
+		}
+		drivetrain.ArcadeDrive(speed * sensitivityScale * inputScale, -(turn * .75), true);
 		
 	}
 

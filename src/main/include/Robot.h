@@ -79,6 +79,7 @@ class Robot : public frc::TimedRobot {
   const int FollowFlywheelID = 11;
   const int ElevatorID = 18;
   const int solenoidID = 0;
+  const int colorwheelPistonID = 1;
   const int intakeMotorID = 5;
   const int beltID = 7;
   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
@@ -102,8 +103,9 @@ class Robot : public frc::TimedRobot {
   Color Sensor
   =============*/
   rev::ColorSensorV3 colorSensor{i2cPort};
-  TalonSRX colorWheelMotor{ColorWheelID};	
+  TalonSRX colorwheelMotor{ColorWheelID};	
   char currentColorTarget = 'N';
+  frc::Solenoid colorwheelPiston{colorwheelPistonID};
 
   /*=============
   Drivetrain
@@ -136,8 +138,8 @@ class Robot : public frc::TimedRobot {
   =============*/
   static constexpr double kTalonRPMConversionFactor = 10.0 / 2048.0 * 60.0; // 100ms, 2048 ticks
   static const int beltFeedTicks = 5000;
-  int beltFireTicks = 11000;
-  double flywheelRPM = 5800;
+  int beltFireTicks = 9000;
+  double flywheelRPM = 4000;
   static constexpr double flywheelReverseRPM = 900;
   static constexpr double flywheelStoppedRPM = 10;
   static constexpr double intakeRollerSpeed = 0.8;

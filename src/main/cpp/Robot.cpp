@@ -153,7 +153,7 @@ void Robot::TeleopPeriodic() {
 	HandleLEDStrip();
 	HandleDrivetrain();
 	// HandleRecordPlayback(); // breaks elevator
-	// HandleColorWheel(); // Currently breaks robot code w/o sensor
+	HandleColorWheel(); 
 	HandleIntake();
 	HandleShooter();
 	HandleVision();
@@ -214,7 +214,7 @@ void Robot::HandleDrivetrain() {
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 
 	if(!PlayingBack && !isAutoAligning) {
-		drivetrain.ArcadeDrive(speed * inputScale, -turn, true);
+		drivetrain.ArcadeDrive(speed * .75 * inputScale, -(turn * .75), true);
 		
 	}
 
@@ -259,7 +259,7 @@ void Robot::HandleShooter() {
 	// Log variables
 
 	debugTab->PutNumber("current intake velocity", belt.GetSelectedSensorVelocity(0));
-	debugTab->PutNumber("current flywheel velocity", flywheelMotor.GetSelectedSensorVelocity(0) * kTalonRPMConversionFactor);
+	SmartDashboard::PutNumber("current flywheel velocity", flywheelMotor.GetSelectedSensorVelocity(0) * kTalonRPMConversionFactor);
 	debugTab->PutNumber("current error", std::fabs(flywheelMotor.GetClosedLoopError(0)));
 	// Update the status of up to speed
 	if ((runShooter || runFlywheel) && meetsThreshold) {
@@ -370,21 +370,28 @@ void Robot::HandleLEDStrip() {
 
 
 void Robot::HandleColorWheel() {
-	std::string gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
-	char closestColor;
-	double confidence;
-	std::tie(closestColor, confidence) = ClosestColor(colorSensor);
-	int proximity = (int) colorSensor.GetProximity();
-	debugTab->PutNumber("Proximity", proximity);
-	debugTab->PutNumber("Confidence", confidence);
-	debugTab->PutString("Closest Color", std::string(1, closestColor));
-	if(gameData.length() > 0) {
-		currentColorTarget = gameData[0];
-	}
-	if ((currentColorTarget == closestColor) || closestColor == 'N' || currentColorTarget == 'N') {
-		colorWheelMotor.Set(ControlMode::PercentOutput, 0);
+	// std::string gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+	// char closestColor;
+	// double confidence;
+	// std::tie(closestColor, confidence) = ClosestColor(colorSensor);
+	// int proximity = (int) colorSensor.GetProximity();
+	// debugTab->PutNumber("Proximity", proximity);
+	// debugTab->PutNumber("Confidence", confidence);
+	// debugTab->PutString("Closest Color", std::string(1, closestColor));
+	// if(gameData.length() > 0) {
+	// 	currentColorTarget = gameData[0];
+	// }
+	// if ((currentColorTarget == closestColor) || closestColor == 'N' || currentColorTarget == 'N') {
+	// 	colorWheelMotor.Set(ControlMode::PercentOutput, 0);
+	// } else {
+	// 	colorWheelMotor.Set(ControlMode::PercentOutput, -colorSpinnerSpeed);
+	// }
+	if (copilot.GetYButton()) {
+		colorwheelPiston.Set(true);
+		colorwheelMotor.Set(ControlMode::PercentOutput, 0.5);
 	} else {
-		colorWheelMotor.Set(ControlMode::PercentOutput, -colorSpinnerSpeed);
+		colorwheelMotor.Set(ControlMode::PercentOutput, 0);
+		colorwheelPiston.Set(false);
 	}
 
 }

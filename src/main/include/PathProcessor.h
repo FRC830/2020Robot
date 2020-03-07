@@ -74,11 +74,15 @@ class PathProcessor {
         frc::ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
         auto [left, right] = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
         // driving backwards should need l and r reversed along with reversed input to motors
+
+        // .75, .25 => up right
+        // then in reverse we want to go back left
+        // -.75, -.25 => back left
         if(reverse) {
-            left = -left;
+            left = -left; // TODO verify this!!!
             right = -right;
         }
-        leftMotor.SetSpeed(units::meters_per_second_t(-left * 0.5));
+        leftMotor.SetSpeed(units::meters_per_second_t(-left * 0.5)); // TODO test w/o .5x speed
         rightMotor.SetSpeed(units::meters_per_second_t(right * 0.5));
         // Make sure to feed
     }

@@ -23,7 +23,10 @@ void Robot::RobotInit() {
 	LLeadMotor.BurnFlash();
 	LFollowMotor.BurnFlash();
 	prefs.PutDouble("deadzone", 0.1);
-
+	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 	/*=============
 	Flywheel
 	=============*/
@@ -215,7 +218,7 @@ void Robot::HandleDrivetrain() {
 	double sensitivityScale = .65;
 	if(!PlayingBack && !isAutoAligning) {
 		if (std::fabs(speed) > .95) {
-			sensitivityScale = 1.0;
+			sensitivityScale = .8;
 		}
 		drivetrain.ArcadeDrive(speed * sensitivityScale * inputScale, -(turn * .75), true);
 		

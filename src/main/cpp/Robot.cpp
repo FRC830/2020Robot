@@ -196,7 +196,6 @@ void Robot::AutonomousPeriodic() {
 	} else if (currentAutonMode == straightPathAuton) {
 		//AutonIntakeAndShoot("straight","straight");
 	} else if (currentAutonMode == middlePathAuton) {
-	// spin flywheel
 		AutonIntakeAndShoot("Unnamed","Unnamed_0");
 	}
 }

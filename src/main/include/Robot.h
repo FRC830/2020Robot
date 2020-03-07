@@ -97,6 +97,7 @@ class Robot : public frc::TimedRobot {
   std::string basicAuton = "Basic";
   std::string middlePathAuton = "Middle Path Auton";
   std::string straightPathAuton = "Straight Path Auton";
+  std::string specialAuton = "Special Path Auton";
   std::shared_ptr<nt::NetworkTable> visionTab = networkTableInstance.GetTable("Shuffleboard")->GetSubTable("vision");
 
   /*=============

@@ -102,6 +102,8 @@ void Robot::RobotInit() {
 	autonChooser.AddOption(noneAuton, noneAuton); // do nothing
 	autonChooser.AddOption(basicAuton, basicAuton); // go forward, shoot, go back
 	autonChooser.AddOption(simpleAuton, simpleAuton); // very simple, just get off line
+	autonChooser.AddOption(specialAuton, specialAuton); // very simple, just get off line
+
   	frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
 
 }
@@ -201,6 +203,26 @@ void Robot::AutonomousPeriodic() {
 	} else if (currentAutonMode == middlePathAuton) {
 	// spin flywheel
 		AutonIntakeAndShoot("Unnamed","Unnamed_0");
+	} else if (currentAutonMode == specialAuton){
+		flywheelMotor.Set(TalonFXControlMode::Velocity, 11450);
+		debugTab->PutNumber("current distance", (double) units::inch_t(LLead.GetDistance()));
+		if (RLead.GetDistance() < units::inch_t(80) && BasicTimer.Get() < 3) {
+			drivetrain.ArcadeDrive(-0.5, 0, false);
+		} else if (!timerStarted) {
+			timerStarted = true;
+			BasicTimer.Reset();
+			BasicTimer.Start();
+		} else if (timerStarted && BasicTimer.Get() < 3) {
+			drivetrain.ArcadeDrive(0,0,false);
+		} else if (BasicTimer.Get() > 15) {
+			intakePiston.Set(false);
+			BasicTimer.Stop();
+			belt.Set(ControlMode::PercentOutput, 0);
+		} else if (BasicTimer.Get() > 3) {
+			belt.Set(ControlMode::Velocity, beltFireTicks);
+			intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
+			intakePiston.Set(true);
+		}
 	}
 }
 /*==========================
@@ -218,7 +240,7 @@ void Robot::HandleDrivetrain() {
 	double sensitivityScale = .65;
 	if(!PlayingBack && !isAutoAligning) {
 		if (std::fabs(speed) > .95) {
-			sensitivityScale = .8;
+			sensitivityScale = 1.0;
 		}
 		drivetrain.ArcadeDrive(speed * sensitivityScale * inputScale, -(turn * .75), true);
 		
@@ -253,7 +275,7 @@ void Robot::HandleShooter() {
 	double manualBeltPower = ApplyDeadzone(-copilot.GetY(LEFT), .35);
 	if (manualBeltPower != 0) {
 		belt.Set(ControlMode::PercentOutput, manualBeltPower);
-		double intakeSpeed = (manualBeltPower > 0) ? intakeRollerSpeed : -intakeRollerSpeed;
+		double intakeSpeed = (manualBeltPower > 0) ? intakeRollerSpeed : -intakeRollerSpeed * 0.5;
 		intakeMotor.Set(ControlMode::PercentOutput, intakeSpeed);
 		return;
 	}
@@ -343,7 +365,7 @@ void Robot::HandleIntake(){
 	intakePiston.Set(isIntaking || isOuttaking);
 	ignoreCountingIn = false;
 	if (isOuttaking) { // give outtake priority
-		intakeMotor.Set(ControlMode::PercentOutput, -intakeRollerSpeed);
+		intakeMotor.Set(ControlMode::PercentOutput, -0.85);
 		ignoreCountingIn = true;
 	} else if (isIntaking) {
 		intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);

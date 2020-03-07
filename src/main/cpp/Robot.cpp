@@ -504,7 +504,7 @@ void Robot::HandleRecordPlayback() {
 void Robot::AutonIntakeAndShoot(std::string trenchPath, std::string shootPath) {
 	debugTab->PutNumber("current stage", stage);
 	debugTab->PutString("current path", pathProcessor.getCurrentPath());
-	debugTab->PutNumber("current gyro", pathProcessor.getCurrentAngle());
+	debugTab->PutNumber("current gyro", double(units::degree_t(pathProcessor.getCurrentAngle())));
 	if (stage == 0) {
 		pathProcessor.runPathUntilFinished(trenchPath, false);
 		intakePiston.Set(true);

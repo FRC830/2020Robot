@@ -21,24 +21,22 @@
 class PathProcessor {
     public:
     static constexpr units::inch_t kTrackwidth = 27.9_in;
-    frc::DifferentialDriveKinematics kDriveKinematics{units::meter_t(kTrackwidth)};
-    frc::DifferentialDriveOdometry odometry{units::radian_t(0)};
+    frc::DifferentialDriveKinematics kDriveKinematics{kTrackwidth};
+    AHRS &gyro;
+    frc::DifferentialDriveOdometry odometry; // do not initialize this to 0, instead read from the gyro
     SparkController leftMotor;
     SparkController rightMotor;
     frc::Trajectory currentPath;
     frc::Timer timer;
     frc::RamseteController controller;
-    bool pathChanged = true;
     std::string old_path = "NOTHING";
-    AHRS &gyro;
-    PathProcessor(SparkController &leftMotor, SparkController &rightMotor, AHRS &aGyro) : leftMotor(leftMotor), rightMotor(rightMotor), gyro(aGyro) {
+    PathProcessor(SparkController &leftMotor, SparkController &rightMotor, AHRS &aGyro) : leftMotor(leftMotor), rightMotor(rightMotor), gyro(aGyro), odometry(units::radian_t(units::degree_t(aGyro.GetYaw()))) {
 
     }
     void setPath(std::string newPath) {
         frc::Trajectory rawTraj = loadTrajectory(newPath);
         frc::Transform2d transform = odometry.GetPose() - rawTraj.InitialPose();
 	    currentPath = rawTraj.TransformBy(transform);
-        pathChanged = true;
     }
     frc::Trajectory loadTrajectory(std::string fileName) {
         wpi::SmallString<64> deployDirectory;
@@ -65,34 +63,23 @@ class PathProcessor {
     std::string getCurrentPath() {
         return old_path;
     }
-    double getCurrentAngle() {
-        return gyro.GetYaw();
+    units::radian_t getCurrentAngle() {
+        return units::degree_t(gyro.GetYaw());
     }
     void runCurrentPath(bool reverse) {
-        units::degree_t currentGyroAngle;
-        units::meters_per_second_t left;
-        units::meters_per_second_t right;
-        double rawGyro = gyro.GetYaw();
-        if(reverse) {
-            currentGyroAngle = units::degree_t(-rawGyro); // negated so that is clockwise negative
-        }else{
-            currentGyroAngle = units::degree_t(-rawGyro); // negated so that is clockwise negative
-        }
-
-        frc::Pose2d currentRobotPose = odometry.Update(units::radian_t(currentGyroAngle), leftMotor.GetDistance(), rightMotor.GetDistance());
+        //units::meters_per_second_t left;
+        //units::meters_per_second_t right;
+        frc::Pose2d currentRobotPose = odometry.Update(getCurrentAngle(), leftMotor.GetDistance(), rightMotor.GetDistance());
         const frc::Trajectory::State goal = currentPath.Sample(units::second_t(timer.Get())); 
         frc::ChassisSpeeds adjustedSpeeds = controller.Calculate(currentRobotPose, goal);
-        frc::DifferentialDriveWheelSpeeds wheelSpeeds = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
+        auto [left, right] = kDriveKinematics.ToWheelSpeeds(adjustedSpeeds);
         // driving backwards should need l and r reversed along with reversed input to motors
-        if(reverse){
-            left = -wheelSpeeds.right;
-            right = -wheelSpeeds.left;
-        } else {
-            left = wheelSpeeds.left;
-            right = wheelSpeeds.right;
+        if(reverse) {
+            left = -left;
+            right = -right;
         }
-        leftMotor.SetSpeed(-left);
-        rightMotor.SetSpeed(right);
+        leftMotor.SetSpeed(units::meters_per_second_t(-left * 0.5));
+        rightMotor.SetSpeed(units::meters_per_second_t(right * 0.5));
         // Make sure to feed
     }
     bool pathCompleted() {

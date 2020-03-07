@@ -211,9 +211,9 @@ class Robot : public frc::TimedRobot {
   /*=============
   Elevator
   =============*/
-  int elevatorBreaksPoint = 600000;
-  int maxElevatorUp = 300000;
-  int minElevatorDown = 250000;
+  int elevatorBreaksPoint = 620000;
+  int maxElevatorUp = 370000;
+  int minElevatorDown = 340000;
   double elevatorSpeedUp = 0.75;
   double elevatorSpeedDown = 0.6;
   TalonFX elevatorMotor{ElevatorID};

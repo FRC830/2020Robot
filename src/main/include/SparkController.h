@@ -2,6 +2,9 @@
 #include <rev/CANSparkMax.h>
 #include <rev/CANPIDController.h>
 #include <math.h>
+#include <units/length.h>
+#include <units/velocity.h>
+
 class SparkController: public frc::SpeedController {
 public:
     static constexpr double maxRPM = 5500;

@@ -1,32 +1,33 @@
 #pragma once
 #include <string>
 
-#include <frc/TimedRobot.h>
-#include <rev/CANSparkMax.h>
-#include <frc/drive/DifferentialDrive.h>
-#include <frc/GenericHID.h>
-#include <frc/SpeedControllerGroup.h>
-#include <frc/XboxController.h>
-#include <SparkController.h>
-#include <frc/Preferences.h>
-#include <rev/ColorSensorV3.h>
-#include <rev/ColorMatch.h>
-#include <frc/smartdashboard/SendableChooser.h>
-#include "ctre/Phoenix.h"
+
+#include "LEDController.h"
+#include "utility.h"
+
+#include <ctre/Phoenix.h>
 #include <ctre/phoenix/motorcontrol/can/TalonFX.h>
+#include <frc/AnalogInput.h>
+#include <frc/DigitalInput.h>
+#include <frc/drive/DifferentialDrive.h>
+#include <frc/DriverStation.h>
+#include <frc/GenericHID.h>
+#include <frc/Preferences.h>
 #include <frc/shuffleboard/Shuffleboard.h>
 #include <frc/shuffleboard/ShuffleboardTab.h>
-#include "LEDController.h"
-#include <frc/DriverStation.h>
-#include <frc/Solenoid.h>
-#include <Toggle.h>
-#include <frc/DigitalInput.h>
-#include <frc/AnalogInput.h>
-#include <networktables/NetworkTableInstance.h>
-#include <networktables/NetworkTable.h>
-#include <iostream>
+#include <frc/smartdashboard/SendableChooser.h>
 #include <frc/smartdashboard/SmartDashboard.h>
-#include "utility.h"
+#include <frc/Solenoid.h>
+#include <frc/SpeedControllerGroup.h>
+#include <frc/TimedRobot.h>
+#include <frc/XboxController.h>
+#include <iostream>
+#include <networktables/NetworkTable.h>
+#include <networktables/NetworkTableInstance.h>
+#include <rev/CANSparkMax.h>
+#include <rev/ColorMatch.h>
+#include <rev/ColorSensorV3.h>
+#include <Toggle.h>
 
 
 #include <frc/controller/RamseteController.h>
@@ -45,7 +46,6 @@
 #include <wpi/Path.h>
 #include <wpi/SmallString.h>
 #include <AHRS.h> // navx
-#include "PathProcessor.h"
 // #include <frc/cs/CameraServer.h>
 
 class Robot : public frc::TimedRobot {
@@ -58,7 +58,6 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
-  void HandleRecordPlayback();
   void HandleColorWheel();
   void HandleDrivetrain();
   void HandleLEDStrip();
@@ -70,10 +69,16 @@ class Robot : public frc::TimedRobot {
   /*=============
   Pins & IDs
   =============*/
-  const int RLeadID = 2;
-  const int LLeadID = 4;
-  const int RFollowID = 1;
-  const int LFollowID = 3;
+  const int FRWheelID = -1;
+  const int FLWheelID = -1;
+  const int BRWheelID = -1;
+  const int BLWheelID = -1;
+
+  const int FRTurnID = -1;
+  const int FLTurnID = -1;
+  const int BRTurnID = -1;
+  const int BLTurnID = -1;
+
   const int ColorWheelID = 16;
   const int FlyWheelID = 10;
   const int FollowFlywheelID = 11;
@@ -111,21 +116,16 @@ class Robot : public frc::TimedRobot {
   /*=============
   Drivetrain
   =============*/
-  rev::CANSparkMax RLeadMotor{RLeadID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax RFollowMotor{RFollowID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax LLeadMotor{LLeadID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax LFollowMotor{LFollowID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANPIDController LLeadPID{LLeadMotor};
-  rev::CANPIDController RLeadPID{RLeadMotor};
-  rev::CANPIDController LFollowPID{LFollowMotor};
-  rev::CANPIDController RFollowPID{RFollowMotor};
-  //defines drivestrain and motor controllers
-  SparkController RLead{RLeadMotor, RLeadPID};
-  SparkController LLead{LLeadMotor, LLeadPID};
-  SparkController RFollow{RFollowMotor, RFollowPID};
-  SparkController LFollow{LFollowMotor, LFollowPID};
-  frc::DifferentialDrive drivetrain{LLead, RLead};
+  rev::CANSparkMax FrontRightWheelMotor{FRWheelID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax BackRightWheelMotor{BRWheelID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax FrontLeftWheelMotor{FLWheelID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax BackLeftWheelMotor{BLWheelID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax FrontRightTurnMotor{FRTurnID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax BackRightTurnMotor{BRTurnID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax FrontLeftTurnMotor{FLTurnID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax BackLeftTurnMotor{BLTurnID, rev::CANSparkMax::MotorType::kBrushless};
 
+  
   /*=============
   Controls
   =============*/
@@ -171,8 +171,6 @@ class Robot : public frc::TimedRobot {
   // https://docs.wpilib.org/en/latest/docs/software/examples-tutorials/trajectory-tutorial/creating-drive-subsystem.html
   AHRS gyro = AHRS{MXPPort};
 
-  PathProcessor pathProcessor{LLead, RLead, gyro};
-
   int stage = 0;
   bool timerStarted = false;
   frc::Timer BasicTimer;
@@ -181,27 +179,7 @@ class Robot : public frc::TimedRobot {
   vision
   =============*/
   bool frontCamera = true;
-  /*=============
-  playback and record
-  =============*/
-  size_t runsAfterPlayback = 5; // avoid warnings
-  //when we reset the motors there are some residual values
-
-  bool isRecording = false;
-  bool PlayingBack = false;
-  bool Adown = false;
-  bool recordGo = false;
-
-  double targetVelocity;
   bool isAutoAligning = false;
-  
-  std::vector<double> leftLeadMotorValues {};
-  std::vector<double> rightLeadMotorValues;
-  std::vector<double> leftFollowMotorValues;
-  std::vector<double> rightFollowMotorValues;
-
-  double kPposi = 0.17, kIposi = 1e-3, kDposi = 0;
-
   /*=============
   LED Strip
   =============*/

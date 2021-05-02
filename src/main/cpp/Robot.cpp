@@ -12,21 +12,9 @@ void Robot::RobotInit() {
 	/*=============
 	Drivetrain
 	=============*/
-	LLeadMotor.RestoreFactoryDefaults();
-	LFollowMotor.RestoreFactoryDefaults();
-	RLeadMotor.RestoreFactoryDefaults();
-	RFollowMotor.RestoreFactoryDefaults();
-	LFollowMotor.Follow(LLeadMotor, false);
-	RFollowMotor.Follow(RLeadMotor, false);
-	RLeadMotor.BurnFlash();
-	RFollowMotor.BurnFlash();
-	LLeadMotor.BurnFlash();
-	LFollowMotor.BurnFlash();
 	prefs.PutDouble("deadzone", 0.1);
-	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
-	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
-	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
-	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	// TODO
+
 	/*=============
 	Flywheel
 	=============*/
@@ -109,15 +97,8 @@ void Robot::RobotInit() {
 }
 
 void Robot::AutonomousInit() {
-	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
-	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
-	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
-	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
-	drivetrain.SetSafetyEnabled(false);
-	ConfigurePIDF(LLeadPID, 0.001,0,0,0);
-	ConfigurePIDF(RLeadPID, 0.001,0,0,0);
-	LLead.ResetEncoder();
-	RLead.ResetEncoder();
+	// TODO fix drivetrain
+
 	SimpleTimeFromStart.Start();
 	SimpleTimeFromStart.Reset();
 	BasicTimer.Reset();
@@ -129,15 +110,10 @@ void Robot::AutonomousInit() {
 }
 
 void Robot::DisabledInit() {
-	PlayingBack = false;
-	runsAfterPlayback = 5;
 	//drivetrain.SetSafetyEnabled(true);
 
 	// Make sure it is back in coast mode
-	LLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
-	LFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
-	RLeadMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
-	RFollowMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+	// TODO
 }
 
 void Robot::TeleopInit() {
@@ -157,7 +133,6 @@ void Robot::TestPeriodic() {}
 void Robot::TeleopPeriodic() {
 	HandleLEDStrip();
 	HandleDrivetrain();
-	// HandleRecordPlayback(); // breaks elevator
 	HandleColorWheel(); 
 	HandleIntake();
 	HandleShooter();
@@ -169,60 +144,7 @@ void Robot::AutonomousPeriodic() {
 	if (currentAutonMode == noneAuton) {
 		// do nothing
 	} else if (currentAutonMode == basicAuton) {
-
-		flywheelMotor.Set(TalonFXControlMode::Velocity, 10500);
-		debugTab->PutNumber("current distance", (double) units::inch_t(LLead.GetDistance()));
-		if (RLead.GetDistance() < units::inch_t(115) && BasicTimer.Get() < 3) {
-			drivetrain.ArcadeDrive(-0.5, 0, false);
-		} else if (!timerStarted) {
-			timerStarted = true;
-			BasicTimer.Reset();
-			BasicTimer.Start();
-		} else if (timerStarted && BasicTimer.Get() < 3) {
-			drivetrain.ArcadeDrive(0,0,false);
-			belt.Set(ControlMode::Velocity, beltFireTicks);
-		} else if (BasicTimer.Get() > 3) {
-			belt.Set(ControlMode::PercentOutput, 0);
-			flywheelMotor.Set(TalonFXControlMode::Velocity, 0);
-			if (RLead.GetDistance() > units::inch_t(-60)) {
-				drivetrain.ArcadeDrive(0.5,0,false);
-			} else {
-				drivetrain.ArcadeDrive(0,0,false);
-			}
-			BasicTimer.Stop();
-		}
-	} else if (currentAutonMode == simpleAuton) {
-		if(SimpleTimeFromStart.Get() < 2){
-			drivetrain.ArcadeDrive(-0.5,0,false);
-		} else {
-			drivetrain.ArcadeDrive(0,0,false);
-		}
-		
-	} else if (currentAutonMode == straightPathAuton) {
-		//AutonIntakeAndShoot("straight","straight");
-	} else if (currentAutonMode == middlePathAuton) {
-	// spin flywheel
-		AutonIntakeAndShoot("Unnamed","Unnamed_0");
-	} else if (currentAutonMode == specialAuton){
-		flywheelMotor.Set(TalonFXControlMode::Velocity, 11450);
-		debugTab->PutNumber("current distance", (double) units::inch_t(LLead.GetDistance()));
-		if (RLead.GetDistance() < units::inch_t(80) && BasicTimer.Get() < 3) {
-			drivetrain.ArcadeDrive(-0.5, 0, false);
-		} else if (!timerStarted) {
-			timerStarted = true;
-			BasicTimer.Reset();
-			BasicTimer.Start();
-		} else if (timerStarted && BasicTimer.Get() < 3) {
-			drivetrain.ArcadeDrive(0,0,false);
-		} else if (BasicTimer.Get() > 15) {
-			intakePiston.Set(false);
-			BasicTimer.Stop();
-			belt.Set(ControlMode::PercentOutput, 0);
-		} else if (BasicTimer.Get() > 3) {
-			belt.Set(ControlMode::Velocity, beltFireTicks);
-			intakeMotor.Set(ControlMode::PercentOutput, intakeRollerSpeed);
-			intakePiston.Set(true);
-		}
+		// TODO
 	}
 }
 /*==========================
@@ -238,23 +160,8 @@ void Robot::HandleDrivetrain() {
 	double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 	double sensitivityScale = .65;
-	if(!PlayingBack && !isAutoAligning) {
-		if (std::fabs(speed) > .95) {
-			sensitivityScale = 1.0;
-		}
-		drivetrain.ArcadeDrive(speed * sensitivityScale * inputScale, -(turn * .75), true);
-		
-	}
 
-	// Output useful values
-	debugTab->PutNumber("Yaw",gyro.GetYaw());
-	debugTab->PutNumber("Pitch",gyro.GetPitch());
-	debugTab->PutNumber("Roll",gyro.GetRoll());
-	debugTab->PutNumber("Turn", turn);
-	debugTab->PutNumber("left lead position", LLead.GetPosition());
-	debugTab->PutNumber("right lead position", RLead.GetPosition());
-	debugTab->PutNumber("Current L motor velocity", LLead.GetVelocity());
-	debugTab->PutNumber("Current R motor velocity", RLead.GetVelocity());
+	// TODO
 }
 
 
@@ -439,113 +346,33 @@ void Robot::HandleVision() {
 		visionTab->PutNumber("error", error);
 		if (target < centerCamera) {
 			isAutoAligning = true;
-			drivetrain.ArcadeDrive(0, turningSpeed, false);
+			// drivetrain.ArcadeDrive(0, turningSpeed, false);
 		} else if (target > centerCamera) {
 			isAutoAligning = true;
-			drivetrain.ArcadeDrive(0, -turningSpeed, false);
+			// drivetrain.ArcadeDrive(0, -turningSpeed, false);
 		} else { // is now aligned
-			drivetrain.ArcadeDrive(0,0,false);
+			// drivetrain.ArcadeDrive(0,0,false);
 		}
 	} else {
 		isAutoAligning = false;
 	}
 }
-void Robot::HandleRecordPlayback() {
-	if(pilot.GetStartButtonPressed()) {
-		recordGo = false;
-		isRecording = !isRecording;
-		debugTab->PutBoolean("is recording", isRecording);
-		LLeadMotor.GetEncoder().SetPosition(0.0);
-		LFollowMotor.GetEncoder().SetPosition(0.0);
-		RLeadMotor.GetEncoder().SetPosition(0.0);
-		RFollowMotor.GetEncoder().SetPosition(0.0);
-		if(!isRecording) { // recording has just finished, save to a file
-			outputToFile({leftLeadMotorValues, leftFollowMotorValues, rightFollowMotorValues, rightLeadMotorValues}, "/home/lvuser/vectors.txt");
-		}else { // wipe the array, recording started
-			leftLeadMotorValues.clear();
-			leftFollowMotorValues.clear();
-			rightLeadMotorValues.clear();
-			rightFollowMotorValues.clear();
-		}
-	}
-	
-	bool allEncodersZero = (LLeadMotor.GetEncoder().GetPosition() == 0.0 && 
-	RLeadMotor.GetEncoder().GetPosition() == 0.0 &&
-	LFollowMotor.GetEncoder().GetPosition() == 0.0 &&
-	RFollowMotor.GetEncoder().GetPosition() == 0.0);
-	//allEd
-	debugTab->PutBoolean("all encoders are zero", allEncodersZero);
-
-	if (allEncodersZero) {
-		recordGo = true;
-	}
-	// make sure that encoders are wiped before pushing data
-	if(isRecording && recordGo){
-		leftLeadMotorValues.push_back(LLead.GetPosition());
-		leftFollowMotorValues.push_back(LFollow.GetPosition());
-		rightLeadMotorValues.push_back(RLead.GetPosition());
-		rightFollowMotorValues.push_back(RFollow.GetPosition());
-	}
-
-	// start playback
-	if(pilot.GetBButtonPressed() || pilot.GetBButtonReleased()) {
-		LLeadMotor.GetEncoder().SetPosition(0.0);
-		LFollowMotor.GetEncoder().SetPosition(0.0);
-		RLeadMotor.GetEncoder().SetPosition(0.0);
-		RFollowMotor.GetEncoder().SetPosition(0.0); // returns in 1ms, motor doesnt actually set till 50ms
-		
-		PlayingBack = !PlayingBack;
-		debugTab->PutBoolean("is playing back", PlayingBack);
-		runsAfterPlayback = 0;
-		pilot.SetRumble(GenericHID::kLeftRumble, 0);
-		pilot.SetRumble(GenericHID::kRightRumble, 0);
-
-		if (PlayingBack) {
-			SetPID(LLeadMotor, kPposi, kIposi, kDposi);
-			SetPID(RLeadMotor, kPposi, kIposi, kDposi);
-			SetPID(RFollowMotor, kPposi, kIposi, kDposi);
-			SetPID(LFollowMotor, kPposi, kIposi, kDposi);
-		}
-	}
-	// playback
-	if (PlayingBack) {
-	
-		LLeadMotor.GetPIDController().SetReference(leftLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		LFollowMotor.GetPIDController().SetReference(leftFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		RLeadMotor.GetPIDController().SetReference(rightLeadMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-		RFollowMotor.GetPIDController().SetReference(rightFollowMotorValues.at(runsAfterPlayback), rev::ControlType::kPosition);
-
-		pilot.SetRumble(GenericHID::kLeftRumble, 1);
-		pilot.SetRumble(GenericHID::kRightRumble, 1);
-
-		runsAfterPlayback++;
-		if (leftLeadMotorValues.size() <= runsAfterPlayback) {	
-			PlayingBack = false;	
-			pilot.SetRumble(GenericHID::kLeftRumble, 0);	
-			pilot.SetRumble(GenericHID::kRightRumble, 0);	
-		}
-	}
-}
 void Robot::AutonIntakeAndShoot(std::string trenchPath, std::string shootPath) {
 	debugTab->PutNumber("current stage", stage);
-	debugTab->PutString("current path", pathProcessor.getCurrentPath());
-	debugTab->PutNumber("current gyro", pathProcessor.getCurrentAngle());
 	if (stage == 0) {
-		pathProcessor.runPathUntilFinished(trenchPath, false);
 		intakePiston.Set(true);
 		intakeMotor.Set(ControlMode::PercentOutput, 0.5);
 	} else if (stage == 1) {
 		intakeMotor.Set(ControlMode::PercentOutput, 0);
 		intakePiston.Set(false);
 		flywheelMotor.Set(ControlMode::Velocity, (int) (flywheelRPM / kTalonRPMConversionFactor));
-		pathProcessor.runPathUntilFinished(shootPath, true);
 	} else if (stage == 2) {
 		belt.Set(ControlMode::Velocity, beltFireTicks);
 	}
-	drivetrain.Feed();
-	if (pathProcessor.pathCompleted() && stage == 0) {
+	// TODO: THIS DOES NOT WORK RIGHT!!!!
+	if (stage == 0) {
 		stage = 1;
-	} else if (pathProcessor.pathCompleted() && stage == 1) {
+	} else if (stage == 1) {
 		stage = 2;
 	}
 	// Make sure to feed!!

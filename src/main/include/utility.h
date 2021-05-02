@@ -1,18 +1,20 @@
 #pragma once
-#include <rev/ColorSensorV3.h>
-#include <rev/ColorMatch.h>
-#include <frc/util/Color.h>
-#include "ctre/Phoenix.h"
+#include <ctre/Phoenix.h>
 #include <ctre/phoenix/motorcontrol/can/TalonFX.h>
+#include <frc/Filesystem.h>
 #include <frc/shuffleboard/Shuffleboard.h>
 #include <frc/shuffleboard/ShuffleboardTab.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/trajectory/Trajectory.h>
 #include <frc/trajectory/TrajectoryUtil.h>
-#include <wpi/SmallString.h>
-#include <wpi/Path.h>
+#include <frc/util/Color.h>
 #include <fstream>
-#include <frc/Filesystem.h>
+#include <rev/CANSparkMax.h>
+#include <rev/ColorMatch.h>
+#include <rev/ColorSensorV3.h>
+#include <wpi/Path.h>
+#include <wpi/SmallString.h>
+
 void outputToFile(std::vector<std::vector<double>> input, std::string filename) {
 	std::ofstream values;
 	// "/home/lvuser/vectors.txt"

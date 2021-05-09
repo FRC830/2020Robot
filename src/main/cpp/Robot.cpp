@@ -157,11 +157,12 @@ void Robot::AutonomousPeriodic() {
 
 void Robot::HandleDrivetrain() {
 
-	double speed = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+	double fwd = ApplyDeadzone(pilot.GetY(LEFT), prefs.GetDouble("deadzone"));
+	double strafe = ApplyDeadzone(pilot.GetX(LEFT), prefs.GetDouble("deadzone"));
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
-	double sensitivityScale = .65;
 
-	// TODO
+	swerve_drive.Feed(fwd, strafe, turn);
+	// swerve_drive.Apply();
 }
 
 

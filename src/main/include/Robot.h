@@ -4,6 +4,7 @@
 
 #include "LEDController.h"
 #include "utility.h"
+#include "SwerveDrive.h"
 
 #include <ctre/Phoenix.h>
 #include <ctre/phoenix/motorcontrol/can/TalonFX.h>
@@ -116,16 +117,13 @@ class Robot : public frc::TimedRobot {
   /*=============
   Drivetrain
   =============*/
-  rev::CANSparkMax FrontRightWheelMotor{FRWheelID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax BackRightWheelMotor{BRWheelID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax FrontLeftWheelMotor{FLWheelID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax BackLeftWheelMotor{BLWheelID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax FrontRightTurnMotor{FRTurnID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax BackRightTurnMotor{BRTurnID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax FrontLeftTurnMotor{FLTurnID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax BackLeftTurnMotor{BLTurnID, rev::CANSparkMax::MotorType::kBrushless};
-
-  
+  std::pair<int, int> fr_id{FRWheelID, FRTurnID};
+  std::pair<int, int> fl_id{FLWheelID, FLTurnID};
+  std::pair<int, int> br_id{BRWheelID, BRTurnID};
+  std::pair<int, int> bl_id{BLWheelID, BLTurnID};
+  const double robot_width_in = 20.0;
+  const double robot_length_in = 20.0;
+  SwerveDrive swerve_drive{fl_id, fr_id, bl_id, br_id, robot_width_in, robot_length_in};
   /*=============
   Controls
   =============*/

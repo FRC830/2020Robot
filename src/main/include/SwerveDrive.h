@@ -11,33 +11,56 @@ class SwerveModule {
     std::string m_name;
     rev::CANSparkMax m_wheel; // wheel motor
     rev::CANSparkMax m_turn; // turn motor
-    double wheelSpeed;
-    double desiredAngle;
+    double m_wheelSpeed;
+    double m_desiredAngle;
+    const double m_p = 0.01;
+    const double m_i = 0.0;
+    const double m_d = 0.0;
+    const double m_gearRatio = 100.0; // To do a 360, we have to turn the gear 100 times
+    void setPID(double p, double i, double d) {
+        auto pid = m_turn.GetPIDController();
+        pid.SetP(p);
+        pid.SetI(i);
+        pid.SetD(d);
+    }
     public:  
     SwerveModule(std::string name, int wID, int tID) : m_wheel(wID, rev::CANSparkMax::MotorType::kBrushless), m_turn(tID, rev::CANSparkMax::MotorType::kBrushless) {
         m_name = name;
+        setPID(m_p, m_i, m_d);
     }
     void setDesiredAngle(double angle) {
-        desiredAngle = angle;
+        m_desiredAngle = angle;
     }
     void setWheelSpeed(double ws) {
-        wheelSpeed = ws;
+        m_wheelSpeed = ws;
     }
-    void apply() {
-        m_wheel.Set(wheelSpeed);
-        // Calculate desired turn motor power based on current encoder position and desired angle
-        // double calculated_turn_speed = calculation();
-        double calculated_turn_speed = 1.0;
-        m_turn.Set(calculated_turn_speed);
-        /*
-        if (encoderAngle < desiredAngle) {
-            calculated_turn_speed = -1;
-        } else {
-            calculated_turn_speed = 1;
-        } // but we want a PID loop, so that the closer it gets the smaller the turn speed is
 
+    void apply() {
+        m_wheel.Set(m_wheelSpeed);
+
+        // Currently have an angle in radians
+        // Convert this into "Ticks"
+        // [-π, π] => [-1, 1] # [-100, 100], then i*(100/2π) is the current position in ticks
+        auto pid = m_turn.GetPIDController();
+
+        double rawRotations = (m_wheel.GetEncoder().GetPosition()); // 5.75
+        int completeRotations = floor(rawRotations); // 5
+
+        auto desiredRotations = (m_gearRatio / (2 * M_PI)) * m_desiredAngle; // relative [-100,100]
+
+        double goForwardSetpoint = completeRotations + desiredRotations;
+        double goBackwardSetpoint = goForwardSetpoint - 1.0;
+        // Determine which of the two setpoints are closer
+
+        double closestSetpoint = 0.0;
+        if (abs(goBackwardSetpoint - rawRotations) < abs(goForwardSetpoint - rawRotations)) {
+            closestSetpoint = goBackwardSetpoint;
+        } else {
+            closestSetpoint = goForwardSetpoint;
+        }
+        // TODO is this the right units??
+        pid.SetReference(closestSetpoint, rev::ControlType::kPosition);
         // Additionally, if we are more than 90 degrees away, it's faster to invert TODO later
-        */
     }
 
     
@@ -58,7 +81,7 @@ class SwerveDrive {
         m_fl("front left", fl.first, fl.second),
         m_fr("front right", fr.first, fr.second),
         m_bl("back left", bl.first, bl.second),
-        m_br("back right", br.first, br.second){
+        m_br("back right", br.first, br.second) {
         // Initialize values used for Feed
         // ahrs = AHRS()
         m_width = wid;
@@ -119,7 +142,7 @@ class SwerveDrive {
         m_br.setDesiredAngle(waBR);
         m_br.setWheelSpeed(wsBR);
     }
-    void Apply() {
+    void ApplyToSwerveModules() {
         // TODO
     }
 };

@@ -42,27 +42,27 @@ class SwerveModule {
         // Convert this into "Ticks"
         // [-π, π] => [-1, 1] # [-100, 100], then i*(100/2π) is the current position in ticks
         auto pid = m_turn.GetPIDController();
-
-        double rawRotations = (m_wheel.GetEncoder().GetPosition()); // 5.75
-        int completeRotations = floor(rawRotations); // 5
-
-        auto desiredRotations = (m_gearRatio / (2 * M_PI)) * m_desiredAngle; // relative [-100,100]
-
-        double goForwardSetpoint = completeRotations + desiredRotations;
-        double goBackwardSetpoint = goForwardSetpoint - 1.0;
-        // Determine which of the two setpoints are closer
-
-        double closestSetpoint = 0.0;
-        if (abs(goBackwardSetpoint - rawRotations) < abs(goForwardSetpoint - rawRotations)) {
-            closestSetpoint = goBackwardSetpoint;
-        } else {
-            closestSetpoint = goForwardSetpoint;
-        }
+        double rawRotations = (m_wheel.GetEncoder().GetPosition()); // 5.75 
+        double desiredRotations = (m_gearRatio / (2 * M_PI)) * m_desiredAngle; // relative [-100,100]
+        double closestSetpoint = calculateTargetSetpoint(rawRotations, desiredRotations);
         // TODO is this the right units??
         pid.SetReference(closestSetpoint, rev::ControlType::kPosition);
         // Additionally, if we are more than 90 degrees away, it's faster to invert TODO later
     }
 
+    static double calculateTargetSetpoint(double currentPosition, double desiredPosition) {
+        int completeRotations = floor(currentPosition); // 5
+        double goForwardSetpoint = completeRotations + desiredPosition;
+        double goBackwardSetpoint = goForwardSetpoint - 1.0;
+        // Determine which of the two setpoints are closer
+        double closestSetpoint = 0.0;
+        if (abs(goBackwardSetpoint - currentPosition) < abs(goForwardSetpoint - currentPosition)) {
+            closestSetpoint = goBackwardSetpoint;
+        } else {
+            closestSetpoint = goForwardSetpoint;
+        }
+        return closestSetpoint;
+    }
     
 };
 

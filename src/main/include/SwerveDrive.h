@@ -52,18 +52,36 @@ class SwerveModule {
         // Additionally, if we are more than 90 degrees away, it's faster to invert TODO later
     }
 
-    static double calculateTargetSetpoint(double currentPosition, double desiredPosition) {
-        int completeRotations = floor(currentPosition); // 5
-        double goForwardSetpoint = completeRotations + desiredPosition;
-        double goBackwardSetpoint = goForwardSetpoint - 1.0;
-        // Determine which of the two setpoints are closer
-        double closestSetpoint = 0.0;
-        if (abs(goBackwardSetpoint - currentPosition) < abs(goForwardSetpoint - currentPosition)) {
-            closestSetpoint = goBackwardSetpoint;
-        } else {
-            closestSetpoint = goForwardSetpoint;
+    static double calculateTargetSetpoint(double current, double desired) {
+        // Step 1: fmod both values
+        double original = current;
+        current = fmod(current, 1.0);
+        desired = fmod(desired, 1.0);
+        // Step 2: turn range [-1, 1] to [0, 1]
+        if (current < 0)
+            current += 1.0;
+        if (desired < 0)
+            desired += 1.0;
+        // Step 3: Check going forward, going forward to the next rotation, going to the previous rotation
+        // Example Case: If we are checking against a desired 0.9: It will check: -0.1, 0.9, and 1.9
+        // Example Case: If we are checking against a desired -0.1: It will check: -0.1, 0.9, and 1.9
+        double backwardSetpoint = desired - 1.0;
+        double middleSetpoint = desired;
+        double forwardSetpoint = desired + 1.0;
+        // Step 4: Calculate the differences in setpoints
+        double backwardDifference = backwardSetpoint - current;
+        double middleDifference = middleSetpoint - current;
+        double forwardDifference = forwardSetpoint - current;
+        // Step 5: Compare the absolute difference
+        double smallestDifference = middleDifference;
+        if (abs(backwardDifference) < abs(smallestDifference)) {
+            smallestDifference = backwardDifference;
         }
-        return closestSetpoint;
+        if (abs(forwardDifference) < abs(smallestDifference)) {
+            smallestDifference = forwardDifference;
+        }
+        // Step 6: Add the *actual* difference to the original value and return
+        return original + smallestDifference; 
     }
     
 };

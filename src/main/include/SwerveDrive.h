@@ -163,7 +163,10 @@ class SwerveDrive {
         m_br.setWheelSpeed(wsBR);
     }
     void ApplyToSwerveModules() {
-        // TODO
+        m_fl.apply();
+        m_fr.apply();
+        m_bl.apply();
+        m_br.apply();
     }
 };
 

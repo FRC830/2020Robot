@@ -57,14 +57,14 @@ class SwerveModule {
         double original = current;
         current = fmod(current, 1.0);
         desired = fmod(desired, 1.0);
-        // Step 2: turn range [-1, 1] to [0, 1]
-        if (current < 0)
-            current += 1.0;
-        if (desired < 0)
-            desired += 1.0;
+        // Step 2: turn range [-1, 1] to [0, 1] (for negative numbers only. Unneeded?)
+        // if (current < 0)
+        //     current += 1.0;
+        // if (desired < 0)
+        //     desired += 1.0;
         // Step 3: Check going forward, going forward to the next rotation, going to the previous rotation
         // Example Case: If we are checking against a desired 0.9: It will check: -0.1, 0.9, and 1.9
-        // Example Case: If we are checking against a desired -0.1: It will check: -0.1, 0.9, and 1.9
+        // Example Case: If we are checking against a desired -0.1: It will check: -1.1, -0.1, and 0.9
         double backwardSetpoint = desired - 1.0;
         double middleSetpoint = desired;
         double forwardSetpoint = desired + 1.0;

@@ -22,4 +22,9 @@ TEST(swerve, angle) {
 
   EXPECT_DOUBLE_EQ(SwerveModule::calculateTargetSetpoint(-0.5, -0.75), -0.75);
   EXPECT_DOUBLE_EQ(SwerveModule::calculateTargetSetpoint(-0.4, -0.75), -0.75);
+
+  EXPECT_DOUBLE_EQ(SwerveModule::calculateTargetSetpoint(-0.8, -1.2), -1.2);
+  EXPECT_DOUBLE_EQ(SwerveModule::calculateTargetSetpoint(-0.8, -0.2), -1.2);
+  EXPECT_DOUBLE_EQ(SwerveModule::calculateTargetSetpoint(-1.8, -0.2), -2.2);
+  EXPECT_DOUBLE_EQ(SwerveModule::calculateTargetSetpoint(-0.8, -2.2), -1.2);
 }

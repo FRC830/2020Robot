@@ -13,7 +13,6 @@ void Robot::RobotInit() {
 	Drivetrain
 	=============*/
 	prefs.PutDouble("deadzone", 0.1);
-	// TODO
 
 	/*=============
 	Flywheel
@@ -162,7 +161,7 @@ void Robot::HandleDrivetrain() {
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 
 	swerve_drive.Feed(fwd, strafe, turn);
-	// swerve_drive.Apply();
+	swerve_drive.ApplyToSwerveModules();
 }
 
 

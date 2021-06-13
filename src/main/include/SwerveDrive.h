@@ -147,7 +147,7 @@ class SwerveDrive {
         double waFR = atan2(B,C);
         double waFL = atan2(B,D);
         double waBR = atan2(A,C);
-        double waBL = atan2(D,D);
+        double waBL = atan2(A,D);
 
         // Set member's desired angles & wheel speeds
         m_fl.setDesiredAngle(waFL);

@@ -44,7 +44,7 @@ class SwerveModule {
         // Convert this into "Ticks"
         // [-π, π] => [-1, 1] # [-100, 100], then i*(100/2π) is the current position in ticks
         auto pid = m_turn.GetPIDController();
-        double rawRotations = (m_wheel.GetEncoder().GetPosition()); // 5.75 
+        double rawRotations = (m_turn.GetEncoder().GetPosition()); // 5.75 
         double desiredRotations = (m_gearRatio / (2 * M_PI)) * m_desiredAngle; // relative [-100,100]
         double closestSetpoint = calculateTargetSetpoint(rawRotations, desiredRotations);
         // TODO is this the right units??

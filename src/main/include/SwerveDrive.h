@@ -7,6 +7,7 @@
 
 #include <rev/CANSparkMax.h>
 #include <AHRS.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 
 class SwerveModule {
     private:
@@ -40,6 +41,8 @@ class SwerveModule {
     void apply() {
         m_wheel.Set(m_wheelSpeed);
 
+        frc::SmartDashboard::PutNumber(m_name + " speed", m_wheelSpeed);
+
         // Currently have an angle in radians
         // Convert this into "Ticks"
         // [-π, π] => [-1, 1] # [-100, 100], then i*(100/2π) is the current position in ticks
@@ -47,6 +50,7 @@ class SwerveModule {
         double rawRotations = (m_turn.GetEncoder().GetPosition()); // 5.75 
         double desiredRotations = (m_gearRatio / (2 * M_PI)) * m_desiredAngle; // relative [-100,100]
         double closestSetpoint = calculateTargetSetpoint(rawRotations, desiredRotations);
+        frc::SmartDashboard::PutNumber(m_name + " Closest Set Point", closestSetpoint);
         // TODO is this the right units??
         pid.SetReference(closestSetpoint, rev::ControlType::kPosition);
         // Additionally, if we are more than 90 degrees away, it's faster to invert TODO later
@@ -143,6 +147,7 @@ class SwerveDrive {
             wsBR = wsBR/wsMax;
             wsBL = wsBL/wsMax;
         }
+
         // Calculate Wheel Angles
         double waFR = atan2(B,C);
         double waFL = atan2(B,D);
@@ -161,6 +166,17 @@ class SwerveDrive {
     
         m_br.setDesiredAngle(waBR);
         m_br.setWheelSpeed(wsBR);
+
+        // Log the speeds and angles to SmartDashboard
+        frc::SmartDashboard::PutNumber("FL Wheel Speed", wsFL);
+        frc::SmartDashboard::PutNumber("FR Wheel Speed", wsFR);
+        frc::SmartDashboard::PutNumber("BR Wheel Speed", wsBR);
+        frc::SmartDashboard::PutNumber("BL Wheel Speed", wsBL);
+        
+        frc::SmartDashboard::PutNumber("FL Wheel Angle", waFL);
+        frc::SmartDashboard::PutNumber("FR Wheel Angle", waFR);
+        frc::SmartDashboard::PutNumber("BR Wheel Angle", waBR);
+        frc::SmartDashboard::PutNumber("BL Wheel Angle", waBL);
     }
     void ApplyToSwerveModules() {
         m_fl.apply();

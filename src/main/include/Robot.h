@@ -70,15 +70,15 @@ class Robot : public frc::TimedRobot {
   /*=============
   Pins & IDs
   =============*/
-  const int FRWheelID = -1;
-  const int FLWheelID = -1;
-  const int BRWheelID = -1;
-  const int BLWheelID = -1;
+  const int FRWheelID = 12;
+  const int FLWheelID = 13;
+  const int BRWheelID = 14;
+  const int BLWheelID = 15;
 
-  const int FRTurnID = -1;
-  const int FLTurnID = -1;
-  const int BRTurnID = -1;
-  const int BLTurnID = -1;
+  const int FRTurnID = 19;
+  const int FLTurnID = 20;
+  const int BRTurnID = 21;
+  const int BLTurnID = 22;
 
   const int ColorWheelID = 16;
   const int FlyWheelID = 10;

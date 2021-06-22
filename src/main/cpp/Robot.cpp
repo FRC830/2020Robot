@@ -160,6 +160,9 @@ void Robot::HandleDrivetrain() {
 	double strafe = ApplyDeadzone(pilot.GetX(LEFT), prefs.GetDouble("deadzone"));
 	double turn = ApplyDeadzone(pilot.GetX(RIGHT), prefs.GetDouble("deadzone"));
 
+	SmartDashboard::PutNumber("fwd", fwd);
+	SmartDashboard::PutNumber("strafe", strafe);
+	SmartDashboard::PutNumber("turn", turn);
 	swerve_drive.Feed(fwd, strafe, turn);
 	swerve_drive.ApplyToSwerveModules();
 }

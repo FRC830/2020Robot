@@ -18,8 +18,9 @@ class SwerveModule {
     double m_desiredAngle;
     const double m_p = 0.01;
     const double m_i = 0.0;
-    const double m_d = 0.0;
-    const double m_gearRatio = 100.0; // To do a 360, we have to turn the gear 100 times
+    const double m_d = 0.0; 
+    // drive is 6.6:1
+    const double m_turnGearRatio = 12.8; // To do a 360, we have to turn the gear 100 times
     void setPID(double p, double i, double d) {
         auto pid = m_turn.GetPIDController();
         pid.SetP(p);
@@ -32,6 +33,7 @@ class SwerveModule {
         setPID(m_p, m_i, m_d);
     }
     void setDesiredAngle(double angle) {
+        frc::SmartDashboard::PutNumber(m_name + " Desired Angle: ", angle);
         m_desiredAngle = angle;
     }
     void setWheelSpeed(double ws) {
@@ -47,12 +49,15 @@ class SwerveModule {
         // Convert this into "Ticks"
         // [-π, π] => [-1, 1] # [-100, 100], then i*(100/2π) is the current position in ticks
         auto pid = m_turn.GetPIDController();
-        double rawRotations = (m_turn.GetEncoder().GetPosition()); // 5.75 
-        double desiredRotations = (m_gearRatio / (2 * M_PI)) * m_desiredAngle; // relative [-100,100]
+        //All three below variables are in wheel rotations
+        double rawRotations = (m_turn.GetEncoder().GetPosition()) / m_turnGearRatio; // 5.75
+        frc::SmartDashboard::PutNumber(m_name + " Current Set point", rawRotations); 
+        double desiredRotations = m_desiredAngle / (2 * M_PI); // relative [-100,100]
+        frc::SmartDashboard::PutNumber(m_name + " Desired Rotations:", desiredRotations);
         double closestSetpoint = calculateTargetSetpoint(rawRotations, desiredRotations);
         frc::SmartDashboard::PutNumber(m_name + " Closest Set Point", closestSetpoint);
         // TODO is this the right units??
-        pid.SetReference(closestSetpoint, rev::ControlType::kPosition);
+        pid.SetReference(closestSetpoint * m_turnGearRatio, rev::ControlType::kPosition);
         // Additionally, if we are more than 90 degrees away, it's faster to invert TODO later
     }
 

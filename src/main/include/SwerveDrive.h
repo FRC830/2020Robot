@@ -16,7 +16,7 @@ class SwerveModule {
     rev::CANSparkMax m_turn; // turn motor
     double m_wheelSpeed;
     double m_desiredAngle;
-    const double m_p = 0.01;
+    const double m_p = 0.05;
     const double m_i = 0.0;
     const double m_d = 0.0; 
     // drive is 6.6:1
@@ -51,7 +51,7 @@ class SwerveModule {
         auto pid = m_turn.GetPIDController();
         //All three below variables are in wheel rotations
         double rawRotations = (m_turn.GetEncoder().GetPosition()) / m_turnGearRatio; // 5.75
-        frc::SmartDashboard::PutNumber(m_name + " Current Set point", rawRotations); 
+        frc::SmartDashboard::PutNumber(m_name + " Current Set Point", rawRotations); 
         double desiredRotations = m_desiredAngle / (2 * M_PI); // relative [-100,100]
         frc::SmartDashboard::PutNumber(m_name + " Desired Rotations:", desiredRotations);
         double closestSetpoint = calculateTargetSetpoint(rawRotations, desiredRotations);

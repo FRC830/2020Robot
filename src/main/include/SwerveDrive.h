@@ -8,12 +8,14 @@
 #include <rev/CANSparkMax.h>
 #include <AHRS.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <ctre/phoenix/sensors/CANCoder.h>
 
 class SwerveModule {
     private:
     std::string m_name;
     rev::CANSparkMax m_wheel; // wheel motor
     rev::CANSparkMax m_turn; // turn motor
+    ctre::phoenix::sensors::CANCoder m_turnCANcoder;
     double m_wheelSpeed;
     double m_desiredAngle;
     const double m_p = 0.05;
@@ -28,7 +30,11 @@ class SwerveModule {
         pid.SetD(d);
     }
     public:  
-    SwerveModule(std::string name, int wID, int tID) : m_wheel(wID, rev::CANSparkMax::MotorType::kBrushless), m_turn(tID, rev::CANSparkMax::MotorType::kBrushless) {
+    SwerveModule(std::string name, int wID, int tID, int turnCANCoderID) : 
+        m_wheel(wID, rev::CANSparkMax::MotorType::kBrushless), 
+        m_turn(tID, rev::CANSparkMax::MotorType::kBrushless),
+        m_turnCANCoder(turnCANCoderID) 
+    {
         m_name = name;
         setPID(m_p, m_i, m_d);
     }
@@ -107,7 +113,7 @@ class SwerveDrive {
     double m_diameter;
     public:
     SwerveDrive(std::pair<int, int> fl, std::pair<int, int> fr, std::pair<int, int> bl, std::pair<int, int> br, double wid, double len) : 
-        m_fl("front left", fl.first, fl.second),
+        m_fl("front left", fl.first, fl.second), //TO DO: This does not compile due to not having the right amount of parameters! Fix this!
         m_fr("front right", fr.first, fr.second),
         m_bl("back left", bl.first, bl.second),
         m_br("back right", br.first, br.second) {

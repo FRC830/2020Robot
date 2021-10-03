@@ -80,6 +80,11 @@ class Robot : public frc::TimedRobot {
   const int BRTurnID = 21;
   const int BLTurnID = 22;
 
+  const int FRCANCoderID = 23;
+  const int FLCANCoderID = 24;
+  const int BRCANCoderID = 25;
+  const int BLCANCoderID = 26;
+
   const int ColorWheelID = 16;
   const int FlyWheelID = 10;
   const int FollowFlywheelID = 11;
@@ -117,10 +122,11 @@ class Robot : public frc::TimedRobot {
   /*=============
   Drivetrain
   =============*/
-  std::pair<int, int> fr_id{FRWheelID, FRTurnID};
-  std::pair<int, int> fl_id{FLWheelID, FLTurnID};
-  std::pair<int, int> br_id{BRWheelID, BRTurnID};
-  std::pair<int, int> bl_id{BLWheelID, BLTurnID};
+  std::tuple<int, int, int> fl_id{FLWheelID, FLTurnID, FLCANCoderID};
+  std::tuple<int, int, int> fr_id{FRWheelID, FRTurnID, FRCANCoderID};
+  std::tuple<int, int, int> br_id{BRWheelID, BRTurnID, BRCANCoderID};
+  std::tuple<int, int, int> bl_id{BLWheelID, BLTurnID, BLCANCoderID};
+
   const double robot_width_in = 20.0;
   const double robot_length_in = 20.0;
   SwerveDrive swerve_drive{fl_id, fr_id, bl_id, br_id, robot_width_in, robot_length_in};

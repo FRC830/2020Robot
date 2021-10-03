@@ -15,7 +15,7 @@ class SwerveModule {
     std::string m_name;
     rev::CANSparkMax m_wheel; // wheel motor
     rev::CANSparkMax m_turn; // turn motor
-    ctre::phoenix::sensors::CANCoder m_turnCANcoder;
+    ctre::phoenix::sensors::CANCoder m_turnCANCoder; // Motor CANCoder
     double m_wheelSpeed;
     double m_desiredAngle;
     const double m_p = 0.05;
@@ -32,8 +32,8 @@ class SwerveModule {
     public:  
     SwerveModule(std::string name, int wID, int tID, int turnCANCoderID) : 
         m_wheel(wID, rev::CANSparkMax::MotorType::kBrushless), 
-        m_turn(tID, rev::CANSparkMax::MotorType::kBrushless),
-        m_turnCANCoder(turnCANCoderID) 
+        m_turn(tID, rev::CANSparkMax::MotorType::kBrushless),       
+        m_turnCANCoder(turnCANCoderID)
     {
         m_name = name;
         setPID(m_p, m_i, m_d);
@@ -112,11 +112,11 @@ class SwerveDrive {
     double m_length;
     double m_diameter;
     public:
-    SwerveDrive(std::pair<int, int> fl, std::pair<int, int> fr, std::pair<int, int> bl, std::pair<int, int> br, double wid, double len) : 
-        m_fl("front left", fl.first, fl.second), //TO DO: This does not compile due to not having the right amount of parameters! Fix this!
-        m_fr("front right", fr.first, fr.second),
-        m_bl("back left", bl.first, bl.second),
-        m_br("back right", br.first, br.second) {
+    SwerveDrive(std::tuple<int, int, int> fl, std::tuple<int, int, int> fr, std::tuple<int, int, int> bl, std::tuple<int, int, int> br, double wid, double len) : 
+        m_fl("front left", std::get<0>(fl), std::get<1>(fl), std::get<2>(fl)), 
+        m_fr("front right", std::get<0>(fr), std::get<1>(fr), std::get<2>(fr)),
+        m_bl("back left", std::get<0>(bl), std::get<1>(bl), std::get<2>(bl)),
+        m_br("back right", std::get<0>(br), std::get<1>(br), std::get<2>(br)) {
         // Initialize values used for Feed
         // ahrs = AHRS()
         m_width = wid;

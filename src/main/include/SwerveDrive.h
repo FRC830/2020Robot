@@ -62,9 +62,15 @@ class SwerveModule {
         frc::SmartDashboard::PutNumber(m_name + " Desired Rotations:", desiredRotations);
         double closestSetpoint = calculateTargetSetpoint(rawRotations, desiredRotations);
         frc::SmartDashboard::PutNumber(m_name + " Closest Set Point", closestSetpoint);
-        // TODO is this the right units??
+        //Inversion Awareness
+        if (abs(closestSetpoint - rawRotations) > 0.25){
+            closestSetpoint = closestSetpoint + copysign(0.5, closestSetpoint - rawRotations);
+            m_wheel.SetInverted(true);
+        }
+        else{
+            m_wheel.SetInverted(false);
+        }
         pid.SetReference(closestSetpoint * m_turnGearRatio, rev::ControlType::kPosition);
-        // Additionally, if we are more than 90 degrees away, it's faster to invert TODO later
     }
 
     static double calculateTargetSetpoint(double current, double desired) {

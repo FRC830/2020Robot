@@ -58,10 +58,13 @@ class SwerveModule {
         //All three below variables are in wheel rotations
         double rawRotations = (m_turn.GetEncoder().GetPosition()) / m_turnGearRatio; // 5.75
         frc::SmartDashboard::PutNumber(m_name + " Current Set Point", rawRotations); 
+
         double desiredRotations = m_desiredAngle / (2 * M_PI); // relative [-100,100]
         frc::SmartDashboard::PutNumber(m_name + " Desired Rotations:", desiredRotations);
+
         double closestSetpoint = calculateTargetSetpoint(rawRotations, desiredRotations);
         frc::SmartDashboard::PutNumber(m_name + " Closest Set Point", closestSetpoint);
+        
         //Inversion Awareness
         if (abs(closestSetpoint - rawRotations) > 0.25){
             closestSetpoint = closestSetpoint + copysign(0.5, closestSetpoint - rawRotations);
@@ -71,8 +74,10 @@ class SwerveModule {
             m_wheel.SetInverted(false);
         }
         pid.SetReference(closestSetpoint * m_turnGearRatio, rev::ControlType::kPosition);
+        frc::SmartDashboard::PutNumber(m_name + " CANCoder Value", m_turnCANCoder.GetPosition());
     }
-
+    
+    
     static double calculateTargetSetpoint(double current, double desired) {
         // Step 1: fmod both values
         double original = current;

@@ -81,9 +81,9 @@ class Robot : public frc::TimedRobot {
   const int BLTurnID = 22;
 
   const int FRCANCoderID = 23;
-  const int FLCANCoderID = 24;
-  const int BRCANCoderID = 25;
-  const int BLCANCoderID = 26;
+  const int FLCANCoderID = 21;
+  const int BRCANCoderID = 20;
+  const int BLCANCoderID = 22;
 
   const int ColorWheelID = 16;
   const int FlyWheelID = 10;

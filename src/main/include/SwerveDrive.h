@@ -47,10 +47,7 @@ class SwerveModule {
     }
 
     void apply() {
-        m_wheel.Set(m_wheelSpeed);
-
-        frc::SmartDashboard::PutNumber(m_name + " speed", m_wheelSpeed);
-
+        
         // Currently have an angle in radians
         // Convert this into "Ticks"
         // [-π, π] => [-1, 1] # [-100, 100], then i*(100/2π) is the current position in ticks
@@ -74,7 +71,11 @@ class SwerveModule {
         //     m_wheel.SetInverted(false);
         // }
         pid.SetReference(closestSetpoint * m_turnGearRatio, rev::ControlType::kPosition);
-        frc::SmartDashboard::PutNumber(m_name + " CANCoder Value", m_turnCANCoder.GetPosition());
+        m_wheel.Set(m_wheelSpeed);
+        frc::SmartDashboard::PutNumber(m_name + " speed", m_wheelSpeed);
+
+        double m_CANCoderValue = m_turnCANCoder.GetPosition();
+        frc::SmartDashboard::PutNumber(m_name + " CANCoder Value", m_CANCoderValue);
     }
     
     

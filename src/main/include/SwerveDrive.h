@@ -136,7 +136,8 @@ class SwerveDrive {
         m_ahrs = new AHRS(frc::SPI::Port::kMXP);
     }
     double GetGyroAngle() {
-        return m_ahrs->GetAngle();
+        // return m_ahrs->GetAngle();
+        return 0;
     }
     void Feed(double raw_fwd, double raw_strf, double rot) {
         // Translate the fwd and strf values into field-relative positions

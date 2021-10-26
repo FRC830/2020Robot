@@ -66,13 +66,13 @@ class SwerveModule {
         frc::SmartDashboard::PutNumber(m_name + " Closest Set Point", closestSetpoint);
         
         //Inversion Awareness
-        if (abs(closestSetpoint - rawRotations) > 0.25){
-            closestSetpoint = closestSetpoint + copysign(0.5, closestSetpoint - rawRotations);
-            m_wheel.SetInverted(true);
-        }
-        else{
-            m_wheel.SetInverted(false);
-        }
+        // if (abs(closestSetpoint - rawRotations) > 0.25){
+        //     closestSetpoint = closestSetpoint + copysign(0.5, closestSetpoint - rawRotations);
+        //     m_wheel.SetInverted(true);
+        // }
+        // else{
+        //     m_wheel.SetInverted(false);
+        // }
         pid.SetReference(closestSetpoint * m_turnGearRatio, rev::ControlType::kPosition);
         frc::SmartDashboard::PutNumber(m_name + " CANCoder Value", m_turnCANCoder.GetPosition());
     }
